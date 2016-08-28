@@ -5,26 +5,26 @@ function markdownEscape(text) {
     return text ? text.replace(/\s+/g, " ").replace(/[\\\-*_>#]/g, "\\$&") : '';
 }
 
-function repeat(str,times){
+function repeat(str, times){
     return (new Array(times+1)).join(str)
 }
 
-function childsToMarkdown(tree,mode) {
+function childsToMarkdown(tree, mode) {
     var res = "";
-    for(var i = 0, l = tree.childNodes.length; i < l; i++){
+    for (var i = 0, l = tree.childNodes.length; i < l; i++) {
         res += nodeToMarkdown(tree.childNodes[i], mode);
     }
     return res;
 }
 
-function nodeToMarkdown(tree,mode) {
+function nodeToMarkdown(tree, mode) {
     var nl = "\n\n";
     if (tree.nodeType == 3) { // Text node
         return markdownEscape(tree.nodeValue)
     }
-    else if(tree.nodeType == 1) {
+    else if (tree.nodeType == 1) {
         if (mode == "block") {
-            switch(tree.tagName.toLowerCase()) {
+            switch (tree.tagName.toLowerCase()) {
                 case "br":
                     return nl;
                 case "hr":
@@ -43,7 +43,7 @@ function nodeToMarkdown(tree,mode) {
                 case "pre":
                     return nl + "    " + childsToMarkdown(tree, "inline") + nl;
                 case "code":
-                    if(tree.childNodes.length == 1){
+                    if (tree.childNodes.length == 1) {
                         break; // use the inline format
                     }
                     return nl + "    " + childsToMarkdown(tree, "inline") + nl;
@@ -58,8 +58,8 @@ function nodeToMarkdown(tree,mode) {
                     return nl + "> " + childsToMarkdown(tree, "inline") + nl;
             }
         }
-        if(/^[ou]+$/.test(mode)) {
-            if(tree.tagName == "LI"){
+        if (/^[ou]+$/.test(mode)) {
+            if (tree.tagName == "LI") {
                 return "\n" + repeat("  ", mode.length - 1) + (mode[mode.length-1]=="o"?"1. ":"- ") + childsToMarkdown(tree, mode+"l");
             }
             else{
@@ -67,17 +67,17 @@ function nodeToMarkdown(tree,mode) {
                 return childsToMarkdown(tree, "inline")
             }
         }
-        else if(/^[ou]+l$/.test(mode)) {
-            if(tree.tagName == "UL") {
+        else if (/^[ou]+l$/.test(mode)) {
+            if (tree.tagName == "UL") {
                 return childsToMarkdown(tree,mode.substr(0,mode.length-1)+"u");
             }
-            else if(tree.tagName == "OL") {
+            else if (tree.tagName == "OL") {
                 return childsToMarkdown(tree,mode.substr(0,mode.length-1)+"o");
             }
         }
 
         // Inline tags
-        switch(tree.tagName.toLowerCase()) {
+        switch (tree.tagName.toLowerCase()) {
             case "strong":
             case "b":
                 return "**" + childsToMarkdown(tree,"inline") + "**";
@@ -98,10 +98,9 @@ function nodeToMarkdown(tree,mode) {
                 console.log("[toMarkdown] - undefined element " + tree.tagName);
                 return childsToMarkdown(tree,mode);
         }
-
     }
 }
 
 function toMarkdown(node) {
-    return nodeToMarkdown(node,"block").replace(/[\n]{2,}/g,"\n\n").replace(/^[\n]+/,"").replace(/[\n]+$/,"");
+    return nodeToMarkdown(node, "block").replace(/[\n]{2,}/g,"\n\n").replace(/^[\n]+/,"").replace(/[\n]+$/,"");
 }
