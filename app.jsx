@@ -95,7 +95,8 @@ class NewPost extends React.Component {
     super(props);
 
     this.state = {
-      view: 'edit'
+      view: 'edit',
+      error: ''
     };
 
     this.preventHeaderUnbold = (e) => {
@@ -116,11 +117,11 @@ class NewPost extends React.Component {
       if (e.ctrlKey || e.metaKey) {
         switch(e.keyCode){
           case 66: //ctrl+B or ctrl+b
-          case 98: 
+          case 98:
           case 73: //ctrl+I or ctrl+i
           case 105:
           case 85: //ctrl+U or ctrl+u
-          case 117: 
+          case 117:
             e.stopPropagation();
             e.preventDefault();
             return false;
@@ -153,32 +154,49 @@ class NewPost extends React.Component {
   }
 
   componentWillUnmount() {
-    console.log('unmounting');
     document.removeEventListener('click', this.preventHeaderUnbold);
     document.removeEventListener('keydown', this.preventFormatHotkey);
   }
 
   editPost() {
     this.setState({
-      view: 'edit'
+      view: 'edit',
+      error: ''
     });
   }
 
   previewPost() {
     this.setState({
-      view: 'preview'
+      view: 'preview',
+      error: ''
     });
     document.getElementById('new-post-title-preview').innerHTML = document.getElementById('new-post-title').innerHTML;
     document.getElementById('new-post-body-preview').innerHTML = marked(toMarkdown(document.getElementById('new-post-body')));
   }
 
   submitPost() {
-    this.setState({
-      view: 'success'
-    });
-    var title = document.getElementById('new-post-title').innerHTML;
-    var body = toMarkdown(document.getElementById('new-post-body'));
-    contract.CreatePost('test', title, body, {from: web3.eth.accounts[0], value: contract.CRED()});
+    if (this.props.channel == '') {
+      this.setState({
+        error: 'Please specify a channel (top right)'
+      });
+    }
+    else {
+      var title = document.getElementById('new-post-title').innerHTML;
+      var body = toMarkdown(document.getElementById('new-post-body'));
+      contract.CreatePost(this.props.channel, title, body, {from: web3.eth.accounts[0], value: 0}, (error) => {
+        if (error) {
+          this.setState({
+            error: error.toString()
+          });
+        }
+        else {
+          this.setState({
+            view: 'success',
+            error: ''
+          });
+        }
+      });
+    }
   }
 
   render() {
@@ -212,6 +230,7 @@ class NewPost extends React.Component {
               <a style={{float: 'right'}} onClick={this.submitPost}>Publish</a>
               <div style={{float: 'none', clear: 'bloth'}}>{' '}</div>
             </div>
+            <div style={{color: 'red', fontSize:'60%', textTransform: 'uppercase', fontWeight: 'bold', textAlign: 'center'}}>{this.state.error}</div>
           </div>
         </div>
       </div>
@@ -224,7 +243,7 @@ class RankedChannelList extends React.Component {
     super(props);
     this.state = {
       loaded: false,
-      listItems: [],
+      listItems: []
     };
   }
 
@@ -243,13 +262,11 @@ class RankedChannelList extends React.Component {
           cred: cred[i].toString(),
         });
       }
-      console.log(listItems);
-      var filter = contract.ChannelCreate({channelID: ids}, {fromBlock: 0, toBlock: 'pending'});
-      filter.get((error, channels) => {
+      contract.ChannelCreate({channelID: ids}, {fromBlock: 0, toBlock: 'pending'}).get((error, channels) => {
         channels.forEach(function (channel) {
           var listItem = listItems[idToIndex['0x' + channel.args.channelID.toString(16)]];
-          listItem.title = post.args.channelName;
-          listItem.timestamp = post.args.timestamp;
+          listItem.channel = channel.args.channelName;
+          listItem.timestamp = channel.args.timestamp;
         });
         this.setState({
           loaded: true,
@@ -262,9 +279,9 @@ class RankedChannelList extends React.Component {
   render() {
     var listItems = this.state.listItems.map((listItem) => {
       return (
-        <li key={'li-'+listItem.id} value={listItem.rank} onClick={this.props.selectItem.bind(this, listItem)}>
-          <div>{listItem.title}</div>
-          <span>{'Rank ' +listItem.rank + '  ·  ' + listItem.cred + '¢  ·  Posted ' + new Date(listItem.timestamp* 1000).toLocaleString()}</span>
+        <li key={'li-'+listItem.id} value={listItem.rank} onClick={this.props.selectChannel.bind(this, listItem)}>
+          <div>#{listItem.channel}</div>
+          <span>{'Rank ' +listItem.rank + '  ·  ' + listItem.cred + '¢  ·  Created ' + new Date(listItem.timestamp* 1000).toLocaleString()}</span>
         </li>
       );
     });
@@ -279,7 +296,7 @@ class RankedPostList extends React.Component {
     super(props);
     this.state = {
       loaded: false,
-      listItems: [],
+      listItems: []
     };
     this.getPosts = this.getPosts.bind(this);
   }
@@ -305,6 +322,7 @@ class RankedPostList extends React.Component {
           var listItem = listItems[idToIndex['0x' + post.args.postID.toString(16)]];
           listItem.title = post.args.title;
           listItem.body = post.args.body;
+          listItem.channel = post.args.channelName;
           listItem.timestamp = post.args.timestamp;
         });
         this.setState({
@@ -341,13 +359,95 @@ class RankedPostList extends React.Component {
   }
 }
 
-// TODO: Implement this
-class LatestList extends React.Component {
+class LatestChannelList extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      loaded: false,
+      listItems: []
+    };
+  }
+
+  componentDidMount() {
+    contract.ChannelCreate({}, {fromBlock: 0, toBlock: 'pending'}).get((error, channels) => {
+      var listItems = channels.map((channel) => {
+        return {
+          id: '0x' + channel.args.channelID.toString(16),
+          channel: channel.args.channelName,
+          timestamp: channel.args.timestamp
+        }
+      }).sort((a, b) => a.timestamp > b.timestamp ? -1 : 1);
+      this.setState({
+        loaded: true,
+        listItems: listItems
+      });
+    });
+  }
+
+  render() {
+    var listItems = this.state.listItems.map((listItem) => {
+      return (
+        <li key={'li-'+listItem.id} onClick={this.props.selectChannel.bind(this, listItem)}>
+          <div>#{listItem.channel}</div>
+          <span>{'Created ' + new Date(listItem.timestamp * 1000).toLocaleString()}</span>
+        </li>
+      );
+    });
+    return <ol>{listItems}</ol>;
+  }
+}
+
+class LatestPostList extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      loaded: false,
+      listItems: []
+    };
+    this.getPosts = this.getPosts.bind(this);
+  }
+
+  getPosts(channel) {
+    contract.GetChannelID(channel, (error, channelID) => {
+      contract.PostCreate({channelID: channelID}, {fromBlock: 0, toBlock: 'latest'}).get((error, posts) => {
+        var listItems = posts.map((post) => {
+          return {
+            id: '0x' + post.args.postID.toString(16),
+            body: post.args.body,
+            title: post.args.title,
+            channel: post.args.channelName,
+            timestamp: post.args.timestamp
+          }
+        }).sort((a, b) => a.timestamp > b.timestamp ? -1 : 1);
+        this.setState({
+          loaded: true,
+          listItems: listItems
+        });
+      });
+    })
+  }
+
+  componentDidMount() {
+    this.getPosts(this.props.channel);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.channel != this.state.channel) {
+      this.getPosts(nextProps.channel);
+    }
   }
   render() {
-    return <ol></ol>;
+    var listItems = this.state.listItems.map((listItem) => {
+      return (
+        <li key={'li-'+listItem.id} onClick={this.props.selectItem.bind(this, listItem)}>
+          <div>{listItem.title}</div>
+          <span>{'Posted ' + new Date(listItem.timestamp* 1000).toLocaleString() + ' in #'+listItem.channel}</span>
+        </li>
+      );
+    });
+    return (
+      <ol>{listItems}</ol>
+    );
   }
 }
 
@@ -356,7 +456,7 @@ class PostedList extends React.Component {
     super(props);
     this.state = {
       loaded: false,
-      listItems: [],
+      listItems: []
     };
     this.getPosts = this.getPosts.bind(this);
   }
@@ -371,13 +471,15 @@ class PostedList extends React.Component {
         filter = contract.PostCreate({sourceAddress: web3.eth.accounts[0]}, {fromBlock: 0, toBlock: 'pending'});
       }
       filter.get((error, posts) => {
-        var listItems = posts.map((post) => { return {
-          id: '0x' + post.args.postID.toString(16),
-          channel: post.args.channelName,
-          title: post.args.title,
-          body: post.args.body,
-          timestamp: post.args.timestamp
-        }});
+        var listItems = posts.map((post) => {
+          return {
+            id: '0x' + post.args.postID.toString(16),
+            channel: post.args.channelName,
+            title: post.args.title,
+            body: post.args.body,
+            timestamp: post.args.timestamp
+          }
+        }).sort((a, b) => a.timetamp > b.timestamp ? -1 : 1);
         this.setState({
           channel: channel,
           loaded: true,
@@ -417,7 +519,7 @@ class SignedList extends React.Component {
     super(props);
     this.state = {
       loaded: false,
-      listItems: [],
+      listItems: []
     };
     this.getPosts = this.getPosts.bind(this);
   }
@@ -435,9 +537,7 @@ class SignedList extends React.Component {
         signatureVoidFilter = contract.SignatureVoid({sourceAddress: web3.eth.accounts[0]}, {fromBlock: 0, toBlock: 'pending'});
       }
       signatureFilter.get((error, signatures) => {
-        console.log(signatures);
         signatureVoidFilter.get((error, signatureVoids) => {
-          console.log(signatureVoids);
           var signSum = {};
           var signTime = {};
           signatures.forEach((signature) => {
@@ -458,10 +558,9 @@ class SignedList extends React.Component {
               signTime[postID] = timestamp;
             }
           });
-          console.log(signSum);
           var postFilter = contract.PostCreate({postID: Object.keys(signSum).filter((key) => signSum[key] > 0)}, {fromBlock: 0, toBlock: 'pending'});
           postFilter.get((error, posts) => {
-            var listItems = posts.map((post) => { 
+            var listItems = posts.map((post) => {
               var postID = '0x' + post.args.postID.toString(16);
               return {
                 id: postID,
@@ -514,7 +613,7 @@ class VoidedList extends React.Component {
     super(props);
     this.state = {
       loaded: false,
-      listItems: [],
+      listItems: []
     };
     this.getPosts = this.getPosts.bind(this);
   }
@@ -558,7 +657,7 @@ class VoidedList extends React.Component {
           // The only logical difference from getting the Signed posts is in the `filter` function
           var postFilter = contract.PostCreate({postID: Object.keys(signSum).filter((key) => signSum[key] == 0)}, {fromBlock: 0, toBlock: 'pending'});
           postFilter.get((error, posts) => {
-            var listItems = posts.map((post) => { 
+            var listItems = posts.map((post) => {
               var postID = '0x' + post.args.postID.toString(16);
               return {
                 id: postID,
@@ -610,22 +709,27 @@ class VoidedList extends React.Component {
 class App extends React.Component {
   constructor(props) {
     super(props);
-    
+
     // TODO merge in hashtag deetz
     this.state = {
-      channel: 'test',
+      channel: '',
       view: 'ranked',
       postID: null
     };
 
 
     this.selectItem = this.selectItem.bind(this);
+    this.selectChannel = this.selectChannel.bind(this);
     this.setChannel = this.setChannel.bind(this);
     this.setView = this.setView.bind(this);
 
     this.views = {
-      'ranked': (channel) => channel == '' ? <RankedChannelList selectItem={this.selectItem} /> : <RankedPostList channel={channel} selectItem={this.selectItem} />,
-      'latest': (channel) => <LatestList channel={channel} selectItem={this.selectItem} />,
+      'ranked': (channel) => channel == '' ?
+        <RankedChannelList selectChannel={this.selectChannel} /> :
+        <RankedPostList channel={channel} selectItem={this.selectItem} />,
+      'latest': (channel) => channel == '' ?
+        <LatestChannelList selectChannel={this.selectChannel} /> :
+        <LatestPostList channel={channel} selectItem={this.selectItem} />,
       'posted': (channel) => <PostedList channel={channel} selectItem={this.selectItem} />,
       'signed': (channel) => <SignedList channel={channel} selectItem={this.selectItem} />,
       'voided': (channel) => <VoidedList channel={channel} selectItem={this.selectItem} />,
@@ -638,6 +742,13 @@ class App extends React.Component {
       postID: listItem.id,
       listItem: listItem
     });
+  }
+
+  selectChannel(listItem) {
+    this.setState({
+      channel: listItem.channel
+    });
+    document.getElementById('channel').innerHTML = listItem.channel;
   }
 
   setChannel(e) {
@@ -662,15 +773,18 @@ class App extends React.Component {
     }
   }
 
+  componentDidMount() {
+    document.getElementById('channel').innerHTML = this.state.channel;
+  }
+
   render() {
     var view = '';
-
-    // if the view is a post, 
+    // if the view is a post,
     if (this.state.postID) {
       view = (
-        <Post 
-          id={this.state.postID} 
-          channel={this.state.channel} 
+        <Post
+          id={this.state.postID}
+          channel={this.state.listItem.channel}
           title={this.state.listItem.title}
           body={this.state.listItem.body}
           timestamp={this.state.listItem.timestamp} />
