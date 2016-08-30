@@ -286,7 +286,10 @@ class RankedChannelList extends React.Component {
       );
     });
     return (
-      <ol>{listItems}</ol>
+      <div className='view-align'>
+        <div>{'Top channels'}</div>
+        <ol>{listItems}</ol>
+      </div>
     );
   }
 }
@@ -354,12 +357,15 @@ class RankedPostList extends React.Component {
       );
     });
     return (
-      <ol>{listItems}</ol>
+      <div className='view-align'>
+        <div>{'Top content in #'+this.state.channel}</div>
+        <ol>{listItems}</ol>
+      </div>
     );
   }
 }
 
-class LatestChannelList extends React.Component {
+class NewestChannelList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -393,11 +399,16 @@ class LatestChannelList extends React.Component {
         </li>
       );
     });
-    return <ol>{listItems}</ol>;
+    return (
+      <div className='view-align'>
+        <div>{'Newest channels'}</div>
+        <ol>{listItems}</ol>
+      </div>
+    );
   }
 }
 
-class LatestPostList extends React.Component {
+class NewestPostList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -446,7 +457,10 @@ class LatestPostList extends React.Component {
       );
     });
     return (
-      <ol>{listItems}</ol>
+      <div className='view-align'>
+        <div>{'Newest content in #'+this.props.channel}</div>
+        <ol>{listItems}</ol>
+      </div>
     );
   }
 }
@@ -509,7 +523,10 @@ class PostedList extends React.Component {
       );
     });
     return (
-      <ol>{listItems}</ol>
+      <div className='view-align'>
+        <div>{'Content posted by you ('+listItems.length+')'}</div>
+        <ol>{listItems}</ol>
+      </div>
     );
   }
 }
@@ -603,7 +620,10 @@ class SignedList extends React.Component {
       );
     });
     return (
-      <ol>{listItems}</ol>
+      <div className='view-align'>
+        <div>{'Content currently signed by you ('+listItems.length+')'}</div>
+        <ol>{listItems}</ol>
+      </div>
     );
   }
 }
@@ -700,7 +720,10 @@ class VoidedList extends React.Component {
       );
     });
     return (
-      <ol>{listItems}</ol>
+      <div className='view-align'>
+        <div>{'Content no longer signed by you ('+listItems.length+')'}</div>
+        <ol>{listItems}</ol>
+      </div>
     );
   }
 }
@@ -727,9 +750,9 @@ class App extends React.Component {
       'ranked': (channel) => channel == '' ?
         <RankedChannelList selectChannel={this.selectChannel} /> :
         <RankedPostList channel={channel} selectItem={this.selectItem} />,
-      'latest': (channel) => channel == '' ?
-        <LatestChannelList selectChannel={this.selectChannel} /> :
-        <LatestPostList channel={channel} selectItem={this.selectItem} />,
+      'newest': (channel) => channel == '' ?
+        <NewestChannelList selectChannel={this.selectChannel} /> :
+        <NewestPostList channel={channel} selectItem={this.selectItem} />,
       'posted': (channel) => <PostedList channel={channel} selectItem={this.selectItem} />,
       'signed': (channel) => <SignedList channel={channel} selectItem={this.selectItem} />,
       'voided': (channel) => <VoidedList channel={channel} selectItem={this.selectItem} />,
@@ -796,27 +819,28 @@ class App extends React.Component {
     else {
       view = <div>Invalid Path</div>;
     }
+
     return (
-      <div style={{padding: '1em 0'}}>
-        <div style={{maxWidth: '600px', margin: '0 auto', height: '3em'}}>
-            <ol style={{listStyleType: 'none', paddingLeft: '0', display: 'inline'}} id="navigation">
-              <li><a href={"#/ranked/" + this.state.channel} className={this.state.view == 'ranked' ? 'selected' : ''} onClick={this.setView}>Ranked</a></li>
-              <li><a href={"#/latest/" + this.state.channel} className={this.state.view == 'latest' ? 'selected' : ''} onClick={this.setView}>Latest</a></li>
-              <li><a href={"#/posted/" + this.state.channel} className={this.state.view == 'posted' ? 'selected' : ''} onClick={this.setView}>Posted</a></li>
-              <li><a href={"#/signed/" + this.state.channel} className={this.state.view == 'signed' ? 'selected' : ''} onClick={this.setView}>Signed</a></li>
-              <li><a href={"#/voided/" + this.state.channel} className={this.state.view == 'voided' ? 'selected' : ''} onClick={this.setView}>Voided</a></li>
-              <li><a href={"#/create/" + this.state.channel} className={this.state.view == 'create' ? 'selected' : ''} onClick={this.setView}>Create</a></li>
-              <li style={{position: 'relative'}}>
-                <div style={{position: 'absolute', left: '0', top: '0'}}>
-                <div>
-                  <span>#</span>
-                  <span onKeyUp={this.setChannel} id="channel" contentEditable="true" placeholder="channel"></span>
-                </div>
-                </div>
-              </li>
-            </ol>
+      <div>
+        <div style={{maxWidth: '600px', margin: '0 auto'}}>
+          <ol style={{listStyleType: 'none', padding: '1em 0 2em 0', margin: '0'}} id="navigation">
+            <li><a href={"#/ranked/" + this.state.channel} className={this.state.view == 'ranked' ? 'selected' : ''} onClick={this.setView}>Ranked</a></li>
+            <li><a href={"#/newest/" + this.state.channel} className={this.state.view == 'newest' ? 'selected' : ''} onClick={this.setView}>Newest</a></li>
+            <li><a href={"#/posted/" + this.state.channel} className={this.state.view == 'posted' ? 'selected' : ''} onClick={this.setView}>Posted</a></li>
+            <li><a href={"#/signed/" + this.state.channel} className={this.state.view == 'signed' ? 'selected' : ''} onClick={this.setView}>Signed</a></li>
+            <li><a href={"#/voided/" + this.state.channel} className={this.state.view == 'voided' ? 'selected' : ''} onClick={this.setView}>Voided</a></li>
+            <li><a href={"#/create/" + this.state.channel} className={this.state.view == 'create' ? 'selected' : ''} onClick={this.setView}>Create</a></li>
+            <li style={{position: 'relative'}}>
+              <div style={{position: 'absolute', left: '0', top: '0',/* paddingBottom: '.5em', borderBottom: '2px solid gray',*/ cursor: 'pointer'}}>
+              <div onClick={() => document.getElementById('channel').focus()}>
+                <span>#</span>
+                <span onKeyUp={this.setChannel} id="channel" contentEditable="true" placeholder="channel"></span>
+              </div>
+              </div>
+            </li>
+          </ol>
         </div>
-        <div id="main-view">{view}</div>
+        <div>{view}</div>
       </div>
     );
   }

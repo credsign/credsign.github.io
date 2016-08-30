@@ -1,8 +1,8 @@
 body {
   /* Font family adapted from medium.com */
-  font-family: -apple-system, BlinkMacSystemFont, 
-  "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", 
-  "Fira Sans", "Droid Sans", "Helvetica Neue", 
+  font-family: -apple-system, BlinkMacSystemFont,
+  "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell",
+  "Fira Sans", "Droid Sans", "Helvetica Neue",
   sans-serif;
   margin: 0;
   position: relative;
@@ -65,14 +65,23 @@ div.medium-editor-placeholder:after {
 }
 
 /** ----------- LIST CSS ------------- */
-#main-view ol {
-  list-style-type: none;
-  margin: 0 auto;
-  padding: 1em;
+.view-align {
+  padding: 0 1em;
   width: 600px;
+  margin: 0 auto;
+}
+.view-align > div {
+  padding: 0 .66em 1em;
+  font-weight: bold;
+  font-size: 1.5em;
+}
+.view-align > ol {
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
 }
 
-#main-view li {
+.view-align > ol > li {
   font-weight: bold;
   display: block;
   cursor: pointer;
@@ -83,11 +92,11 @@ div.medium-editor-placeholder:after {
   -webkit-transition: background-color .2s ease-in,color .2s ease-in;
   transition: background-color .2s ease-in,color .2s ease-in;
 }
-#main-view li:hover {
+.view-align > ol > li:hover {
   background-color: #FCFCFC;
 }
 
-#main-view li span {
+.view-align > ol > li span {
   text-transform: uppercase;
   color: gray;
   font-size: 69%;
@@ -114,6 +123,7 @@ a.selected {
 #channel[contenteditable=true]:empty:not(:focus):after {
   content: attr(placeholder);
   color: gray;
+  cursor: pointer;
 }
 
 #new-post-title[contenteditable=true]:empty:not(:focus):after {
