@@ -358,7 +358,7 @@ class RankedPostList extends React.Component {
     });
     return (
       <div className='view-align'>
-        <div>{'Top content in #'+this.state.channel}</div>
+        <div>{'Top content in #'+this.props.channel}</div>
         <ol>{listItems}</ol>
       </div>
     );
