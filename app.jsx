@@ -215,7 +215,7 @@ class NewPost extends React.Component {
                 <div id="new-post-body-preview"></div>
               </div>
               <div style={{display: this.state.view == 'success' ? 'block' : 'none'}}>
-                <div>Your new post has been published. Please allow a few minutes for it to broadcast across the network.</div>
+                <div>Your new post has been published. Please give it a few minutes to broadcast across the network.</div>
               </div>
             </div>
           </div>
@@ -358,7 +358,7 @@ class RankedPostList extends React.Component {
     });
     return (
       <div className='view-align'>
-        <div>{'Top content in #'+this.props.channel}</div>
+        <div>{'Top posts in #'+this.props.channel}</div>
         <ol>{listItems}</ol>
       </div>
     );
@@ -458,7 +458,7 @@ class NewestPostList extends React.Component {
     });
     return (
       <div className='view-align'>
-        <div>{'Newest content in #'+this.props.channel}</div>
+        <div>{'Newest posts in #'+this.props.channel}</div>
         <ol>{listItems}</ol>
       </div>
     );
@@ -524,7 +524,7 @@ class PostedList extends React.Component {
     });
     return (
       <div className='view-align'>
-        <div>{'Content posted by you ('+listItems.length+')'}</div>
+        <div>{'Your posts ('+listItems.length+')'}</div>
         <ol>{listItems}</ol>
       </div>
     );
@@ -621,107 +621,7 @@ class SignedList extends React.Component {
     });
     return (
       <div className='view-align'>
-        <div>{'Content currently signed by you ('+listItems.length+')'}</div>
-        <ol>{listItems}</ol>
-      </div>
-    );
-  }
-}
-
-class VoidedList extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      loaded: false,
-      listItems: []
-    };
-    this.getPosts = this.getPosts.bind(this);
-  }
-
-  getPosts(channel) {
-    contract.GetChannelID(channel, (error, channelID) => {
-      var signatureFilter;
-      var signatureVoidFilter;
-      if (channelID > 0) {
-        signatureFilter = contract.PostSign({sourceAddress: web3.eth.accounts[0], channelID: channelID}, {fromBlock: 0, toBlock: 'pending'});
-        signatureVoidFilter = contract.SignatureVoid({sourceAddress: web3.eth.accounts[0], channelID: channelID}, {fromBlock: 0, toBlock: 'pending'});
-      }
-      else {
-        signatureFilter = contract.PostSign({sourceAddress: web3.eth.accounts[0]}, {fromBlock: 0, toBlock: 'pending'});
-        signatureVoidFilter = contract.SignatureVoid({sourceAddress: web3.eth.accounts[0]}, {fromBlock: 0, toBlock: 'pending'});
-      }
-      signatureFilter.get((error, signatures) => {
-        signatureVoidFilter.get((error, signatureVoids) => {
-          var signSum = {};
-          var signTime = {};
-          var signVoid = {};
-          signatures.forEach((signature) => {
-            var postID = '0x' + signature.args.postID.toString(16);
-            var cred = parseInt(signature.args.cred.toString(10));
-            var timestamp = parseInt(signature.args.timestamp.toString(10));
-            signSum[postID] = signSum[postID] > 0 ? (signSum[postID] + cred) : cred;
-            if (!signTime[postID] || timestamp > signTime[postID]) {
-              signTime[postID] = timestamp;
-            }
-          });
-          signatureVoids.forEach((signatureVoid) => {
-            var postID = '0x' + signatureVoid.args.postID.toString(16);
-            var cred = parseInt(signatureVoid.args.cred.toString(10));
-            var timestamp = parseInt(signatureVoid.args.timestamp.toString(10));
-            signSum[postID] -= cred;
-            if (timestamp > signTime[postID]) {
-              signVoid[postID] = cred;
-              signTime[postID] = timestamp;
-            }
-          });
-          // The only logical difference from getting the Signed posts is in the `filter` function
-          var postFilter = contract.PostCreate({postID: Object.keys(signSum).filter((key) => signSum[key] == 0)}, {fromBlock: 0, toBlock: 'pending'});
-          postFilter.get((error, posts) => {
-            var listItems = posts.map((post) => {
-              var postID = '0x' + post.args.postID.toString(16);
-              return {
-                id: postID,
-                channel: post.args.channelName,
-                title: post.args.title,
-                body: post.args.body,
-                timestamp: post.args.timestamp,
-                signatureAmount: signVoid[postID],
-                signatureTime: signTime[postID]
-              }
-            }).sort((a, b) => signTime[a.id] > signTime[b.id] ? -1 : 1);
-            this.setState({
-              channel: channel,
-              loaded: true,
-              listItems: listItems
-            });
-          });
-        });
-      });
-    });
-  }
-
-  componentDidMount() {
-    this.getPosts(this.props.channel);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.channel != this.state.channel) {
-      this.getPosts(nextProps.channel);
-    }
-  }
-
-  render() {
-    var listItems = this.state.listItems.map((listItem) => {
-      return (
-        <li key={'li-'+listItem.id} onClick={this.props.selectItem.bind(this, listItem)}>
-          <div>{listItem.title}</div>
-          <span>{'Voided ' + listItem.signatureAmount + '¢  on  ' + new Date(listItem.signatureTime * 1000).toLocaleString()}</span>
-        </li>
-      );
-    });
-    return (
-      <div className='view-align'>
-        <div>{'Content no longer signed by you ('+listItems.length+')'}</div>
+        <div>{'Posts signed by you ('+listItems.length+')'}</div>
         <ol>{listItems}</ol>
       </div>
     );
@@ -753,9 +653,8 @@ class App extends React.Component {
       'newest': (channel) => channel == '' ?
         <NewestChannelList selectChannel={this.selectChannel} /> :
         <NewestPostList channel={channel} selectItem={this.selectItem} />,
-      'posted': (channel) => <PostedList channel={channel} selectItem={this.selectItem} />,
       'signed': (channel) => <SignedList channel={channel} selectItem={this.selectItem} />,
-      'voided': (channel) => <VoidedList channel={channel} selectItem={this.selectItem} />,
+      'posted': (channel) => <PostedList channel={channel} selectItem={this.selectItem} />,
       'create': (channel) => <NewPost channel={channel} />
     }
   }
@@ -822,24 +721,21 @@ class App extends React.Component {
 
     return (
       <div>
-        <div style={{maxWidth: '600px', margin: '0 auto'}}>
-          <ol style={{listStyleType: 'none', padding: '1em 0 2em 0', margin: '0'}} id="navigation">
-            <li><a href={"#/ranked/" + this.state.channel} className={this.state.view == 'ranked' ? 'selected' : ''} onClick={this.setView}>Ranked</a></li>
-            <li><a href={"#/newest/" + this.state.channel} className={this.state.view == 'newest' ? 'selected' : ''} onClick={this.setView}>Newest</a></li>
-            <li><a href={"#/posted/" + this.state.channel} className={this.state.view == 'posted' ? 'selected' : ''} onClick={this.setView}>Posted</a></li>
-            <li><a href={"#/signed/" + this.state.channel} className={this.state.view == 'signed' ? 'selected' : ''} onClick={this.setView}>Signed</a></li>
-            <li><a href={"#/voided/" + this.state.channel} className={this.state.view == 'voided' ? 'selected' : ''} onClick={this.setView}>Voided</a></li>
-            <li><a href={"#/create/" + this.state.channel} className={this.state.view == 'create' ? 'selected' : ''} onClick={this.setView}>Create</a></li>
-            <li style={{position: 'relative'}}>
-              <div style={{position: 'absolute', left: '0', top: '0',/* paddingBottom: '.5em', borderBottom: '2px solid gray',*/ cursor: 'pointer'}}>
-              <div onClick={() => document.getElementById('channel').focus()}>
-                <span>#</span>
-                <span onKeyUp={this.setChannel} id="channel" contentEditable="true" placeholder="channel"></span>
-              </div>
-              </div>
-            </li>
-          </ol>
-        </div>
+        <ol style={{listStyleType: 'none', padding: '1em 0 2em 0', margin: '0', width: '600px', margin: '0 auto'}} id="navigation">
+          <li><a href={"#/ranked/" + this.state.channel} className={this.state.view == 'ranked' ? 'selected' : ''} onClick={this.setView}>Ranked</a></li>
+          <li><a href={"#/newest/" + this.state.channel} className={this.state.view == 'newest' ? 'selected' : ''} onClick={this.setView}>Newest</a></li>
+          <li><a href={"#/signed/" + this.state.channel} className={this.state.view == 'signed' ? 'selected' : ''} onClick={this.setView}>Signed</a></li>
+          <li><a href={"#/posted/" + this.state.channel} className={this.state.view == 'posted' ? 'selected' : ''} onClick={this.setView}>Posted</a></li>
+          <li><a href={"#/create/" + this.state.channel} className={this.state.view == 'create' ? 'selected' : ''} onClick={this.setView} style={{backgroundColor: '#000', color: '#FFF', padding: '.5em'}}>Create New Post</a></li>
+          <li style={{position: 'relative'}}>
+            <div style={{position: 'absolute', left: '-.5em', top: '0',/* paddingBottom: '.5em', borderBottom: '2px solid gray',*/ cursor: 'pointer'}}>
+            <div onClick={() => document.getElementById('channel').focus()}>
+              <span>#</span>
+              <span onKeyUp={this.setChannel} id="channel" contentEditable="true" placeholder="channel"></span>
+            </div>
+            </div>
+          </li>
+        </ol>
         <div>{view}</div>
       </div>
     );
