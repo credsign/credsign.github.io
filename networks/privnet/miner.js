@@ -5,7 +5,6 @@ var mining = false;
 var address = eth.accounts.length > 0 ? eth.accounts[eth.accounts.length - 1] : personal.newAccount("credsign");
 
 (function toggleMiner() {
-  personal.unlockAccount(address, "credsign", 10);
   if (mining) {
     if (txpool.status.queued == 0 && txpool.status.pending == 0) {
       mining = false;

@@ -10,6 +10,7 @@ var spawn = require('child_process').spawn;
 
 var solc = require('solc');
 var fs = require('fs');
+var net = require('net');
 var path = require('path');
 
 var geth, server;
@@ -22,13 +23,8 @@ gulp.task('privnet', function (done) {
   geth.on('close', function (code) {
     geth = spawn('./networks/geth', [
       '--datadir=./networks/privnet/datadir',
-      '--rpc',
-      '--rpcport=8545',
-      '--rpccorsdomain=*',
-      '--port=30303',
+      '--ipcpath='+getIPCPath(),
       '--nodiscover',
-      '--ipcapi=admin,db,eth,debug,miner,net,shh,txpool,personal,web3',
-      '--rpcapi=db,eth,net,web3',
       '--networkid=1337',
       '--verbosity=4',
       'js', './networks/privnet/miner.js'
@@ -42,45 +38,44 @@ gulp.task('privnet', function (done) {
   })
 });
 
-gulp.task('testnet', function (done) {
-
+function getIPCPath() {
   // Geth Testnet uses a different IPC path than mainnet by default
   // Overwrite the default so the integration with Mist doesn't break
-  var ipcpath;
   if (process.platform === 'darwin') {
-    ipcpath = path.resolve(process.env['HOME'], 'Library/Ethereum/geth.ipc');
+    return path.resolve(process.env['HOME'], 'Library/Ethereum/geth.ipc');
   }
   else if (process.platform === 'freebsd' || process.platform === 'linux' || process.platform === 'sunos') {
-    ipcpath = path.resolve(process.env['HOME'], '.ethereum/geth.ipc');
+    return path.resolve(process.env['HOME'], '.ethereum/geth.ipc');
   }
   else if (process.platform === 'win32') {
-    ipcpath = '\\\\.\\pipe\\geth.ipc';
+    return '\\\\.\\pipe\\geth.ipc';
   }
+  else {
+    throw new Error('Unsupported platform');
+  }
+}
+
+gulp.task('testnet', function (done) {
 
   geth = spawn('./networks/geth', [
-    '--rpc',
-    '--rpcport=8545',
-    '--rpccorsdomain=*',
-    '--port=30303',
-    '--ipcpath='+ipcpath,
-    '--ipcapi=admin,db,eth,debug,miner,net,shh,txpool,personal,web3',
-    '--rpcapi=db,eth,net,web3',
+    '--ipcpath='+getIPCPath(),
+    '--cache=1024',
     '--fast',
     '--testnet',
-    '--unlock=0',
-    '--password=./networks/testnet/password.txt',
     '--verbosity=4'
   ]);
-  // geth.stdout.on('data', (data) => {
-  //   console.log(`stdout: ${data}`);
-  // });
-  // geth.stderr.on('data', (data) => {
-  //   console.log(`stderr: ${data}`);
-  // });
+  geth.stdout.on('data', (data) => {
+    console.log(`stdout: ${data}`);
+  });
+  geth.stderr.on('data', (data) => {
+    console.log(`stderr: ${data}`);
+  });
 });
 
 function deploy(network, done) {
-  var web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
+  var socket = new net.Socket();
+  var web3 = new Web3(new Web3.providers.IpcProvider(getIPCPath(), socket));
+  var password = fs.readFileSync(path.resolve('./networks', network, 'password.txt'), 'utf-8');
 
   var Contract = function () {
     return {
@@ -168,17 +163,22 @@ function deploy(network, done) {
         contract.deploying = true;
         contract.bytecode = solc.linkBytecode(contract.bytecode, contractDependencies);
         web3.eth.estimateGas({data: contract.bytecode, from: address}, function (error, gasEstimate) {
-          web3.eth.contract(contract.interface).new({data: contract.bytecode, from: address, gas: gasEstimate}, function (error, result) {
+          web3.personal.unlockAccount(address, password, 60, function (error) {
             if (error) {
-              console.log(error);
+              console.log(error.toString());
             }
-            if (result.address) {
-              contract.address = result.address;
-              console.log('* Deployed ' + symbolName);
-              if (Object.keys(contracts).length == ++deployedCounter){
-                customInitialization();
+            web3.eth.contract(contract.interface).new({data: contract.bytecode, from: address, gas: gasEstimate}, function (error, result) {
+              if (error) {
+                console.log(error.toString());
               }
-            }
+              if (result.address) {
+                contract.address = result.address;
+                console.log('* Deployed ' + symbolName);
+                if (Object.keys(contracts).length == ++deployedCounter){
+                  customInitialization();
+                }
+              }
+            });
           });
         });
       }

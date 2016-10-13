@@ -101,12 +101,15 @@ contract CredSign {
 
         User user = users[msg.sender];
         uint256 oldCred = user.contentCred[contentID];
-        uint256 subUnit = msg.value % CRED;
-        uint256 newCred = (msg.value - subUnit) / CRED;
+        uint256 remainder = msg.value % CRED;
+        uint256 sentCred = (msg.value - remainder) / CRED;
 
-        if (cred > oldCred + newCred) {
+        if (cred > oldCred + sentCred) {
             // Not enough cred to sign
             throw;
+        }
+        else if (oldCred > cred) {
+            remainder += (oldCred - cred) * CRED;
         }
 
         // Rerank the content in the channel
@@ -141,9 +144,9 @@ contract CredSign {
             );
         }
 
-        // Refund any excess
-        if (subUnit > 0) {
-            if (!msg.sender.send(subUnit)) {
+        // Refund back amounts owned by sender
+        if (remainder > 0) {
+            if (!msg.sender.send(remainder)) {
                 throw;
             }
         }

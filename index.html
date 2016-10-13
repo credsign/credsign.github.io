@@ -24,12 +24,9 @@
         sanitize: true,
         smartLists: false
       });
+
       function getWeb3(done) {
-        if (window.Web3 !== undefined) {
-          window.web3 = new Web3(web3.currentProvider);
-          done();
-        }
-        else {
+        if (window.web3 === undefined) {
           (function(d, script) {
             script = d.createElement('script');
             script.type = 'text/javascript';
@@ -43,6 +40,9 @@
             script.src = 'https://unpkg.com/web3@0.16.0/dist/web3.js';
             d.getElementsByTagName('head')[0].appendChild(script);
           }(document));
+        }
+        else {
+          done();
         }
       }
 
