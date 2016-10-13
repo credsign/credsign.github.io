@@ -3,29 +3,18 @@
     <title>CredSign</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="stylesheet" href="default.css">
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/medium-editor/5.21.1/css/medium-editor.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/medium-editor/5.21.1/css/themes/tim.css">
+    <link rel="stylesheet" href="/webapp/default.css">
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/medium-editor/5.21.1/js/medium-editor.min.js"></script>
-    <script type="text/javascript" src="toMarkdown.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.6/marked.js"></script>
-    <script src="https://fb.me/react-15.2.1.js"></script>
-    <script src="https://fb.me/react-dom-15.2.1.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
-    <script type="text/babel" src="app.jsx"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/react/15.3.2/react.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/react/15.3.2/react-dom.min.js"></script>
+    <script type="text/javascript" src="/webapp/dist/app.min.js"></script>
   </head>
   <body>
     <div id="main"></div>
-    <script>
-      // var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
-      // var web3 = new Web3();
-
-      var address = '0x49Bc7df203075d601Bb9e55324963D940eDF3B62';
-      var abi = [ { "constant": true, "inputs": [ { "name": "channelName", "type": "string" } ], "name": "GetChannelRank", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "type": "function" }, { "constant": false, "inputs": [ { "name": "channelName", "type": "string" }, { "name": "title", "type": "string" }, { "name": "body", "type": "string" } ], "name": "CreatePost", "outputs": [], "type": "function" }, { "constant": true, "inputs": [ { "name": "startRank", "type": "uint256" }, { "name": "endRank", "type": "uint256" } ], "name": "GetChannelsByRankRange", "outputs": [ { "name": "", "type": "uint256[]", "value": [] }, { "name": "", "type": "uint256[]", "value": [] }, { "name": "", "type": "uint256[]", "value": [] } ], "type": "function" }, { "constant": true, "inputs": [ { "name": "postID", "type": "uint256" } ], "name": "GetPostRank", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "type": "function" }, { "constant": true, "inputs": [], "name": "GetChannelCount", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "type": "function" }, { "constant": false, "inputs": [ { "name": "postID", "type": "uint256" } ], "name": "VoidSignature", "outputs": [], "type": "function" }, { "constant": true, "inputs": [ { "name": "postID", "type": "uint256" } ], "name": "GetPostCred", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "type": "function" }, { "constant": true, "inputs": [ { "name": "rank", "type": "uint256" } ], "name": "Test", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "type": "function" }, { "constant": true, "inputs": [ { "name": "name", "type": "string" } ], "name": "GetChannelID", "outputs": [ { "name": "id", "type": "uint256", "value": "0" } ], "type": "function" }, { "constant": false, "inputs": [ { "name": "postID", "type": "uint256" } ], "name": "SignPost", "outputs": [], "type": "function" }, { "constant": true, "inputs": [ { "name": "id", "type": "uint256" } ], "name": "GetChannelName", "outputs": [ { "name": "", "type": "string", "value": "" } ], "type": "function" }, { "constant": true, "inputs": [ { "name": "channelName", "type": "string" } ], "name": "GetPostCount", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "type": "function" }, { "constant": true, "inputs": [ { "name": "channelName", "type": "string" }, { "name": "startRank", "type": "uint256" }, { "name": "endRank", "type": "uint256" } ], "name": "GetPostsByRankRange", "outputs": [ { "name": "", "type": "uint256[]", "value": [] }, { "name": "", "type": "uint256[]", "value": [] }, { "name": "", "type": "uint256[]", "value": [] } ], "type": "function" }, { "constant": true, "inputs": [], "name": "GetAggregateCred", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "type": "function" }, { "constant": true, "inputs": [ { "name": "channelName", "type": "string" } ], "name": "GetChannelCred", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "type": "function" }, { "constant": true, "inputs": [ { "name": "postID", "type": "uint256" }, { "name": "source", "type": "address" } ], "name": "GetSignatureCred", "outputs": [ { "name": "", "type": "uint256", "value": "0" } ], "type": "function" }, { "constant": true, "inputs": [], "name": "CRED", "outputs": [ { "name": "", "type": "uint256", "value": "10000000000000000" } ], "type": "function" }, { "inputs": [], "type": "constructor" }, { "anonymous": false, "inputs": [ { "indexed": true, "name": "channelID", "type": "uint256" }, { "indexed": false, "name": "channelName", "type": "string" }, { "indexed": false, "name": "timestamp", "type": "uint256" } ], "name": "ChannelCreate", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "name": "sourceAddress", "type": "address" }, { "indexed": true, "name": "channelID", "type": "uint256" }, { "indexed": true, "name": "postID", "type": "uint256" }, { "indexed": false, "name": "channelName", "type": "string" }, { "indexed": false, "name": "title", "type": "string" }, { "indexed": false, "name": "body", "type": "string" }, { "indexed": false, "name": "timestamp", "type": "uint256" } ], "name": "PostCreate", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "name": "sourceAddress", "type": "address" }, { "indexed": true, "name": "channelID", "type": "uint256" }, { "indexed": true, "name": "postID", "type": "uint256" }, { "indexed": false, "name": "cred", "type": "uint256" }, { "indexed": false, "name": "timestamp", "type": "uint256" } ], "name": "PostSign", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "name": "sourceAddress", "type": "address" }, { "indexed": true, "name": "channelID", "type": "uint256" }, { "indexed": true, "name": "postID", "type": "uint256" }, { "indexed": false, "name": "cred", "type": "uint256" }, { "indexed": false, "name": "timestamp", "type": "uint256" } ], "name": "SignatureVoid", "type": "event" } ];
-
-      var contract = web3.eth.contract(abi).at(address);
-    </script>
     <script>
       marked.setOptions({
         gfm: false,
@@ -35,9 +24,56 @@
         sanitize: true,
         smartLists: false
       });
-    </script>
-    <script type="text/babel">
-    ReactDOM.render(<window.App />, document.getElementById('main'));
+      function getWeb3(done) {
+        if (window.Web3 !== undefined) {
+          window.web3 = new Web3(web3.currentProvider);
+          done();
+        }
+        else {
+          (function(d, script) {
+            script = d.createElement('script');
+            script.type = 'text/javascript';
+            script.async = true;
+            script.onload = function() {
+                window.web3 = new Web3(new Web3.providers.HttpProvider(
+                  window.location.protocol == 'https:' ? 'https://morden.infura.io' : 'http://localhost:8545'
+                ));
+                done();
+            };
+            script.src = 'https://unpkg.com/web3@0.16.0/dist/web3.js';
+            d.getElementsByTagName('head')[0].appendChild(script);
+          }(document));
+        }
+      }
+
+      function getContracts(network, done) {
+        (function(d, script) {
+          script = d.createElement('script');
+          script.type = 'text/javascript';
+          script.async = true;
+          script.onload = function() {
+            window.credsign = web3.eth.contract(contracts.CredSign.interface).at(contracts.CredSign.address);
+            window.batchread = web3.eth.contract(contracts.BatchRead.interface).at(contracts.BatchRead.address);
+            done();
+          };
+          script.src = '/networks/'+network+'/contracts.js';
+          d.getElementsByTagName('head')[0].appendChild(script);
+        }(document));
+      }
+
+      getWeb3(function () {
+        web3.version.getNetwork(function (error, networkID) {
+          if (error) {
+            console.log(error.toString());
+          }
+          else {
+            var network = networkID == '2' ? 'testnet' : 'privnet';
+            getContracts(network, function () {
+              ReactDOM.render(React.createElement(window.App, null), document.getElementById('main'));
+            });
+          }
+        });
+      });
     </script>
   </body>
 </html>

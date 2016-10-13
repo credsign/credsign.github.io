@@ -20,7 +20,20 @@ div#main {
   font-weight: bold;
   width: 100%;
   resize: none;
-  overflow: visible;
+  overflow: hidden;
+  max-height: 4em;
+  padding: 0;
+  margin: 0;
+}
+
+h1 {
+  margin: 0;
+  padding: 0;
+}
+
+#new-post-title[contenteditable=true]:empty:not(:focus):after {
+  content: attr(placeholder);
+  color: gray;
 }
 
 #new-post-body {
@@ -65,6 +78,37 @@ div.medium-editor-placeholder:after {
 }
 
 /** ----------- LIST CSS ------------- */
+.view-align ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #DDD;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.view-align ul > li {
+  display: block;
+  background-color: white;
+  padding: .5em 1em;
+  font-weight: normal;
+  font-size: .66em;
+  margin: 0;
+  border-top: 1px solid #EEE;
+  -webkit-transition: background-color .2s ease-in,color .2s ease-in;
+  transition: background-color .2s ease-in,color .2s ease-in;
+}
+
+.view-align ul > li:first-child {
+  border-radius: 5px 5px 0 0;
+  border-top: 0;
+}
+.view-align ul > li:last-child {
+  border-radius: 0 0 5px 5px;
+}
+.view-align ul > li:hover {
+  background-color: #FCFCFC;
+}
+
 .view-align {
   padding: 0 1em;
   width: 600px;
@@ -82,13 +126,10 @@ div.medium-editor-placeholder:after {
 }
 
 .view-align > ol > li {
-  font-weight: bold;
   display: block;
-  cursor: pointer;
-  padding: 1em;
   margin-bottom: 1em;
   background-color: #FFF;
-  box-shadow: 0 0 5px #888;
+  border: 1px solid #DDD;
   -webkit-transition: background-color .2s ease-in,color .2s ease-in;
   transition: background-color .2s ease-in,color .2s ease-in;
 }
@@ -109,29 +150,22 @@ div.medium-editor-placeholder:after {
 }
 
 a {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+}
+
+li a {
+  font-weight: bold;
+  padding: 1em;
   text-decoration: none;
   color: #3a3a3a;
-  padding: .5em 0em;
-  border-bottom: 2px solid #000;
-  cursor: pointer;
+  display: block;
 }
 
-a.selected {
-  border-bottom: 2px solid red;
-}
-
-#channel[contenteditable=true]:empty:not(:focus):after {
-  content: attr(placeholder);
+#channel::-webkit-input-placeholder {
   color: gray;
-  cursor: pointer;
-}
-
-#new-post-title[contenteditable=true]:empty:not(:focus):after {
-  content: attr(placeholder);
-  color: gray;
-}
-
-#channel {
-  cursor: text;
-  outline: none;
 }
