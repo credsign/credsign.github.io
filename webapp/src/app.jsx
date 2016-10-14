@@ -119,14 +119,13 @@ class Post extends React.Component {
           </div>
         </div>
         <div style={{maxWidth: '600px', margin: '0 auto'}}>
-          <div style={{padding: '1.5em 1em', display: 'flex'}}>
-            <div style={{display: 'block', flex: '1 0 0', textAlign: 'left'}}>
+          <div className="flex" style={{padding: '1.5em 1em'}}>
+            <div className="flex-grow" style={{display: 'block', textAlign: 'left'}}>
               <div style={{}}>
                 <span>{`Rank ${this.state.rank} with ${this.state.cred}¢`}</span>
               </div>
             </div>
-            <div style={{
-              flex: '1 0 0',
+            <div className="flex-grow" style={{
               textAlign: 'right',
               display: (this.props.account == '') ? 'none' : 'block',
             }}>
@@ -303,8 +302,8 @@ class Create extends React.Component {
         </div>
         <div style={{width: '100%'}}>
           <div style={{maxWidth: '600px', margin: '0 auto'}}>
-            <div style={{display: 'flex', padding: '1.5em 1em'}}>
-              <div style={{flex: '1 0 0', textAlign: 'left'}}>
+            <div className="flex" style={{padding: '1.5em 1em'}}>
+              <div className="flex-grow" style={{textAlign: 'left'}}>
                 <a style={{
                   color: 'black',
                   display: this.state.view == 'edit' ? 'inline-block' : 'none',
@@ -317,7 +316,7 @@ class Create extends React.Component {
                   paddingBottom: '.5em'
                 }} onClick={this.editPost}>Edit</a>
               </div>
-              <div style={{flex: '1 0 0', textAlign: 'right'}}>
+              <div className="flex-grow" style={{textAlign: 'right'}}>
                 <a style={{
                   display: this.state.view == 'edit' ? 'inline-block' : 'none',
                   borderBottom: '2px solid black',
@@ -921,19 +920,16 @@ class App extends React.Component {
             width: '600px',
             margin: '0 auto'
           }}>
-            <div style={{padding: '0 .66em', display: 'flex'}}>
-              <a href='#/channel' style={{
-                flex: '1 0 0',
+            <div className="flex" style={{padding: '0 .66em'}}>
+              <a href='#/channel' className="flex-grow" style={{
                 color: 'black',
                 textAlign: 'left',
                 display: 'inline-block'
               }}>Channels</a>
-              <div style={{
-                flex: '0 1 auto',
+              <div className="flex-shrink" style={{
                 display: 'inline-block'
               }}>¢</div>
-              <a href={`#/account/${this.state.account}`} style={{
-                flex: '1 0 0',
+              <a href={`#/account/${this.state.account}`} className="flex-grow" style={{
                 color: 'black',
                 textAlign: 'right',
                 display: 'inline-block'
@@ -942,10 +938,9 @@ class App extends React.Component {
           </div>
         </div>
         <div style={{width: '600px', margin: '0 auto', padding: '1.5em 0'}}>
-          <div style={{display: 'flex'}}>
-            <div style={{flex: '1 0 0'}}>
-              <div style={{
-                display: 'flex',
+          <div className="flex">
+            <div className="flex-grow">
+              <div className="flex" style={{
                 padding: '.5em 1em',
                 backgroundColor: 'white',
                 borderTop: '2px solid white',
@@ -953,27 +948,23 @@ class App extends React.Component {
                 borderRight: '0',
                 borderLeft: '0'
               }}>
-                <span style={{
+                <span className="flex-shrink" style={{
                   color: 'gray',
-                  flex: '0 1 auto',
                   fontWeight: 'normal',
                 }}>{this.state.levelOne == 'account' ? '@' : '#'}</span>
-                <input type="text" placeholder={this.state.levelOne == "account" ? "0x321..." : "channel"} id="channel" style={{
+                <input type="text" placeholder={this.state.levelOne == "account" ? "0x321..." : "channel"} id="channel" className="flex-grow" style={{
                   backgroundColor: 'transparent',
                   fontSize: '1em',
                   padding: 0,
                   margin: 0,
                   border: 0,
                   outline: 0,
-                  flex: '1 0 0',
                   placeholderTextColor: 'gray',
                   color: 'black'
                 }} value={this.state.levelTwo} onChange={this.setChannel}></input>
               </div>
             </div>
-            <div style={{
-              flex: '0 1 auto'
-            }}>
+            <div className="flex-shrink">
               <a style={{
                 margin: '0 1em',
                 color: 'black',

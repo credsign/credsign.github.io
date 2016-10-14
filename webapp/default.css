@@ -166,6 +166,20 @@ li a {
   display: block;
 }
 
+.flex-grow {
+  -webkit-flex: 1 0 0;
+  flex: 1 0 0;
+}
+
+.flex-shrink {
+  -webkit-flex: 0 1 auto,
+  flex: 0 1 auto,
+}
+.flex {
+  display: -webkit-flex;
+  display: flex;
+}
+
 #channel::-webkit-input-placeholder {
   color: gray;
 }
