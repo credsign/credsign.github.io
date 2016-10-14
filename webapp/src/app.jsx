@@ -619,51 +619,51 @@ class Account extends React.Component {
     };
 
     this.getPosts = this.getPosts.bind(this);
-    this.getPostsPosted = this.getPostsPosted.bind(this);
+    this.getAddress = this.getAddress.bind(this);
+    this.getPostsPublished = this.getPostsPublished.bind(this);
     this.getPostsSigned = this.getPostsSigned.bind(this);
     this.getPostsFunded = this.getPostsFunded.bind(this);
+    this.onFilterChange = this.onFilterChange.bind(this);
+  }
+
+  getAddress(input) {
+    if (parseInt(input) > 0)
+      return input;
+    else
+      return '-1';
   }
 
   componentDidMount() {
-    if (this.state.filter == 'Posted') {
-      this.getPostsPosted(this.props.account);
-    }
-    else if (this.state.filter == 'Funded') {
-      this.getPostsFunded(this.props.account);
-    }
-    else if (this.state.filter == 'Signed') {
-      this.getPostsSigned(this.props.account);
-    }
+    var account = this.getAddress(this.props.account);
+    this.getPosts(this.state.filter, account);
   }
 
   componentWillReceiveProps(nextProps) {
-    if (this.state.filter == 'Posted') {
-      this.getPostsPosted(this.props.account);
-    }
-    else if (this.state.filter == 'Funded') {
-      this.getPostsFunded(this.props.account);
-    }
-    else if (this.state.filter == 'Signed') {
-      this.getPostsSigned(this.props.account);
-    }
+    var account = this.getAddress(nextProps.account);
+    this.getPosts(this.state.filter, account);
   }
 
-  getPosts(e) {
-    var filter = e.target.innerHTML;
+  getPosts(filter, account) {
     this.setState({menu: false, filter: filter});
     if (filter == 'Posted') {
-      this.getPostsPosted(this.props.account);
+      this.getPostsPublished(account);
     }
     else if (filter == 'Funded') {
-      this.getPostsFunded(this.props.account);
+      this.getPostsFunded(account);
     }
     else if (filter == 'Signed') {
-      this.getPostsSigned(this.props.account);
+      this.getPostsSigned(account);
     }
   }
 
-  getPostsPosted(address) {
-    credsign.Post({signatory: address}, {fromBlock: 0, toBlock: 'latest'}).get((error, postEvents) => {
+  onFilterChange(e) {
+    var filter = e.target.innerHTML;
+    var account = this.getAddress(this.props.account);
+    this.getPosts(filter, account);
+  }
+
+  getPostsPublished(address) {
+    credsign.Post({publisher: address}, {fromBlock: 0, toBlock: 'latest'}).get((error, postEvents) => {
       var ids = [];
       postEvents.forEach((postEvent) => ids.unshift('0x' + postEvent.args.contentID.toString(16)));
       var listItems = [];
@@ -806,7 +806,7 @@ class Account extends React.Component {
       <div className='view-align'>
         <div style={{position: 'relative'}}>
           <span onClick={() => this.setState({menu: !this.state.menu})} style={{cursor: 'pointer'}}>{`${this.state.filter} ▾`}</span>
-          <ul onMouseLeave={() => this.setState({menu: false})} onClick={this.getPosts} style={{position: 'absolute', top: '1.5em', left: '0', display: this.state.menu ? 'block' : 'none'}}>
+          <ul onMouseLeave={() => this.setState({menu: false})} onClick={this.onFilterChange} style={{position: 'absolute', top: '1.5em', left: '0', display: this.state.menu ? 'block' : 'none'}}>
             <li>Posted</li>
             <li>Funded</li>
             <li>Signed</li>
