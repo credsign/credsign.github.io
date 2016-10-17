@@ -140,6 +140,7 @@ div.medium-editor-placeholder:after {
 .view-align > ol > li span {
   text-transform: uppercase;
   color: gray;
+  font-weight: normal;
   font-size: 69%;
 }
 

@@ -17,10 +17,9 @@ contract CredSign {
         uint256 channelID;
     }
 
-    struct User {
-        IterableSet.Set signedContents;
+    struct Account {
         IterableSet.Set fundedContents;
-        mapping(uint256 => uint256) contentCred;
+        mapping(uint256 => uint256) signedCred;
     }
 
     event Store (
@@ -32,7 +31,7 @@ contract CredSign {
         uint256 timestamp
     );
 
-    event Post (
+    event Publish (
         address indexed publisher,
         uint256 indexed channelID,
         uint256 indexed feedIndex,
@@ -44,24 +43,26 @@ contract CredSign {
         address indexed signatory,
         uint256 indexed contentID,
         uint256 indexed channelID,
+        uint256 accountCred,
+        uint256 contentCred,
+        uint256 channelCred,
         uint256 timestamp
     );
 
-    uint256 totalCred;
     RankingTree.Tree rankedChannels;
     mapping(uint256 => Channel) private channels;
     mapping(uint256 => Content) private contents;
-    mapping(address => User) private users;
+    mapping(address => Account) private accounts;
 
     function() public { throw; }
 
     function CredSign() public { }
 
-    function post(string channelName, string title, string body) payable {
+    function publish(string channelName, string title, string body) payable {
         uint256 channelID = this.getChannelByName(channelName);
         uint256 contentID = uint256(sha256(msg.sender, channelID, title, body, block.timestamp));
 
-        if (bytes(channelName).length < 3|| bytes(title).length < 3 || bytes(body).length < 3 || channelID == 0) {
+        if (channelID == 0 || bytes(title).length < 10 || bytes(title).length > 100) {
             // failed validation
             throw;
         }
@@ -78,7 +79,7 @@ contract CredSign {
             block.timestamp
         );
 
-        Post(
+        Publish(
             msg.sender,
             channelID,
             RankingTree.size(channel.rankedContents),
@@ -86,30 +87,40 @@ contract CredSign {
             block.timestamp
         );
 
-        RankingTree.insert(channel.rankedContents, 0, contentID);
-        RankingTree.insert(rankedChannels, channel.cred, channelID);
+        if (msg.value > 0) {
+            sign(contentID, (msg.value - (msg.value % CRED)) / CRED);
+        }
+        else {
+            RankingTree.insert(channel.rankedContents, 0, contentID);
+            RankingTree.insert(rankedChannels, channel.cred, channelID);
+        }
     }
 
-    // TODO: Allow multiple signs/voids in 1 txn
-    function sign(uint256 contentID, uint cred) payable {
-        Content content = contents[contentID];
-        if (content.channelID == 0) {
+    function sign(uint256 contentID, uint256 cred) payable {
+        uint256 channelID = contents[contentID].channelID;
+        if (channelID == 0) {
             // Content does not exist
             throw;
         }
-        Channel channel = channels[content.channelID];
+        Account account = accounts[msg.sender];
+        Content content = contents[contentID];
+        Channel channel = channels[channelID];
 
-        User user = users[msg.sender];
-        uint256 oldCred = user.contentCred[contentID];
-        uint256 remainder = msg.value % CRED;
-        uint256 sentCred = (msg.value - remainder) / CRED;
+        uint256 oldCred = account.signedCred[contentID];
+        uint256 sentCred = (msg.value - (msg.value % CRED)) / CRED;
 
-        if (cred > oldCred + sentCred) {
-            // Not enough cred to sign
+        if (oldCred + sentCred < cred) {
+            // Insufficient funds to sign desired amount
             throw;
         }
-        else if (oldCred > cred) {
-            remainder += (oldCred - cred) * CRED;
+
+        // Track the funds stored in the account's account
+        account.signedCred[contentID] = cred;
+        if (cred > 0) {
+            IterableSet.insert(account.fundedContents, contentID);
+        }
+        else {
+            IterableSet.remove(account.fundedContents, contentID);
         }
 
         // Rerank the content in the channel
@@ -118,33 +129,25 @@ contract CredSign {
         RankingTree.insert(channel.rankedContents, content.cred, contentID);
 
         // Rerank the channel overall
-        RankingTree.remove(rankedChannels, channel.cred, content.channelID);
+        RankingTree.remove(rankedChannels, channel.cred, channelID);
         channel.cred += cred - oldCred;
-        RankingTree.insert(rankedChannels, channel.cred, content.channelID);
+        RankingTree.insert(rankedChannels, channel.cred, channelID);
 
-        totalCred += cred - oldCred;
+        Sign(
+            msg.sender,
+            contentID,
+            channelID,
+            cred,
+            content.cred,
+            channel.cred,
+            block.timestamp
+        );
 
-        // Set the new signature amount
-        user.contentCred[contentID] = cred;
-
-        if (cred > 0) {
-            IterableSet.insert(user.fundedContents, contentID);
+        // Send the account back any excess
+        uint256 remainder = msg.value % CRED;
+        if (oldCred + sentCred > cred) {
+            remainder += (oldCred + sentCred - cred) * CRED;
         }
-        else {
-            IterableSet.remove(user.fundedContents, contentID);
-        }
-
-        // Emit the signed event if not previously signed
-        if (IterableSet.insert(user.signedContents, contentID)) {
-            Sign(
-                msg.sender,
-                contentID,
-                content.channelID,
-                block.timestamp
-            );
-        }
-
-        // Refund back amounts owned by sender
         if (remainder > 0) {
             if (!msg.sender.send(remainder)) {
                 throw;
@@ -152,15 +155,11 @@ contract CredSign {
         }
     }
 
-    function getTotalCred() external constant returns (uint256) {
-        return totalCred;
-    }
-
     // ----- CHANNEL DATA
     function getChannelByName(string str) external constant returns (uint256 num) {
         bytes memory raw = bytes(str);
-        // Limit strings to 25char
-        if (raw.length < 25) {
+        // Limit channels to [3, 30] chars
+        if (raw.length >= 3 && raw.length <= 30) {
             for (uint256 i = 0; i < raw.length; i++) {
                 uint8 c = uint8(raw[i]);
                 if (
@@ -206,9 +205,6 @@ contract CredSign {
     function getContentCred(uint256 contentID) external constant returns (uint256) {
         return contents[contentID].cred;
     }
-    function getContentCredSignedByUser(address userAddress, uint256 contentID) external constant returns (uint256) {
-        return users[userAddress].contentCred[contentID];
-    }
     function getContentRank(uint256 contentID) external constant returns (uint256) {
         return RankingTree.getRankByKeyValue(
             channels[contents[contentID].channelID].rankedContents,
@@ -219,13 +215,16 @@ contract CredSign {
     function getContentByRank(uint256 rank, uint256 channelID) external constant returns (uint256, uint256) {
         return RankingTree.getValueByRank(channels[channelID].rankedContents, rank);
     }
+    function getContentCredSignedByAccount(address account, uint256 contentID) external constant returns (uint256) {
+        return accounts[account].signedCred[contentID];
+    }
     function getNumContents(uint256 channelID) external constant returns (uint256) {
         return RankingTree.size(channels[channelID].rankedContents);
     }
-    function getNumContentsFundedByUser(address userAddress) external constant returns (uint256) {
-        return IterableSet.size(users[userAddress].fundedContents);
+    function getNumContentsFundedByAccount(address account) external constant returns (uint256) {
+        return IterableSet.size(accounts[account].fundedContents);
     }
-    function getNextContentFundedByUser(address userAddress, uint256 contentID) external constant returns (uint256) {
-        return IterableSet.next(users[userAddress].fundedContents, contentID);
+    function getNextContentFundedByAccount(address account, uint256 contentID) external constant returns (uint256) {
+        return IterableSet.next(accounts[account].fundedContents, contentID);
     }
 }

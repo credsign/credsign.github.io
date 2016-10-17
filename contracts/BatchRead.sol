@@ -63,13 +63,13 @@ contract BatchRead {
         return (contentCred, contentRanks);
     }
 
-    function getContentsFundedByUser(address userAddress) public constant returns (uint256[], uint256[]) {
-        uint256[] memory contentIDs = new uint256[](api.getNumContentsFundedByUser(userAddress));
+    function getContentsFundedByAccount(address account) public constant returns (uint256[], uint256[]) {
+        uint256[] memory contentIDs = new uint256[](api.getNumContentsFundedByAccount(account));
         uint256[] memory contentCred = new uint256[](contentIDs.length);
 
         for (uint i = 0; i < contentIDs.length; i++) {
-            contentIDs[i] = api.getNextContentFundedByUser(userAddress, (i > 0 ? contentIDs[i - 1] : 0));
-            contentCred[i] = api.getContentCredSignedByUser(userAddress, contentIDs[i]);
+            contentIDs[i] = api.getNextContentFundedByAccount(account, (i > 0 ? contentIDs[i - 1] : 0));
+            contentCred[i] = api.getContentCredSignedByAccount(account, contentIDs[i]);
         }
         return (contentIDs, contentCred);
     }

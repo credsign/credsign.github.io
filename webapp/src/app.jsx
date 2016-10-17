@@ -10,16 +10,16 @@ class Post extends React.Component {
       publisher: '0x0',
       timestamp: '0',
       signature: 0,
+      signing: false,
       error: ''
     };
     this.signPost = this.signPost.bind(this);
-    this.voidSignature = this.voidSignature.bind(this);
     this.onCredChange = this.onCredChange.bind(this);
   }
 
   componentDidMount() {
     credsign.Store({contentID: this.props.id}, {fromBlock: 0, toBlock: 'latest'}).get((error, posts) => {
-      credsign.getContentCredSignedByUser(this.props.account, this.props.id, (error, credSigned) => {
+      credsign.getContentCredSignedByAccount(this.props.account, this.props.id, (error, credSigned) => {
         batchread.getCredRanksByContents([this.props.id], (error, credRanks) => {
           this.setState({
             title: posts[0].args.title,
@@ -47,47 +47,42 @@ class Post extends React.Component {
 
   signPost() {
     this.setState({
-      error: 'Confirming on the network, please wait'
+      signing: true
     });
     var newCred = this.state.newCred;
-    var value = credsign.CRED().times(newCred);
-    credsign.sign.estimateGas(this.props.id, newCred, {from: this.props.account, value: value}, (error, gasEstimate) => {
-      console.log(gasEstimate);
-      credsign.sign(this.props.id, newCred, {from: this.props.account, value: value, gas: gasEstimate}, (error, result) => {
-        if (!error) {
-          this.setState({
-            newCred: '',
-            signature: newCred,
-            error: ''
-          });
-        }
-        else {
-          this.setState({
-            error: error.toString()
-          });
-        }
-      });
-    });
-  }
-
-  voidSignature() {
-    this.setState({
-      error: 'Confirming on the network, please wait'
-    });
-    credsign.void.estimateGas(this.props.id, {from: this.props.account, value: 0}, (error, gasEstimate) => {
-      console.log(gasEstimate);
-      credsign.void(this.props.id, {from: this.props.account, value: 0, gas: gasEstimate}, (error, result) => {
-        if (!error) {
-          this.setState({
-            signature: 0,
-            error: ''
-          });
-        }
-        else {
-          this.setState({
-            error: error.toString()
-          });
-        }
+    credsign.getContentCredSignedByAccount(this.props.account, this.props.id, (error, credSigned) => {
+      var value = credsign.CRED().times(newCred > credSigned ? (newCred - credSigned) : 0);
+      credsign.sign.estimateGas(this.props.id, newCred, {from: this.props.account, value: value}, (error, gasEstimate) => {
+        console.log(gasEstimate);
+        gasEstimate += 100000;
+        credsign.sign(this.props.id, newCred, {from: this.props.account, value: value, gas: gasEstimate}, (error, result) => {
+          if (error) {
+            this.setState({
+              error: error.toString()
+            });
+          }
+          else {
+            var watcher = credsign.Sign({signatory: this.props.account, contentID: this.props.id}, {fromBlock: 'latest'});
+            watcher.watch((error, signature) => {
+              watcher.stopWatching();
+              if (error) {
+                this.setState({
+                  error: error.toString()
+                });
+              }
+              else {
+                batchread.getCredRanksByContents([this.props.id], (error, credRanks) => {
+                  this.setState({
+                    signing: false,
+                    cred: credRanks[0][0].toString(10),
+                    rank: credRanks[1][0].toString(10),
+                    signature: parseInt(signature.args.accountCred.toString())
+                  });
+                });
+              }
+            });
+          }
+        });
       });
     });
   }
@@ -113,15 +108,60 @@ class Post extends React.Component {
                   `#${this.props.channel}`
                 }</a>
               </div>
-              <h1 style={{}}>{this.state.title}</h1>
+              <h1>{this.state.title}</h1>
               <div id={'post-'+this.props.id}></div>
             </div>
           </div>
         </div>
         <div style={{maxWidth: '600px', margin: '0 auto'}}>
+          <div className='backdrop' style={{
+            width: '100%',
+            height: '100%',
+            opacity: 0.5,
+            backgroundColor: 'black',
+            position: 'fixed',
+            zIndex: 1,
+            display: this.state.signing ? 'block' : 'none',
+            top: '0',
+            left: '0'
+          }}>{' '}</div>
+          <div style={{
+            display: this.state.signing ? 'block' : 'none',
+            left: '50%',
+            top: '30%',
+            marginLeft: '-300px',
+            position: 'fixed',
+            zIndex: 2,
+            backgroundColor: '#FCFCFC',
+            border: '1px solid #DDD',
+            width: '600px'
+          }}>
+            <div style={{padding: '1em', display: this.state.error.length == 0 ? 'block' : 'none'}}>
+              <h1>Signing...</h1>
+              <div style={{padding: '1em 0'}}>{
+                'If the page does not update after several minutes, try closing this message and signing again.'
+              }</div>
+              <span onClick={() => this.setState({signing: false, error: ''})} style={{
+                borderBottom: '2px solid black',
+                padding: '.5em 0',
+                display: 'inline-block',
+                cursor: 'pointer'
+              }}>Close</span>
+            </div>
+            <div style={{padding: '1em', display: this.state.error.length > 0 ? 'block' : 'none'}}>
+              <h1>Unable to sign</h1>
+              <div style={{padding: '1em 0'}}>{this.state.error}</div>
+              <span onClick={() => this.setState({signing: false, error: ''})} style={{
+                borderBottom: '2px solid black',
+                padding: '.5em 0',
+                display: 'inline-block',
+                cursor: 'pointer'
+              }}>Close</span>
+            </div>
+          </div>
           <div className="flex" style={{padding: '1.5em 1em'}}>
             <div className="flex-grow" style={{display: 'block', textAlign: 'left'}}>
-              <div style={{}}>
+              <div>
                 <span>{`Rank ${this.state.rank} with ${this.state.cred}¢`}</span>
               </div>
             </div>
@@ -139,7 +179,6 @@ class Post extends React.Component {
               }}>Sign</a>
             </div>
           </div>
-          <div style={{color: 'red', fontSize:'60%', textTransform: 'uppercase', fontWeight: 'bold', textAlign: 'center'}}>{this.state.error}</div>
         </div>
       </div>
     );
@@ -247,8 +286,8 @@ class Create extends React.Component {
     if (credsign.getChannelByName(this.props.channel) == 0) {
       errors.push('Channel must be between 3 and 30 characters and consist of only letters numbers and underscores');
     }
-    if (title.length < 3 || title > 100) {
-      errors.push('Title must be between 3 and 100 characters');
+    if (title.length < 10 || title > 100) {
+      errors.push('Title must be between 10 and 100 characters');
     }
     this.setState({
       error: errors.join('. '),
@@ -256,16 +295,17 @@ class Create extends React.Component {
     });
 
     if (errors.length == 0) {
-      credsign.post.estimateGas(this.props.channel, title, body, {from: this.props.account, value: 0}, (error, gasEstimate) => {
+      credsign.publish.estimateGas(this.props.channel, title, body, {from: this.props.account, value: 0}, (error, gasEstimate) => {
         console.log(gasEstimate);
-        credsign.post(this.props.channel, title, body, {from: this.props.account, value: 0, gas: gasEstimate}, (error) => {
+        gasEstimate += 100000;
+        credsign.publish(this.props.channel, title, body, {from: this.props.account, value: 0, gas: gasEstimate}, (error) => {
           if (error) {
             this.setState({
               error: error.toString()
             });
           }
           else {
-            var watcher = credsign.Post({publisher: this.props.account}, {fromBlock: 'latest'});
+            var watcher = credsign.Publish({publisher: this.props.account}, {fromBlock: 'latest'});
             watcher.watch((error, post) => {
               watcher.stopWatching();
               if (error) {
@@ -351,7 +391,7 @@ class Create extends React.Component {
                 width: '600px'
               }}>
                 <div style={{padding: '1em', display: this.state.error.length > 0 ? 'block' : 'none'}}>
-                  <h1>Unable to publish...</h1>
+                  <h1>Unable to publish</h1>
                   <div style={{padding: '1em 0'}}>{this.state.error}</div>
                   <span onClick={() => this.setState({view: 'edit', error: ''})} style={{
                     borderBottom: '2px solid black',
@@ -524,7 +564,7 @@ class ChannelPosts extends React.Component {
         var listItems = [];
         credsign.Store({channelID: channelID}, {fromBlock: 0, toBlock: 'latest'}).get((error, posts) => {
           posts.forEach((post) => {
-            listItems.unshift({
+            listItems.push({
               id: '0x' + post.args.contentID.toString(16),
               title: post.args.title,
               timestamp: post.args.timestamp,
@@ -539,7 +579,7 @@ class ChannelPosts extends React.Component {
             }
             this.setState({
               toggle: !this.state.toggle,
-              listItems: listItems,
+              listItems: listItems.reverse(),
               count: numRanks
             });
           });
@@ -662,15 +702,16 @@ class Account extends React.Component {
   }
 
   getPostsPublished(address) {
-    credsign.Post({publisher: address}, {fromBlock: 0, toBlock: 'latest'}).get((error, postEvents) => {
+    credsign.Publish({publisher: address}, {fromBlock: 0, toBlock: 'latest'}).get((error, postEvents) => {
       var ids = [];
-      postEvents.forEach((postEvent) => ids.unshift('0x' + postEvent.args.contentID.toString(16)));
       var listItems = [];
       var idToIndex = {};
-      for (var i = 0; i < ids.length; i++) {
-        idToIndex[ids[i]] = i;
-        listItems.unshift({
-          id: ids[i],
+      for (var i = 0; i < postEvents.length; i++) {
+        var id = '0x' + postEvents[i].args.contentID.toString(16)
+        idToIndex[id] = ids.length;
+        ids.push(id);
+        listItems.push({
+          id: id,
           timestamp: parseInt(postEvents[i].args.timestamp.toString(10))
         });
       }
@@ -693,7 +734,7 @@ class Account extends React.Component {
           });
           this.setState({
             toggle: !this.state.toggle,
-            listItems: listItems
+            listItems: listItems.reverse()
           });
         });
       });
@@ -703,15 +744,18 @@ class Account extends React.Component {
   getPostsSigned(address) {
     credsign.Sign({signatory: address}, {fromBlock: 0, toBlock: 'latest'}).get((error, signatures) => {
       var ids = [];
-      signatures.forEach((signature) => ids.unshift('0x' + signature.args.contentID.toString(16)));
       var listItems = [];
       var idToIndex = {};
-      for (var i = 0; i < ids.length; i++) {
-        idToIndex[ids[i]] = i;
-        listItems.unshift({
-          id: ids[i],
-          timestamp: parseInt(signatures[i].args.timestamp.toString(10))
-        });
+      for (var i = 0; i < signatures.length; i++) {
+        if (idToIndex[id] === undefined || !signatures[i].args.accountCred.equals(0)) {
+          var id = '0x' + signatures[i].args.contentID.toString(16);
+          ids.push(id);
+          idToIndex[id] = listItems.length;
+          listItems.push({
+            id: id,
+            timestamp: parseInt(signatures[i].args.timestamp.toString(10))
+          });
+        }
       }
       batchread.getCredRanksByContents(ids, (error, credRanks) => {
         for (var i = 0; i < ids.length; i++) {
@@ -732,7 +776,7 @@ class Account extends React.Component {
           });
           this.setState({
             toggle: !this.state.toggle,
-            listItems: listItems
+            listItems: listItems.reverse()
           });
         });
       });
@@ -740,7 +784,7 @@ class Account extends React.Component {
   }
 
   getPostsFunded(address) {
-    batchread.getContentsFundedByUser(address, (error, tuple) => {
+    batchread.getContentsFundedByAccount(address, (error, tuple) => {
       var ids = tuple[0].map((id) => '0x' + id.toString(16));
       var credSigned = tuple[1].map((cred) => parseInt(cred.toString()));
       console.log(ids);

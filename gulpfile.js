@@ -24,6 +24,8 @@ gulp.task('privnet', function (done) {
     geth = spawn('./networks/geth', [
       '--datadir=./networks/privnet/datadir',
       '--ipcpath='+getIPCPath(),
+      '--rpc',
+      '--rpccorsdomain=*',
       '--nodiscover',
       '--networkid=1337',
       '--verbosity=4',
@@ -163,7 +165,7 @@ function deploy(network, done) {
         contract.deploying = true;
         contract.bytecode = solc.linkBytecode(contract.bytecode, contractDependencies);
         web3.eth.estimateGas({data: contract.bytecode, from: address}, function (error, gasEstimate) {
-          web3.personal.unlockAccount(address, password, 60, function (error) {
+          web3.personal.unlockAccount(address, password, 300, function (error) {
             if (error) {
               console.log(error.toString());
             }

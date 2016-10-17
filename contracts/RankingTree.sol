@@ -170,6 +170,7 @@ library RankingTree {
                     index = tree.nodes[index].leftChild;
                 }
             }
+            rank += tree.nodes[index].numRight;
         }
         return rank;
     }
