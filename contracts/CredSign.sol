@@ -1,230 +1,196 @@
 pragma solidity ^0.4.2;
 
-import "IterableSet.sol";
-import "RankingTree.sol";
+import "Indexer.sol";
 
 contract CredSign {
 
     uint256 public constant CRED = 10**16; // 0.01eth
 
-    struct Channel {
-        uint256 cred;
-        RankingTree.Tree rankedContents;
-    }
-
     struct Content {
-        uint256 cred;
+        address accountID;
+        uint256 parentID;
         uint256 channelID;
+        uint256 timestamp;
+        mapping(address => mapping(address => uint256)) indexedAccountCred;
     }
 
-    struct Account {
-        IterableSet.Set fundedContents;
-        mapping(uint256 => uint256) signedCred;
-    }
+    // contentID: fetch document metadata
+    // accountID: generate profile
+    // parentID: fetch responses
+    event Post (
+        uint256 indexed contentID,
+        address indexed accountID,
+        uint256 indexed parentID,
+        uint256 channelID,
+        string attributes,
+        uint256 sizeBytes,
+        uint256 timestamp
+    );
 
+    // contentID: fetch the document
+    // accountID: notify successful publish
+    // nonce: notify successful publish
     event Store (
         uint256 indexed contentID,
-        address indexed publisher,
-        uint256 indexed channelID,
-        string title,
-        string body,
-        uint256 timestamp
+        address indexed accountID,
+        uint256 indexed nonce,
+        uint256 parentID,
+        uint256 channelID,
+        string attributes,
+        string document
     );
 
-    event Publish (
-        address indexed publisher,
-        uint256 indexed channelID,
-        uint256 indexed feedIndex,
-        uint256 contentID,
-        uint256 timestamp
-    );
-
+    // contentID: filter on post
+    // accountID: generate profile
+    // indexer: filter on post
     event Sign (
-        address indexed signatory,
+        uint256 indexed contentID,
+        address indexed accountID,
+        address indexed indexer,
+        uint256 channelID,
+        uint256 oldCred,
+        uint256 newCred,
+        uint256 timestamp
+    );
+
+    // contentID: find content sequence
+    // channelID: generate channel timeline
+    // sequenceNum: lookup based on ordering
+    event ChannelSequence (
         uint256 indexed contentID,
         uint256 indexed channelID,
-        uint256 accountCred,
-        uint256 contentCred,
-        uint256 channelCred,
-        uint256 timestamp
+        uint256 indexed sequenceNum
     );
 
-    RankingTree.Tree rankedChannels;
-    mapping(uint256 => Channel) private channels;
+    mapping(uint256 => uint256) private channelSequenceNum;
     mapping(uint256 => Content) private contents;
-    mapping(address => Account) private accounts;
 
     function() public { throw; }
 
     function CredSign() public { }
 
-    function publish(string channelName, string title, string body) payable {
-        uint256 channelID = this.getChannelByName(channelName);
-        uint256 contentID = uint256(sha256(msg.sender, channelID, title, body, block.timestamp));
-
-        if (channelID == 0 || bytes(title).length < 10 || bytes(title).length > 100) {
-            // failed validation
+    function post(string channelName, string attributes, string document, uint256 nonce, uint256 parentID, address indexer) {
+        uint256 channelID = getChannelByName(channelName);
+        uint256 contentID = uint256(sha256(msg.sender, nonce, parentID, channelID, attributes, document));
+        Content content = contents[contentID];
+        if (content.accountID != 0) {
+            // Content already exists
             throw;
         }
-        contents[contentID].channelID = channelID;
-        Channel channel = channels[channelID];
+        content.accountID = msg.sender;
+        content.channelID = channelID;
+        content.parentID = parentID;
+        content.timestamp = block.timestamp;
 
-        // Consider IPFS for storage once it uses Ethereum
         Store(
             contentID,
             msg.sender,
+            nonce,
+            parentID,
             channelID,
-            title,
-            body,
-            block.timestamp
+            attributes,
+            document
         );
 
-        Publish(
-            msg.sender,
-            channelID,
-            RankingTree.size(channel.rankedContents),
+        Post(
             contentID,
+            msg.sender,
+            parentID,
+            channelID,
+            attributes,
+            bytes(document).length,
             block.timestamp
         );
 
-        if (msg.value > 0) {
-            sign(contentID, (msg.value - (msg.value % CRED)) / CRED);
-        }
-        else {
-            RankingTree.insert(channel.rankedContents, 0, contentID);
-            RankingTree.insert(rankedChannels, channel.cred, channelID);
-        }
+        ChannelSequence(contentID, channelID, ++channelSequenceNum[channelID]);
+
+        Indexer(indexer).index(contentID, msg.sender, 0, 0);
     }
 
-    function sign(uint256 contentID, uint256 cred) payable {
-        uint256 channelID = contents[contentID].channelID;
-        if (channelID == 0) {
+    function sign(uint256 contentID, uint256 newCred, address indexer) payable {
+        Content content = contents[contentID];
+        if (content.accountID == 0) {
             // Content does not exist
             throw;
         }
-        Account account = accounts[msg.sender];
-        Content content = contents[contentID];
-        Channel channel = channels[channelID];
 
-        uint256 oldCred = account.signedCred[contentID];
-        uint256 sentCred = (msg.value - (msg.value % CRED)) / CRED;
-
-        if (oldCred + sentCred < cred) {
+        uint256 oldCred = content.indexedAccountCred[indexer][msg.sender];
+        uint256 txnCred = (msg.value - (msg.value % CRED)) / CRED;
+        if (oldCred + txnCred < newCred) {
             // Insufficient funds to sign desired amount
             throw;
         }
 
-        // Track the funds stored in the account's account
-        account.signedCred[contentID] = cred;
-        if (cred > 0) {
-            IterableSet.insert(account.fundedContents, contentID);
-        }
-        else {
-            IterableSet.remove(account.fundedContents, contentID);
-        }
-
-        // Rerank the content in the channel
-        RankingTree.remove(channel.rankedContents, content.cred, contentID);
-        content.cred += cred - oldCred;
-        RankingTree.insert(channel.rankedContents, content.cred, contentID);
-
-        // Rerank the channel overall
-        RankingTree.remove(rankedChannels, channel.cred, channelID);
-        channel.cred += cred - oldCred;
-        RankingTree.insert(rankedChannels, channel.cred, channelID);
-
         Sign(
-            msg.sender,
             contentID,
-            channelID,
-            cred,
-            content.cred,
-            channel.cred,
+            msg.sender,
+            indexer,
+            content.channelID,
+            oldCred,
+            newCred,
             block.timestamp
         );
 
-        // Send the account back any excess
-        uint256 remainder = msg.value % CRED;
-        if (oldCred + sentCred > cred) {
-            remainder += (oldCred + sentCred - cred) * CRED;
+        content.indexedAccountCred[indexer][msg.sender] = newCred;
+
+        Indexer(indexer).index(contentID, msg.sender, oldCred, newCred);
+
+        // Refund excess funds
+        uint256 refund = msg.value % CRED;
+        if (oldCred + txnCred > newCred) {
+            refund += (oldCred + txnCred - newCred) * CRED;
         }
-        if (remainder > 0) {
-            if (!msg.sender.send(remainder)) {
-                throw;
-            }
+        if (refund > 0 && !msg.sender.send(refund)) {
+            throw;
         }
     }
 
     // ----- CHANNEL DATA
-    function getChannelByName(string str) external constant returns (uint256 num) {
+    function getChannelByName(string str) constant returns (uint256 channelID) {
         bytes memory raw = bytes(str);
         // Limit channels to [3, 30] chars
-        if (raw.length >= 3 && raw.length <= 30) {
-            for (uint256 i = 0; i < raw.length; i++) {
-                uint8 c = uint8(raw[i]);
-                if (
-                    (c >= 48 && c <= 57) || // [0-9]
-                    (c >= 97 && c <= 122) || // [a-z]
-                    c == 95 // [_]
-                ) {
-                    // Shift by 1 byte (*2^8) and add char
-                    num *= 256;
-                    num += c;
-                }
-                else if (c >= 65 && c <= 90) { // [A-Z]
-                    // Shift by 1 byte (*2^8) and add lowercase char
-                    num *= 256;
-                    num += c + 32; // 32 = a - A
-                }
-                else {
-                    num = 0;
-                    break;
-                }
+        if (raw.length < 3 || raw.length > 30) {
+            throw;
+        }
+        for (uint256 i = 0; i < raw.length; i++) {
+            uint8 c = uint8(raw[i]);
+            if (
+                (c >= 48 && c <= 57) || // [0-9]
+                (c >= 97 && c <= 122) || // [a-z]
+                c == 95 // [_]
+            ) {
+                // Shift by 1 byte (*2^8) and add char
+                channelID *= 256;
+                channelID += c;
+            }
+            else if (c >= 65 && c <= 90) { // [A-Z]
+                // Shift by 1 byte (*2^8) and add lowercase char
+                channelID *= 256;
+                channelID += c + 32; // 32 = a - A
+            }
+            else {
+                throw;
             }
         }
-        return num;
-    }
-    function getChannelByRank(uint256 rank) external constant returns (uint256, uint256) {
-        return RankingTree.getValueByRank(rankedChannels, rank);
-    }
-    function getChannelCred(uint256 channelID) external constant returns (uint256) {
-        return channels[channelID].cred;
-    }
-    function getChannelRank(uint256 channelID) external constant returns (uint256) {
-        return RankingTree.getRankByKeyValue(
-            rankedChannels,
-            channels[channelID].cred,
-            channelID
-        );
-    }
-    function getNumChannels() external constant returns (uint256) {
-        return RankingTree.size(rankedChannels);
+        return channelID;
     }
 
-    // ----- CONTENT DATA
-    function getContentCred(uint256 contentID) external constant returns (uint256) {
-        return contents[contentID].cred;
+    function getContentIndexedAccountCred(uint256 contentID, address indexer, address accountID) constant returns (uint256) {
+        return contents[contentID].indexedAccountCred[indexer][accountID];
     }
-    function getContentRank(uint256 contentID) external constant returns (uint256) {
-        return RankingTree.getRankByKeyValue(
-            channels[contents[contentID].channelID].rankedContents,
-            contents[contentID].cred,
-            contentID
-        );
+    function getContentAccount(uint256 contentID) constant returns (address) {
+        return contents[contentID].accountID;
     }
-    function getContentByRank(uint256 rank, uint256 channelID) external constant returns (uint256, uint256) {
-        return RankingTree.getValueByRank(channels[channelID].rankedContents, rank);
+    function getContentParent(uint256 contentID) constant returns (uint256) {
+        return contents[contentID].parentID;
     }
-    function getContentCredSignedByAccount(address account, uint256 contentID) external constant returns (uint256) {
-        return accounts[account].signedCred[contentID];
+    function getContentChannel(uint256 contentID) constant returns (uint256) {
+        return contents[contentID].channelID;
     }
-    function getNumContents(uint256 channelID) external constant returns (uint256) {
-        return RankingTree.size(channels[channelID].rankedContents);
+    function getContentTimetamp(uint256 contentID) constant returns (uint256) {
+        return contents[contentID].timestamp;
     }
-    function getNumContentsFundedByAccount(address account) external constant returns (uint256) {
-        return IterableSet.size(accounts[account].fundedContents);
-    }
-    function getNextContentFundedByAccount(address account, uint256 contentID) external constant returns (uint256) {
-        return IterableSet.next(accounts[account].fundedContents, contentID);
+    function getNumContents(uint256 channelID) constant returns (uint256) {
+        return channelSequenceNum[channelID];
     }
 }

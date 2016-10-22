@@ -15,12 +15,12 @@ var path = require('path');
 
 var geth, server;
 
-gulp.task('privnet', function (done) {
+gulp.task('privnet', (done) => {
   geth = spawn('./networks/geth', [
     '--datadir', './networks/privnet/datadir',
     'init', './networks/privnet/genesis.json'
   ]);
-  geth.on('close', function (code) {
+  geth.on('close', (code) => {
     geth = spawn('./networks/geth', [
       '--datadir=./networks/privnet/datadir',
       '--ipcpath='+getIPCPath(),
@@ -40,6 +40,59 @@ gulp.task('privnet', function (done) {
   })
 });
 
+
+gulp.task('testnet', (done) => {
+
+  geth = spawn('./networks/geth', [
+    '--ipcpath='+getIPCPath(),
+    '--cache=1024',
+    // '--fast',
+    '--rpc',
+    '--rpccorsdomain=*',
+    '--testnet',
+    '--verbosity=4'
+  ]);
+  geth.stdout.on('data', (data) => {
+    console.log(`stdout: ${data}`);
+  });
+  geth.stderr.on('data', (data) => {
+    console.log(`stderr: ${data}`);
+  });
+});
+
+gulp.task('webapp-build', () => {
+  return gulp.src(['./webapp/src/*'])
+    .pipe(sourcemaps.init())
+    .pipe(babel({
+        'presets': ['es2015', 'react']
+    })).on('error', (error) => {
+      console.error(error.toString());
+      this.emit('end');
+    })
+    .pipe(concat('app.min.js'))
+    .pipe(uglify())
+    .pipe(sourcemaps.write('.'))
+    .pipe(gulp.dest('./webapp/dist'));
+});
+
+gulp.task('webapp-server', (done) => {
+  server = spawn('python', ['-m', 'SimpleHTTPServer']);
+  gulp.watch('./webapp/src/*', ['webapp-build']).on('change', (event) => {
+    console.log('Frontend file ' + event.path + ' was ' + event.type + ', rebuilding');
+  });
+});
+
+gulp.task('privnet-server', ['privnet', 'webapp-server'], () => {});
+gulp.task('testnet-server', ['testnet', 'webapp-server'], () => {});
+
+gulp.task('privnet-deploy', (done) => { deploy('privnet', 'store', done) });
+gulp.task('testnet-deploy', (done) => { deploy('testnet', 'store', done) });
+
+gulp.task('privnet-deploy-index', (done) => { deploy('privnet', 'index', done) });
+gulp.task('testnet-deploy-index', (done) => { deploy('testnet', 'index', done) });
+
+gulp.task('default', () => {});
+
 function getIPCPath() {
   // Geth Testnet uses a different IPC path than mainnet by default
   // Overwrite the default so the integration with Mist doesn't break
@@ -57,189 +110,138 @@ function getIPCPath() {
   }
 }
 
-gulp.task('testnet', function (done) {
-
-  geth = spawn('./networks/geth', [
-    '--ipcpath='+getIPCPath(),
-    '--cache=1024',
-    '--fast',
-    '--testnet',
-    '--verbosity=4'
-  ]);
-  geth.stdout.on('data', (data) => {
-    console.log(`stdout: ${data}`);
-  });
-  geth.stderr.on('data', (data) => {
-    console.log(`stderr: ${data}`);
-  });
-});
-
-function deploy(network, done) {
+function deploy(network, mode, done) {
   var socket = new net.Socket();
   var web3 = new Web3(new Web3.providers.IpcProvider(getIPCPath(), socket));
-  var password = fs.readFileSync(path.resolve('./networks', network, 'password.txt'), 'utf-8');
 
-  var Contract = function () {
-    return {
-      address: null,
-      bytecode: null,
-      dependencies: [],
-      deploying: false,
-      interface: null,
-    }
-  };
-
-  var address;
   var sources = {};
-  var contracts = {};
-  var deployedCounter = 0;
+  try {
+    fs.readdirSync('./contracts')
+    .filter((filename) => filename.slice(-4) == '.sol')
+    .forEach((filename) => {
+      var symbolName = filename.slice(0, -4);
+      if (sources[symbolName] === undefined) {
+        var dependencies = [];
+        var compilation = solc.compile({
+          sources: { [symbolName]: fs.readFileSync(path.resolve('./contracts', filename), 'utf-8') }
+        }, 0, (dependencyFilename) => {
+          dependencies.push(dependencyFilename.slice(0, -4));
+          return {
+            contents: fs.readFileSync(path.resolve('./contracts', dependencyFilename), 'utf-8')
+          };
+        });
 
+        if (compilation.errors) {
+          throw new Error(compilation.errors.toString());
+        }
+        sources[symbolName] = {
+          bytecode: compilation.contracts[symbolName].bytecode,
+          dependencies: dependencies,
+          interface: JSON.parse(compilation.contracts[symbolName].interface),
+        };
+        console.log('* Compiled ' + symbolName);
+      }
+    });
+  }
+  catch (e) {
+    done(e);
+  }
+
+  var account;
+  var password = fs.readFileSync(path.resolve('./networks', network, 'password.txt'), 'utf-8');
+  var contracts = {};
+  var oldContracts = {};
   (function waitForAccounts() {
-    web3.eth.getAccounts(function (error, result) {
+    web3.eth.getAccounts((error, result) => {
       if (error || result.length == 0) {
         setTimeout(waitForAccounts, 1000);
       }
       else {
-        address = result[0];
-        console.log('* Got account: '+address);
-        compile();
+        account = result[0];
+        console.log('* Got account: '+account);
+
+        try {
+          oldContracts = JSON.parse(fs.readFileSync(path.resolve('./networks', network, 'contracts.js'), 'utf-8').split('=')[1]);
+        }
+        catch (e) { }
+
+        if (mode == 'index' && oldContracts.CredSign) {
+          contracts.Indexer = {
+            address: oldContracts.Indexer.address,
+            interface: oldContracts.Indexer.interface
+          };
+          contracts.CredSign = {
+            address: oldContracts.CredSign.address,
+            interface: oldContracts.CredSign.interface
+          };
+          deployContract('IterableSet', [], () => {
+            deployContract('RankingTree', [], () => {
+              deployContract('CredRank', [], writeContracts);
+            });
+          });
+        }
+        else {
+          deployContract('Indexer', [], () => {
+            deployContract('CredSign', [], () => {
+              deployContract('IterableSet', [], () => {
+                deployContract('RankingTree', [], () => {
+                  deployContract('CredRank', [], writeContracts);
+                });
+              });
+            });
+          });
+        }
       }
     });
   })();
 
-  function compile() {
-    try {
-      fs.readdirSync('./contracts')
-      .filter(function (filename) { return filename.slice(-4) == '.sol' })
-      .map(function (filename) {
-        var symbolName = filename.slice(0, -4);
-        if (contracts[symbolName] === undefined) {
-          var source = {};
-          if (sources[filename] === undefined) {
-            sources[filename] = fs.readFileSync(path.resolve('./contracts', filename), 'utf-8');
-          }
-          source[symbolName] = sources[filename];
-          var contract = contracts[symbolName] = Contract();
-          var compilation = solc.compile({sources: source}, 0, function (dependencyFilename) {
-            var dependencySymbolName = dependencyFilename.slice(0, -4)
-            contract.dependencies.push(dependencySymbolName);
-            if (!sources[dependencyFilename]) {
-              sources[dependencyFilename] = fs.readFileSync(path.resolve('./contracts', dependencyFilename), 'utf-8');
-            }
-            return {
-              contents: sources[dependencyFilename]
-            };
-          });
-          if (compilation.errors) {
-            throw new Error(compilation.errors.toString());
-          }
-          console.log('* Compiled ' + symbolName);
-          contract.bytecode = compilation.contracts[symbolName].bytecode;
-          contract.interface = JSON.parse(compilation.contracts[symbolName].interface);
+  function deployContract(symbolName, constructorArgs, callback) {
+    var interface = sources[symbolName].interface;
+    var bytecode = sources[symbolName].bytecode;
+    var contract = web3.eth.contract(interface);
+    var dependencies = {};
+    sources[symbolName].dependencies.forEach((dependency) => {
+      dependencies[dependency] = contracts[dependency].address;
+    });
+    bytecode = contract.new.getData.apply(this, constructorArgs.concat({
+      data: solc.linkBytecode(bytecode, dependencies)
+    }));
+    web3.personal.unlockAccount(account, password, 300, (error) => {
+      if (error) {
+        done(error.toString());
+        return;
+      }
+      web3.eth.estimateGas({data: bytecode, from: account}, (error, gasEstimate) => {
+        if (error) {
+          done(error.toString());
+          return;
         }
-        return symbolName;
-      })
-      .forEach(recursiveDeploy);
-    }
-    catch (e) {
-      console.log(e.toString());
-      done();
-    }
+        contract.new({data: bytecode, from: account, gas: gasEstimate}, (error, result) => {
+          if (error) {
+            done(error.toString());
+            return;
+          }
+          if (result.address && !contracts.hasOwnProperty(symbolName)) {
+            contracts[symbolName] = {
+              address: result.address,
+              interface: interface
+            };
+            console.log('* Deployed ' + symbolName);
+            callback();
+          }
+        });
+      });
+    });
   }
 
-  function recursiveDeploy(symbolName) {
-    var contract = contracts[symbolName];
-    var contractDependencies = {};
-    contract.dependencies.forEach(function (dependencyName) {
-      if (contracts[dependencyName].deploying) {
-        if (contracts[dependencyName].address != null) {
-          contractDependencies[dependencyName] = contracts[dependencyName].address;
-        }
-      }
-      else {
-        recursiveDeploy(dependencyName);
-      }
-    });
-    if (Object.keys(contractDependencies).length == contract.dependencies.length) {
-      if (!contract.deploying) {
-        contract.deploying = true;
-        contract.bytecode = solc.linkBytecode(contract.bytecode, contractDependencies);
-        web3.eth.estimateGas({data: contract.bytecode, from: address}, function (error, gasEstimate) {
-          web3.personal.unlockAccount(address, password, 300, function (error) {
-            if (error) {
-              console.log(error.toString());
-            }
-            web3.eth.contract(contract.interface).new({data: contract.bytecode, from: address, gas: gasEstimate}, function (error, result) {
-              if (error) {
-                console.log(error.toString());
-              }
-              if (result.address) {
-                contract.address = result.address;
-                console.log('* Deployed ' + symbolName);
-                if (Object.keys(contracts).length == ++deployedCounter){
-                  customInitialization();
-                }
-              }
-            });
-          });
-        });
-      }
-    }
-    else {
-      setTimeout(function () {
-        recursiveDeploy(symbolName);
-      }, 1000);
-    }
-  };
-
-  function customInitialization() {
-    fs.writeFileSync(path.resolve('./networks', network, 'contracts.js'), 'window.contracts='+JSON.stringify(contracts));
+  function writeContracts() {
+    fs.writeFileSync(path.resolve('./networks', network, 'contracts.js'), `window.contracts=${JSON.stringify(contracts)}\n`);
     console.log('* Contract interfaces saved');
-    var batchAPI = web3.eth.contract(contracts.BatchRead.interface).at(contracts.BatchRead.address);
-    batchAPI.init.estimateGas(contracts.CredSign.address, function (error, gasEstimate) {
-      batchAPI.init(contracts.CredSign.address, {from: address, value: 0, gas: gasEstimate}, done);
-    });
-  };
+    done();
+  }
 }
 
-gulp.task('webapp-build', function () {
-  return gulp.src(['./webapp/src/*'])
-    .pipe(sourcemaps.init())
-    .pipe(babel({
-        'presets': ['es2015', 'react']
-    })).on('error', function (error) {
-      console.error(error.toString());
-      this.emit('end');
-    })
-    .pipe(concat('app.min.js'))
-    .pipe(uglify())
-    .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest('./webapp/dist'));
-});
-
-gulp.task('webapp-server', function (done) {
-  server = spawn('python', ['-m', 'SimpleHTTPServer']);
-  gulp.watch('./webapp/src/*', ['webapp-build']).on('change', function(event) {
-    console.log('Frontend file ' + event.path + ' was ' + event.type + ', rebuilding');
-  });
-});
-
-gulp.task('privnet-contracts-deploy', function (done) {
-  deploy('privnet', done);
-});
-gulp.task('testnet-contracts-deploy', function (done) {
-  deploy('testnet', done);
-});
-
-gulp.task('privnet-deploy', ['privnet-contracts-deploy', 'webapp-build'], function () {});
-gulp.task('privnet-server', ['privnet', 'webapp-server'], function () {});
-
-gulp.task('testnet-deploy', ['testnet-contracts-deploy', 'webapp-build'], function () {});
-gulp.task('testnet-server', ['testnet', 'webapp-server'], function () {});
-
-gulp.task('default', function () {});
-
-process.on('exit', function (){
+process.on('exit', () => {
   server && server.close();
   geth && geth.close();
 });

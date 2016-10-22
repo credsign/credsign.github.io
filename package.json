@@ -3,10 +3,13 @@
   "version": "0.0.8",
   "description": "The Distributed News Terminal",
   "scripts": {
-    "privnet-deploy": "npm install && ./node_modules/gulp/bin/gulp.js privnet-deploy",
     "privnet-server": "npm install && ./node_modules/gulp/bin/gulp.js privnet-server",
+    "privnet-deploy": "npm install && ./node_modules/gulp/bin/gulp.js privnet-deploy",
+    "privnet-deploy-index": "npm install && ./node_modules/gulp/bin/gulp.js privnet-deploy-index",
+    "testnet-server": "npm install && ./node_modules/gulp/bin/gulp.js testnet-server",
     "testnet-deploy": "npm install && ./node_modules/gulp/bin/gulp.js testnet-deploy",
-    "testnet-server": "npm install && ./node_modules/gulp/bin/gulp.js testnet-server"
+    "testnet-deploy-index": "npm install && ./node_modules/gulp/bin/gulp.js testnet-deploy-index",
+    "webapp-build": "npm install && ./node_modules/gulp/bin/gulp.js webapp-build"
   },
   "repository": {
     "type": "git",

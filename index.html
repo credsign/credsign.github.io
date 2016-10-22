@@ -53,7 +53,7 @@
           script.async = true;
           script.onload = function() {
             window.credsign = web3.eth.contract(contracts.CredSign.interface).at(contracts.CredSign.address);
-            window.batchread = web3.eth.contract(contracts.BatchRead.interface).at(contracts.BatchRead.address);
+            window.credrank = web3.eth.contract(contracts.CredRank.interface).at(contracts.CredRank.address);
             done();
           };
           script.src = '/networks/'+network+'/contracts.js';

@@ -1,3 +1,4 @@
 networks/privnet/datadir
+networks/privnet/contracts.js
 networks/geth
 node_modules
