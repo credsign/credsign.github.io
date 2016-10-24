@@ -7,6 +7,22 @@ function getChannelName(channelID) {
   return channelName;
 }
 
+function getContentTitle(attributes) {
+  var title = null;
+  try {
+    title = JSON.parse(attributes).title;
+  }
+  catch (e) {
+    console.log(`Invalid JSON: ${attributes}`);
+  }
+
+  // If the title is empty or just spaces, return empty
+  if (title.replace(/ /g, '').length == 0) {
+    title = null;
+  }
+  return title;
+}
+
 function aggregateSignature(result, signature) {
   var contentID = '0x' + signature.args.contentID.toString(16);
   if (result.funds[contentID] === undefined) {
@@ -36,16 +52,17 @@ class Post extends React.Component {
   }
 
   componentDidMount() {
-    credsign.Post({id: this.props.id}, {fromBlock: 0, toBlock: 'latest'}).get((error, post) => {
-      credsign.Store({id: this.props.id}, {fromBlock: 0, toBlock: 'latest'}).get((error, content) => {
+    var contentID = web3.toBigNumber(this.props.id);
+    credsign.Post({contentID: contentID}, {fromBlock: 0, toBlock: 'latest'}).get((error, post) => {
+      credsign.Store({contentID: contentID}, {fromBlock: 0, toBlock: 'latest'}).get((error, content) => {
         credrank.getCredRanksByContents(credsign.address, [this.props.id], (error, credRanks) => {
           this.setState({
-            title: content[0].args.attributes,
-            body: content[0].args.document,
+            title: getContentTitle(content[0].args.attributes),
+            body: JSON.parse(content[0].args.document).body,
             publisher: post[0].args.accountID,
             timestamp: post[0].args.timestamp,
-            cred: credRanks[0][0].toString(10),
-            rank: credRanks[1][0].toString(10),
+            cred: parseInt(credRanks[0][0].toString()),
+            rank: parseInt(credRanks[1][0].toString()),
             funds: window.accountSignatures[this.props.account].funds[this.props.id] || 0
           });
         });
@@ -92,8 +109,8 @@ class Post extends React.Component {
               credrank.getCredRanksByContents(credsign.address, [this.props.id], (error, credRanks) => {
                 this.setState({
                   signing: false,
-                  cred: credRanks[0][0].toString(10),
-                  rank: credRanks[1][0].toString(10),
+                  cred: parseInt(credRanks[0][0].toString()),
+                  rank: parseInt(credRanks[1][0].toString()),
                   newCred: '',
                   signed: true,
                   funds: parseInt(signature.args.newCred.toString())
@@ -107,6 +124,9 @@ class Post extends React.Component {
   }
 
   render() {
+    var rankCaption = this.state.rank > 0
+      ? `Rank ${this.state.rank} with ${this.state.cred}¢`
+      : `Currently unranked`;
     return (
       <div>
         <div style={{backgroundColor: '#FFF'}}>
@@ -136,7 +156,7 @@ class Post extends React.Component {
           <div className="flex" style={{padding: '1.5em 1em'}}>
             <div className="flex-grow" style={{display: 'block', textAlign: 'left'}}>
               <div>
-                <span>{`Rank ${this.state.rank} with ${this.state.cred}¢`}</span>
+                <span>{rankCaption}</span>
               </div>
             </div>
             <div className="flex-grow" style={{
@@ -262,6 +282,15 @@ class Create extends React.Component {
     var title = document.getElementById('new-post-title').value;
     var body = toMarkdown(document.getElementById('new-post-body'));
 
+    var attributes = JSON.stringify({
+      version: '1.0',
+      title: title
+    });
+    var doc = JSON.stringify({
+      version: '1.0',
+      body: body
+    });
+
     if (credsign.getChannelByName(this.props.channel) == 0) {
       errors.push('Channel must be between 3 and 30 characters and consist of only letters numbers and underscores');
     }
@@ -278,10 +307,10 @@ class Create extends React.Component {
       this.setState({
         nonce: nonce
       })
-      credsign.post.estimateGas(this.props.channel, title, body, nonce, 0, credrank.address, {from: this.props.account, value: 0}, (error, gasEstimate) => {
+      credsign.post.estimateGas(this.props.channel, attributes, doc, nonce, 0, credrank.address, {from: this.props.account, value: 0}, (error, gasEstimate) => {
         console.log(gasEstimate);
         gasEstimate += 100000;
-        credsign.post(this.props.channel, title, body, nonce, 0, credrank.address, {from: this.props.account, value: 0, gas: gasEstimate}, (error) => {
+        credsign.post(this.props.channel, attributes, doc, nonce, 0, credrank.address, {from: this.props.account, value: 0, gas: gasEstimate}, (error) => {
           if (error) {
             this.setState({
               error: error.toString()
@@ -451,7 +480,7 @@ class RankedChannels extends React.Component {
   render() {
     var listItems = this.state.listItems.map((listItem) => {
       return (
-        <li key={'li-'+listItem.id} value={listItem.rank}>
+        <li key={'li-'+listItem.id}>
           <a href={`#/channel/${listItem.channelName}`}>
             <div>{'#' + listItem.channelName}</div>
             <span>{'Rank '+listItem.rank + ' with '+listItem.cred + '¢ signed'}</span>
@@ -493,7 +522,9 @@ class ChannelPosts extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    this.getPosts(this.state.filter, nextProps.channel);
+    if (nextProps.channel != this.props.channel) {
+      this.getPosts(this.state.filter, nextProps.channel);
+    }
   }
 
   onFilterChange(e) {
@@ -527,27 +558,26 @@ class ChannelPosts extends React.Component {
         }
         else {
           this.setState({
-            channelID: channelID
+            channelID: channelID,
+            channelName: getChannelName(channelID)
           });
         }
         credrank.getContentsByRanks(credsign.address, channelID, 1, numRanks, (error, tuple) => {
-          var ids = tuple[0].map((id) => '0x' + id.toString(16));
-          var cred = tuple[1].map((cred) => parseInt(cred.toString()));
-          var ranks = tuple[2].map((rank) => parseInt(rank.toString()));
           var listItems = [];
           var idToIndex = {};
-          for (var i = 0; i < ids.length; i++) {
-            idToIndex[ids[i]] = i;
+          for (var i = 0; i < tuple[0].length; i++) {
+            var id = '0x' + tuple[0][i].toString(16);
+            idToIndex[id] = i;
             listItems.push({
-              id: ids[i],
-              rank: ranks[i].toString(),
-              cred: cred[i].toString()
+              id: id,
+              cred: parseInt(tuple[1][i].toString()),
+              rank: parseInt(tuple[2][i].toString())
             });
           }
-          credsign.Post({contentID: ids}, {fromBlock: 0, toBlock: 'latest'}).get((error, posts) => {
+          credsign.Post({contentID: tuple[0]}, {fromBlock: 0, toBlock: 'latest'}).get((error, posts) => {
             posts.forEach((post) => {
               var index = idToIndex['0x' + post.args.contentID.toString(16)];
-              listItems[index].title = post.args.attributes;
+              listItems[index].title = getContentTitle(post.args.attributes);
               listItems[index].timestamp = post.args.timestamp;
             });
             this.setState({
@@ -574,7 +604,8 @@ class ChannelPosts extends React.Component {
         }
         else {
           this.setState({
-            channelID: channelID
+            channelID: channelID,
+            channelName: getChannelName(channelID)
           });
         }
         var sequenceNums = [Array.from(Array(numRanks))].map((_, i) => i + 1);
@@ -585,14 +616,14 @@ class ChannelPosts extends React.Component {
             ids.push(posts[i].args.contentID);
             listItems.push({
               id: '0x' + ids[i].toString(16),
-              title: posts[i].args.title,
+              title: getContentTitle(posts[i].args.attributes),
               timestamp: posts[i].args.timestamp
             });
           };
           credrank.getCredRanksByContents(credsign.address, ids, (error, credRanks) => {
             for (var i = 0; i < posts.length; i++) {
-              listItems[i].cred = credRanks[0][i].toString();
-              listItems[i].rank = credRanks[1][i].toString();
+              listItems[i].cred = parseInt(credRanks[0][i].toString());
+              listItems[i].rank = parseInt(credRanks[1][i].toString());
             }
             this.setState({
               toggle: !this.state.toggle,
@@ -607,18 +638,27 @@ class ChannelPosts extends React.Component {
 
   render() {
     var listItems = this.state.listItems.map((listItem) => {
-      var signature = ''
-      if (listItem.signed) {
-        signature = '- Signed';
-        if (listItem.funding > 0) {
-          signature += ` with ${listItem.funding}¢`;
+      var caption = '';
+      console.log(listItem);
+      if (listItem.rank > 0) {
+        caption = `Rank ${listItem.rank} with ${listItem.cred}¢`;
+        if (listItem.signed) {
+          if (listItem.funds > 0) {
+            caption += ` - Signed with ${listItem.funds}¢`;
+          }
+          else {
+            caption += ` - Signed`;
+          }
         }
       }
+      else {
+        caption = `Unranked in #${this.state.channelName}`;
+      }
       return (
-        <li key={'li-'+listItem.id} value={listItem.rank}>
+        <li key={'li-'+listItem.id}>
           <a href={`#/channel/${this.props.channel}/post/${listItem.id}`}>
             <div>{listItem.title}</div>
-            <span>{`Rank ${listItem.rank} with ${listItem.cred}¢ ${signature}`}</span>
+            <span>{caption}</span>
           </a>
         </li>
       );
@@ -697,7 +737,7 @@ class Account extends React.Component {
           ids.push(post.args.contentID);
           listItems.push({
             id: '0x' + post.args.contentID.toString(16),
-            title: post.args.attributes,
+            title: getContentTitle(post.args.attributes),
             channelName: getChannelName(post.args.channelID),
             timestamp: post.args.timestamp
           });
@@ -708,8 +748,8 @@ class Account extends React.Component {
           });
           credrank.getCredRanksByContents(credsign.address, ids, (error, credRanks) => {
             listItems.forEach((listItem, i) => {
-              listItem.cred = credRanks[0][i];
-              listItem.rank = credRanks[1][i];
+              listItem.cred = parseInt(credRanks[0][i].toString());
+              listItem.rank = parseInt(credRanks[1][i].toString());
               listItem.signed = signedContents.funds[listItem.id] !== undefined;
               listItem.funds = signedContents.funds[listItem.id] || 0;
             })
@@ -732,11 +772,11 @@ class Account extends React.Component {
             fundedIDs.forEach((contentID, i) => {
               listItems.push({
                 id: contentID,
-                title: posts[i].args.attributes,
+                title: getContentTitle(posts[i].args.attributes),
                 channelName: getChannelName(posts[i].args.channelID),
                 timestamp: posts[i].args.timestamp,
-                cred: credRanks[0][i],
-                rank: credRanks[1][i],
+                cred: parseInt(credRanks[0][i].toString()),
+                rank: parseInt(credRanks[1][i].toString()),
                 signed: true,
                 funds: signedContents.funds[contentID]
               });
@@ -759,11 +799,11 @@ class Account extends React.Component {
             signedContents.sequence.forEach((contentID, i) => {
               listItems.push({
                 id: contentID,
-                title: posts[i].args.attributes,
+                title: getContentTitle(posts[i].args.attributes),
                 channelName: getChannelName(posts[i].args.channelID),
                 timestamp: posts[i].args.timestamp,
-                cred: credRanks[0][i],
-                rank: credRanks[1][i],
+                cred: parseInt(credRanks[0][i].toString()),
+                rank: parseInt(credRanks[1][i].toString()),
                 signed: true,
                 funds: signedContents.funds[contentID]
               });
@@ -786,18 +826,26 @@ class Account extends React.Component {
 
   render() {
     var listItems = this.state.listItems.map((listItem) => {
-      var signature = ''
-      if (listItem.signed) {
-        signature = '- Signed';
-        if (listItem.funds > 0) {
-          signature += ` with ${listItem.funds}¢`;
+      var caption = '';
+      if (listItem.rank > 0) {
+        caption = `Rank ${listItem.rank} in #${listItem.channelName} with ${listItem.cred}¢`;
+        if (listItem.signed) {
+          if (listItem.funds > 0) {
+            caption += ` - Signed with ${listItem.funds}¢`;
+          }
+          else {
+            caption += ` - Signed`;
+          }
         }
       }
+      else {
+        caption = `Unranked in #${listItem.channelName}`;
+      }
       return (
-        <li key={'li-'+listItem.id} value={listItem.rank}>
+        <li key={'li-'+listItem.id}>
           <a href={`#/channel/${listItem.channelName}/post/${listItem.id}`}>
             <div>{listItem.title}</div>
-            <span>{`Rank ${listItem.rank} in #${listItem.channelName} with ${listItem.cred}¢ ${signature}`}</span>
+            <span>{caption}</span>
           </a>
         </li>
       );

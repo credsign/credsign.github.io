@@ -65,7 +65,7 @@ gulp.task('webapp-build', () => {
     .pipe(sourcemaps.init())
     .pipe(babel({
         'presets': ['es2015', 'react']
-    })).on('error', (error) => {
+    })).on('error', function (error) {
       console.error(error.toString());
       this.emit('end');
     })
