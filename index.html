@@ -16,62 +16,64 @@
   <body>
     <div id="main"></div>
     <script>
-      marked.setOptions({
-        gfm: false,
-        tables: false,
-        breaks: false,
-        pedantic: false,
-        sanitize: true,
-        smartLists: false
-      });
+      window.addEventListener('load', function () {
+        marked.setOptions({
+          gfm: false,
+          tables: false,
+          breaks: false,
+          pedantic: false,
+          sanitize: true,
+          smartLists: false
+        });
 
-      function getWeb3(done) {
-        if (window.web3 === undefined) {
+        function getWeb3(done) {
+          if (window.web3 === undefined) {
+            (function(d, script) {
+              script = d.createElement('script');
+              script.type = 'text/javascript';
+              script.async = true;
+              script.onload = function() {
+                  window.web3 = new Web3(new Web3.providers.HttpProvider(
+                    window.location.protocol == 'https:' ? 'https://morden.infura.io/rKXO8uv6njXPdnUsNSeE' : 'http://localhost:8545'
+                  ));
+                  done();
+              };
+              script.src = 'https://unpkg.com/web3@0.16.0/dist/web3.js';
+              d.getElementsByTagName('head')[0].appendChild(script);
+            }(document));
+          }
+          else {
+            done();
+          }
+        }
+
+        function getContracts(network, done) {
           (function(d, script) {
             script = d.createElement('script');
             script.type = 'text/javascript';
             script.async = true;
             script.onload = function() {
-                window.web3 = new Web3(new Web3.providers.HttpProvider(
-                  window.location.protocol == 'https:' ? 'https://morden.infura.io' : 'http://localhost:8545'
-                ));
-                done();
+              window.credsign = web3.eth.contract(contracts.CredSign.interface).at(contracts.CredSign.address);
+              window.credrank = web3.eth.contract(contracts.CredRank.interface).at(contracts.CredRank.address);
+              done();
             };
-            script.src = 'https://unpkg.com/web3@0.16.0/dist/web3.js';
+            script.src = '/networks/'+network+'/contracts.js';
             d.getElementsByTagName('head')[0].appendChild(script);
           }(document));
         }
-        else {
-          done();
-        }
-      }
 
-      function getContracts(network, done) {
-        (function(d, script) {
-          script = d.createElement('script');
-          script.type = 'text/javascript';
-          script.async = true;
-          script.onload = function() {
-            window.credsign = web3.eth.contract(contracts.CredSign.interface).at(contracts.CredSign.address);
-            window.credrank = web3.eth.contract(contracts.CredRank.interface).at(contracts.CredRank.address);
-            done();
-          };
-          script.src = '/networks/'+network+'/contracts.js';
-          d.getElementsByTagName('head')[0].appendChild(script);
-        }(document));
-      }
-
-      getWeb3(function () {
-        web3.version.getNetwork(function (error, networkID) {
-          if (error) {
-            console.log(error.toString());
-          }
-          else {
-            var network = networkID == '2' ? 'testnet' : 'privnet';
-            getContracts(network, function () {
-              ReactDOM.render(React.createElement(window.App, null), document.getElementById('main'));
-            });
-          }
+        getWeb3(function () {
+          web3.version.getNetwork(function (error, networkID) {
+            if (error) {
+              console.log(error.toString());
+            }
+            else {
+              var network = networkID == '2' ? 'testnet' : 'privnet';
+              getContracts(network, function () {
+                ReactDOM.render(React.createElement(window.App, null), document.getElementById('main'));
+              });
+            }
+          });
         });
       });
     </script>

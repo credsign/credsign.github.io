@@ -56,6 +56,10 @@ class Post extends React.Component {
     credsign.Post({contentID: contentID}, {fromBlock: 0, toBlock: 'latest'}).get((error, post) => {
       credsign.Store({contentID: contentID}, {fromBlock: 0, toBlock: 'latest'}).get((error, content) => {
         credrank.getCredRanksByContents(credsign.address, [this.props.id], (error, credRanks) => {
+          var funds = 0;
+          if (window.accountSignatures.hasOwnProperty(this.props.account)) {
+            funds = window.accountSignatures[this.props.account].funds[this.props.id] || 0;
+          }
           this.setState({
             title: getContentTitle(content[0].args.attributes),
             body: JSON.parse(content[0].args.document).body,
@@ -63,7 +67,7 @@ class Post extends React.Component {
             timestamp: post[0].args.timestamp,
             cred: parseInt(credRanks[0][0].toString()),
             rank: parseInt(credRanks[1][0].toString()),
-            funds: window.accountSignatures[this.props.account].funds[this.props.id] || 0
+            funds: funds
           });
         });
       });
@@ -639,7 +643,6 @@ class ChannelPosts extends React.Component {
   render() {
     var listItems = this.state.listItems.map((listItem) => {
       var caption = '';
-      console.log(listItem);
       if (listItem.rank > 0) {
         caption = `Rank ${listItem.rank} with ${listItem.cred}¢`;
         if (listItem.signed) {
