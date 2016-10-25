@@ -60,8 +60,8 @@ gulp.task('testnet', (done) => {
   });
 });
 
-gulp.task('webapp-build', () => {
-  return gulp.src(['./webapp/src/*'])
+gulp.task('terminal-build', () => {
+  return gulp.src(['./terminal/src/*'])
     .pipe(sourcemaps.init())
     .pipe(babel({
         'presets': ['es2015', 'react']
@@ -72,18 +72,18 @@ gulp.task('webapp-build', () => {
     .pipe(concat('app.min.js'))
     .pipe(uglify())
     .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest('./webapp/dist'));
+    .pipe(gulp.dest('./terminal/dist'));
 });
 
-gulp.task('webapp-server', (done) => {
+gulp.task('terminal-server', (done) => {
   server = spawn('python', ['-m', 'SimpleHTTPServer']);
-  gulp.watch('./webapp/src/*', ['webapp-build']).on('change', (event) => {
+  gulp.watch('./terminal/src/*', ['terminal-build']).on('change', (event) => {
     console.log('Frontend file ' + event.path + ' was ' + event.type + ', rebuilding');
   });
 });
 
-gulp.task('privnet-server', ['privnet', 'webapp-server'], () => {});
-gulp.task('testnet-server', ['testnet', 'webapp-server'], () => {});
+gulp.task('privnet-server', ['privnet', 'terminal-server'], () => {});
+gulp.task('testnet-server', ['testnet', 'terminal-server'], () => {});
 
 gulp.task('privnet-deploy', (done) => { deploy('privnet', 'store', done) });
 gulp.task('testnet-deploy', (done) => { deploy('testnet', 'store', done) });

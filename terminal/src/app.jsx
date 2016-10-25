@@ -515,7 +515,6 @@ class ChannelPosts extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      toggle: false,
       channelID: -1,
       listItems: [],
       filter: 'Top',
@@ -543,6 +542,7 @@ class ChannelPosts extends React.Component {
 
   getPosts(filter, channel) {
     this.setState({
+      loading: true,
       filter: filter,
       menu: false
     });
@@ -559,7 +559,7 @@ class ChannelPosts extends React.Component {
       credrank.getNumContents(credsign.address, channelID, (error, numRanks) => {
         if (numRanks == 0 || channelID == 0) {
           this.setState({
-            loaded: true,
+            loading: false,
             listItems: [],
             channelID: channelID,
             count: 0
@@ -591,9 +591,9 @@ class ChannelPosts extends React.Component {
               listItems[index].timestamp = post.args.timestamp;
             });
             this.setState({
-              toggle: !this.state.toggle,
               listItems: listItems,
-              count: numRanks
+              count: numRanks,
+              loading: false
             });
           });
         });
@@ -602,11 +602,14 @@ class ChannelPosts extends React.Component {
   }
 
   getNewPosts(channel) {
+    this.setState({
+      loading: true
+    });
     credsign.getChannelByName(channel, (error, channelID) => {
       credsign.getNumContents(channelID, (error, numRanks) => {
         if (numRanks == 0) {
           this.setState({
-            loaded: true,
+            loading: false,
             listItems: [],
             count: 0
           });
@@ -636,7 +639,7 @@ class ChannelPosts extends React.Component {
               listItems[i].rank = parseInt(credRanks[1][i].toString());
             }
             this.setState({
-              toggle: !this.state.toggle,
+              loading: false,
               listItems: listItems.reverse(),
               count: numRanks
             });
@@ -687,8 +690,8 @@ class ChannelPosts extends React.Component {
         <ol>{listItems}</ol>
         <span style={{paddingLeft: '1em', display: listItems.length == 0 ? 'block' : 'none', fontStyle: 'italic'}}>{
           this.state.channelID != 0
-            ? `Nothing to see here`
-            : `Channels must be between 3 and 30 characters consisting of letters, numbers, and underscores.`
+            ? (this.state.loading ? 'Loading...' : 'Nothing to see here')
+            : 'Channels must be between 3 and 30 characters consisting of letters, numbers, and underscores.'
         }</span>
       </div>
     );
@@ -700,7 +703,6 @@ class Account extends React.Component {
     super(props);
     this.state = {
       filter: this.props.filter || 'Posted',
-      toggle: false,
       listItems: [],
       count: 0
     };
@@ -731,6 +733,7 @@ class Account extends React.Component {
 
   getPosts(filter, account) {
     this.setState({
+      loading: true,
       menu: false,
       filter: filter
     });
@@ -763,7 +766,7 @@ class Account extends React.Component {
               listItem.funds = signedContents.funds[listItem.id] || 0;
             })
             this.setState({
-              toggle: !this.state.toggle,
+              loading: false,
               listItems: listItems
             });
           });
@@ -791,7 +794,7 @@ class Account extends React.Component {
               });
             });
             this.setState({
-              toggle: !this.state.toggle,
+              loading: false,
               listItems: listItems
             });
           });
@@ -818,7 +821,7 @@ class Account extends React.Component {
               });
             });
             this.setState({
-              toggle: !this.state.toggle,
+              loading: false,
               listItems: listItems
             });
           });
@@ -871,7 +874,77 @@ class Account extends React.Component {
           <span>{` by account (${listItems.length})`}</span>
         </div>
         <ol>{listItems}</ol>
-        <span style={{paddingLeft: '1em', display: listItems.length == 0 ? 'block' : 'none', fontStyle: 'italic'}}>Nothing to see here</span>
+        <span style={{paddingLeft: '1em', display: listItems.length == 0 ? 'block' : 'none', fontStyle: 'italic'}}>{
+          this.state.loading ? 'Loading...' : 'Nothing to see here'
+        }</span>
+      </div>
+    );
+  }
+}
+
+class Preview extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      title: '',
+      body: '',
+      publisher: '0x0',
+      loading: true,
+      retries: 10
+    };
+  }
+
+  componentDidMount() {
+    var contentID = web3.toBigNumber(this.props.id);
+    credsign.Store({contentID: contentID}, {fromBlock: 0, toBlock: 'latest'}).get((error, content) => {
+      // FIXME - hack to keep trying since infura may be unresponsive
+      if (error || content.length == 0) {
+        if (error) {
+          console.log(error.toString());
+        }
+        if (this.state.retries > 0) {
+          this.setState({
+            retries: this.state.retries - 1
+          });
+          setTimeout(() => {this.componentDidMount()}, 500);
+        }
+      }
+      else {
+        this.setState({
+          title: getContentTitle(content[0].args.attributes),
+          body: JSON.parse(content[0].args.document).body,
+          publisher: content[0].args.accountID,
+          channelName: getChannelName(content[0].args.channelID),
+          loading: false
+        });
+      }
+    });
+  }
+
+  componentDidUpdate() {
+    document.getElementById('post-'+this.props.id).innerHTML = marked(this.state.body);
+  }
+
+  render() {
+    return (
+      <div>
+        <div style={{backgroundColor: '#FFF'}}>
+          <div style={{maxWidth: '600px', margin: '0 auto'}}>
+            <div style={{padding: '1.5em 1em', display: this.state.loading ? 'none' : 'block'}}>
+              <div style={{color: 'gray', paddingBottom: '1em'}}>
+                <span>{`Posted in #${this.state.channelName}`}</span>
+              </div>
+              <h1>{this.state.title}</h1>
+              <div id={'post-'+this.props.id}></div>
+            </div>
+            <div style={{padding: '1.5em 1em', display: this.state.loading ? 'block' : 'none'}}>
+              <div style={{color: 'gray', paddingBottom: '1em'}}>
+                <span style={{display: this.state.retries == 0 ? 'block' : 'none'}}>Unable to fetch content</span>
+                <span style={{display: this.state.retries != 0 ? 'block' : 'none'}}>Loading...</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -888,7 +961,7 @@ class App extends React.Component {
       levelThree: '',
       levelFour: '',
       account: '',
-      editChannel: true,
+      mounted: false,
       contentID: null
     };
 
@@ -901,34 +974,36 @@ class App extends React.Component {
 
   componentDidMount() {
     this.route(window.location.hash);
-    web3.eth.getAccounts((error, accounts) => {
-      if (accounts.length > 0) {
-        var address = accounts[0];
-        window.accountSignatures = {
-          [address]: {
-            sequence: [],
-            funds: {}
-          }
-        };
-        var watcher = credsign.Sign({accountID: address}, {fromBlock: 0, toBlock: 'latest'});
-        watcher.get((error, signatures) => {
-          watcher.watch((error, signature) => {
-            aggregateSignature(accountSignatures[address], signature);
+    if (!window.infura) {
+      web3.eth.getAccounts((error, accounts) => {
+        if (accounts.length > 0) {
+          var address = accounts[0];
+          window.accountSignatures = {
+            [address]: {
+              sequence: [],
+              funds: {}
+            }
+          };
+          var watcher = credsign.Sign({accountID: address}, {fromBlock: 0, toBlock: 'latest'});
+          watcher.get((error, signatures) => {
+            watcher.watch((error, signature) => {
+              aggregateSignature(accountSignatures[address], signature);
+            });
+            signatures.forEach((signature) => {
+              aggregateSignature(accountSignatures[address], signature);
+            });
           });
-          signatures.forEach((signature) => {
-            aggregateSignature(accountSignatures[address], signature);
+          this.setState({
+            account: address
           });
-        });
-        this.setState({
-          account: address
-        });
-      }
-      else {
-        this.setState({
-          warn: true
-        });
-      }
-    });
+        }
+        else {
+          this.setState({
+            warn: true
+          });
+        }
+      });
+    }
   }
 
   setChannel(e) {
@@ -951,29 +1026,39 @@ class App extends React.Component {
       levelTwo: path[2],
       levelThree: path[3],
       levelFour: path[4],
-      editChannel: (path[1] == 'channel' && path[3] == '') || (path[1] == 'publish') || (path[1] == 'account')
+      mounted: true
     });
   }
 
   render() {
 
-    var view;
-    if (this.state.levelOne == 'channel') {
-      if (this.state.levelThree == 'post') {
-        view = <Post id={this.state.levelFour} channel={this.state.levelTwo} account={this.state.account} />;
+    var view = '';
+    if (this.state.mounted) {
+      if (window.infura) {
+        if (this.state.levelOne == 'channel' && this.state.levelThree == 'post') {
+          view = <Preview id={this.state.levelFour} channel={this.state.levelTwo} />;
+        }
+        else{
+          window.location.replace('/?err=url');
+        }
       }
-      else if (this.state.levelTwo == '') {
-        view = <RankedChannels />;
+      else if (this.state.levelOne == 'channel') {
+        if (this.state.levelThree == 'post') {
+          view = <Post id={this.state.levelFour} channel={this.state.levelTwo} account={this.state.account} />;
+        }
+        else if (this.state.levelTwo == '') {
+          view = <RankedChannels />;
+        }
+        else {
+          view = <ChannelPosts channel={this.state.levelTwo} account={this.state.account} />;
+        }
       }
-      else {
-        view = <ChannelPosts channel={this.state.levelTwo} account={this.state.account} />;
+      else if (this.state.levelOne == 'publish'){
+        view = <Create channel={this.state.levelTwo} account={this.state.account} />
       }
-    }
-    else if (this.state.levelOne == 'publish'){
-      view = <Create channel={this.state.levelTwo} account={this.state.account} />
-    }
-    else if (this.state.levelOne == 'account') {
-      view = <Account account={this.state.levelTwo} />;
+      else if (this.state.levelOne == 'account') {
+        view = <Account account={this.state.levelTwo} />;
+      }
     }
 
     return (
@@ -993,7 +1078,8 @@ class App extends React.Component {
         }}>
           <div style={{
             maxWidth: '600px',
-            margin: '0 auto'
+            margin: '0 auto',
+            display: window.infura ? 'none' : 'block'
           }}>
             <div className='flex' style={{padding: '0 .66em'}}>
               <a href='#/channel' className='flex-grow' style={{
@@ -1001,9 +1087,7 @@ class App extends React.Component {
                 textAlign: 'left',
                 display: 'inline-block'
               }}>Channels</a>
-              <div className='flex-shrink' style={{
-                display: 'inline-block'
-              }}>¢</div>
+              <a href='/terminal' alt='¢'><img src='logo.svg' style={{width: '1em', height: '1em', paddingTop: '2px'}} /></a>
               <a href={`#/account/${this.state.account}`} className='flex-grow' style={{
                 color: 'black',
                 textAlign: 'right',
@@ -1011,8 +1095,21 @@ class App extends React.Component {
               }}>Accounts</a>
             </div>
           </div>
+          <div style={{
+            maxWidth: '600px',
+            margin: '0 auto',
+            display: window.infura ? 'block' : 'none'
+          }}>
+            <a href='/' style={{
+              padding: '0 .66em',
+              display: 'inline-block',
+              color: 'black',
+              textDecoration: 'none'
+            }}>{
+              '¢'
+            }</a></div>
         </div>
-        <div style={{maxWidth: '600px', margin: '0 auto', padding: '1.5em 0'}}>
+        <div style={{maxWidth: '600px', margin: '0 auto', display: window.infura ? 'none' : 'block', padding: '1.5em 0'}}>
           <div className='flex'>
             <div className='flex-grow'>
               <div className='flex' style={{

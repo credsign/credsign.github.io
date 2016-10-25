@@ -9,7 +9,7 @@
     "testnet-server": "npm install && ./node_modules/gulp/bin/gulp.js testnet-server",
     "testnet-deploy": "npm install && ./node_modules/gulp/bin/gulp.js testnet-deploy",
     "testnet-deploy-index": "npm install && ./node_modules/gulp/bin/gulp.js testnet-deploy-index",
-    "webapp-build": "npm install && ./node_modules/gulp/bin/gulp.js webapp-build"
+    "terminal-build": "npm install && ./node_modules/gulp/bin/gulp.js terminal-build"
   },
   "repository": {
     "type": "git",

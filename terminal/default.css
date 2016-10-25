@@ -7,6 +7,7 @@ body {
   margin: 0;
   position: relative;
   background-color: #F9F9F9;
+    /* Put a border to seperate Mist Nav UI */
   border-left: 1px solid #DDD;
 }
 div#main {
@@ -48,6 +49,9 @@ h1 {
 }
 
 @media(max-width:600px) {
+  body {
+    border-left: 0;
+  }
   /* Break up toolbar to two rows of 4 */
   .medium-editor-toolbar-actions {
     max-width: 240px;

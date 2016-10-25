@@ -1,0 +1,85 @@
+<html>
+  <head>
+    <title>CredSign</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/medium-editor/5.21.1/css/medium-editor.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/medium-editor/5.21.1/css/themes/tim.css">
+    <link rel="stylesheet" href="./default.css">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/medium-editor/5.21.1/js/medium-editor.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.6/marked.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/react/15.3.2/react.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/react/15.3.2/react-dom.min.js"></script>
+    <script type="text/javascript" src="./dist/app.min.js"></script>
+  </head>
+  <body>
+    <div id="main"></div>
+    <script>
+      window.addEventListener('load', function () {
+        marked.setOptions({
+          gfm: false,
+          tables: false,
+          breaks: false,
+          pedantic: false,
+          sanitize: true,
+          smartLists: false
+        });
+
+        function getWeb3(done) {
+          if (window.web3 === undefined) {
+            (function(d, script) {
+              script = d.createElement('script');
+              script.type = 'text/javascript';
+              script.async = true;
+              script.onload = function() {
+                if (window.location.protocol == 'https:') {
+                  window.web3 = new Web3(new Web3.providers.HttpProvider('https://morden.infura.io/rKXO8uv6njXPdnUsNSeE'));
+                  window.infura = true;
+                }
+                else {
+                  window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
+                }
+                done();
+              };
+              script.src = 'https://unpkg.com/web3@0.16.0/dist/web3.js';
+              d.getElementsByTagName('head')[0].appendChild(script);
+            }(document));
+          }
+          else {
+            done();
+          }
+        }
+
+        function getContracts(network, done) {
+          (function(d, script) {
+            script = d.createElement('script');
+            script.type = 'text/javascript';
+            script.async = true;
+            script.onload = function() {
+              window.credsign = web3.eth.contract(contracts.CredSign.interface).at(contracts.CredSign.address);
+              window.credrank = web3.eth.contract(contracts.CredRank.interface).at(contracts.CredRank.address);
+              done();
+            };
+            script.src = '/networks/'+network+'/contracts.js';
+            d.getElementsByTagName('head')[0].appendChild(script);
+          }(document));
+        }
+
+        getWeb3(function () {
+          web3.version.getNetwork(function (error, networkID) {
+            if (error) {
+              console.log(error.toString());
+            }
+            else {
+              var network = networkID == '2' ? 'testnet' : 'privnet';
+              getContracts(network, function () {
+                ReactDOM.render(React.createElement(window.App, null), document.getElementById('main'));
+              });
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
