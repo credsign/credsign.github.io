@@ -89,8 +89,8 @@ class Post extends React.Component {
       signing: true
     });
     var newCred = this.state.newCred;
-    var credSigned = 0; // FIXME
-    var value = credsign.CRED().times(newCred > credSigned ? (newCred - credSigned) : 0);
+    var oldCred = parseInt(this.state.funds);
+    var value = newCred > oldCred ? web3.toBigNumber(10).pow(16).times(newCred - oldCred) : 0;
     credsign.sign.estimateGas(this.props.id, newCred, credrank.address, {from: this.props.account, value: value}, (error, gasEstimate) => {
       console.log(gasEstimate);
       gasEstimate += 100000;
@@ -157,18 +157,24 @@ class Post extends React.Component {
           </div>
         </div>
         <div style={{maxWidth: '600px', margin: '0 auto'}}>
-          <div className="flex" style={{padding: '1.5em 1em'}}>
-            <div className="flex-grow" style={{display: 'block', textAlign: 'left'}}>
+          <div className='flex' style={{padding: '1.5em 1em'}}>
+            <div className='flex-grow' style={{display: 'block', textAlign: 'left'}}>
               <div>
                 <span>{rankCaption}</span>
               </div>
             </div>
-            <div className="flex-grow" style={{
+            <div className='flex-grow' style={{
               textAlign: 'right',
               display: (this.props.account == '') ? 'none' : 'block'
             }}>
               <div style={{display: !this.state.signing ? 'block' : 'none'}}>
-                <input type="text" name="cred" placeholder={this.state.funds} value={this.state.newCred} onChange={this.onCredChange} style={{textAlign: 'right', fontSize: '1em', border: '0', backgroundColor: 'transparent', outline: 'none'}} />
+                <input type='text' name='cred' placeholder={this.state.funds} value={this.state.newCred} onChange={this.onCredChange} style={{
+                  textAlign: 'right',
+                  fontSize: '1em',
+                  border: '0',
+                  backgroundColor: 'transparent',
+                  outline: 'none'
+                }} />
                 <span style={{paddingRight: '.5em'}}>¢</span>
                 <a onClick={this.signPost} style={{
                   color: 'black',
@@ -346,20 +352,20 @@ class Create extends React.Component {
           <div style={{maxWidth: '600px', margin: '0 auto'}}>
             <div style={{padding: '2em 1em'}}>
               <div style={{display: this.state.view == 'edit' ? 'block' : 'none'}}>
-                <textarea id="new-post-title" type="text" placeholder="title"></textarea>
-                <div id="new-post-body" contentEditable="true"></div>
+                <textarea id='new-post-title' type='text' placeholder='title'></textarea>
+                <div id='new-post-body' contentEditable='true'></div>
               </div>
               <div style={{display: this.state.view != 'edit' ? 'block' : 'none'}}>
-                <h1 id="new-post-title-preview"></h1>
-                <div id="new-post-body-preview"></div>
+                <h1 id='new-post-title-preview'></h1>
+                <div id='new-post-body-preview'></div>
               </div>
             </div>
           </div>
         </div>
         <div style={{width: '100%'}}>
           <div style={{maxWidth: '600px', margin: '0 auto'}}>
-            <div className="flex" style={{padding: '1.5em 1em'}}>
-              <div className="flex-grow" style={{textAlign: 'left'}}>
+            <div className='flex' style={{padding: '1.5em 1em'}}>
+              <div className='flex-grow' style={{textAlign: 'left'}}>
                 <a style={{
                   color: 'black',
                   display: this.state.view == 'edit' ? 'inline-block' : 'none',
@@ -372,7 +378,7 @@ class Create extends React.Component {
                   paddingBottom: '.5em'
                 }} onClick={this.editPost}>Edit</a>
               </div>
-              <div className="flex-grow" style={{textAlign: 'right'}}>
+              <div className='flex-grow' style={{textAlign: 'right'}}>
                 <a style={{
                   display: this.state.view == 'edit' ? 'inline-block' : 'none',
                   borderBottom: '2px solid black',
@@ -397,37 +403,37 @@ class Create extends React.Component {
               }}>{' '}</div>
               <div style={{
                 display: this.state.view == 'submit' ? 'block' : 'none',
-                left: '50%',
-                top: '30%',
-                marginLeft: '-300px',
+                top: '25%',
+                left: '0',
+                width: '100%',
                 position: 'fixed',
-                zIndex: 2,
-                backgroundColor: '#FCFCFC',
-                border: '1px solid #DDD',
-                width: '600px'
+                backgroundColor: 'transparent',
+                zIndex: 2
               }}>
-                <div style={{padding: '1em', display: this.state.error.length > 0 ? 'block' : 'none'}}>
-                  <h1>Unable to publish</h1>
-                  <div style={{padding: '1em 0'}}>{this.state.error}</div>
-                  <span onClick={() => this.setState({view: 'edit', error: ''})} style={{
-                    borderBottom: '2px solid black',
-                    padding: '.5em 0',
-                    display: 'inline-block',
-                    cursor: 'pointer'
-                  }}>Close</span>
-                </div>
-                <div style={{padding: '1em', display: this.state.error.length == 0 ? 'block' : 'none'}}>
-                  <h1>Publishing...</h1>
-                  <div style={{padding: '1em 0'}}>{
-                    'Your post is being published. This page will redirect to your post once published. '+
-                    'If you are not redirected after several minutes, try closing this message and publishing again.'
-                  }</div>
-                  <span onClick={() => this.setState({view: 'publish', error: ''})} style={{
-                    borderBottom: '2px solid black',
-                    padding: '.5em 0',
-                    display: 'inline-block',
-                    cursor: 'pointer'
-                  }}>Close</span>
+                <div style={{maxWidth: '600px', margin: '0 auto', backgroundColor: '#FCFCFC', border: '1px solid #DDD'}}>
+                  <div style={{padding: '1em', display: this.state.error.length > 0 ? 'block' : 'none'}}>
+                    <h1>Unable to publish</h1>
+                    <div style={{padding: '1em 0'}}>{this.state.error}</div>
+                    <span onClick={() => this.setState({view: 'edit', error: ''})} style={{
+                      borderBottom: '2px solid black',
+                      padding: '.5em 0',
+                      display: 'inline-block',
+                      cursor: 'pointer'
+                    }}>Close</span>
+                  </div>
+                  <div style={{padding: '1em', display: this.state.error.length == 0 ? 'block' : 'none'}}>
+                    <h1>Publishing...</h1>
+                    <div style={{padding: '1em 0'}}>{
+                      'Your post is being published. This page will redirect to your post once published. '+
+                      'If you are not redirected after several minutes, try closing this message and publishing again.'
+                    }</div>
+                    <span onClick={() => this.setState({view: 'publish', error: ''})} style={{
+                      borderBottom: '2px solid black',
+                      padding: '.5em 0',
+                      display: 'inline-block',
+                      cursor: 'pointer'
+                    }}>Close</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -512,7 +518,7 @@ class ChannelPosts extends React.Component {
       toggle: false,
       channelID: -1,
       listItems: [],
-      filter: "Top",
+      filter: 'Top',
       count: 0
     };
     this.getPosts = this.getPosts.bind(this);
@@ -540,10 +546,10 @@ class ChannelPosts extends React.Component {
       filter: filter,
       menu: false
     });
-    if (filter == "Top") {
+    if (filter == 'Top') {
       this.getTopPosts(channel);
     }
-    else if (filter == "New") {
+    else if (filter == 'New') {
       this.getNewPosts(channel);
     }
   }
@@ -926,7 +932,7 @@ class App extends React.Component {
   }
 
   setChannel(e) {
-    window.location.hash = "#/"+this.state.levelOne+"/" + e.target.value;
+    window.location.hash = `#/${this.state.levelOne}/${e.target.value}`;
     this.route(window.location.hash);
   }
 
@@ -986,19 +992,19 @@ class App extends React.Component {
           zIndex: 10
         }}>
           <div style={{
-            width: '600px',
+            maxWidth: '600px',
             margin: '0 auto'
           }}>
-            <div className="flex" style={{padding: '0 .66em'}}>
-              <a href='#/channel' className="flex-grow" style={{
+            <div className='flex' style={{padding: '0 .66em'}}>
+              <a href='#/channel' className='flex-grow' style={{
                 color: 'black',
                 textAlign: 'left',
                 display: 'inline-block'
               }}>Channels</a>
-              <div className="flex-shrink" style={{
+              <div className='flex-shrink' style={{
                 display: 'inline-block'
               }}>¢</div>
-              <a href={`#/account/${this.state.account}`} className="flex-grow" style={{
+              <a href={`#/account/${this.state.account}`} className='flex-grow' style={{
                 color: 'black',
                 textAlign: 'right',
                 display: 'inline-block'
@@ -1006,10 +1012,10 @@ class App extends React.Component {
             </div>
           </div>
         </div>
-        <div style={{width: '600px', margin: '0 auto', padding: '1.5em 0'}}>
-          <div className="flex">
-            <div className="flex-grow">
-              <div className="flex" style={{
+        <div style={{maxWidth: '600px', margin: '0 auto', padding: '1.5em 0'}}>
+          <div className='flex'>
+            <div className='flex-grow'>
+              <div className='flex' style={{
                 padding: '0 1em',
                 backgroundColor: 'white',
                 borderTop: '2px solid white',
@@ -1017,12 +1023,12 @@ class App extends React.Component {
                 borderRight: '0',
                 borderLeft: '0'
               }}>
-                <span className="flex-shrink" style={{
+                <span className='flex-shrink' style={{
                   color: 'gray',
                   padding: '.5em 0',
                   fontWeight: 'normal'
                 }}>{this.state.levelOne == 'account' ? '@' : '#'}</span>
-                <input type="text" placeholder={this.state.levelOne == "account" ? "0x321..." : "channel"} id="channel" className="flex-grow" style={{
+                <input type='text' placeholder={this.state.levelOne == 'account' ? '0x321...' : 'channel'} id='channel' className='flex-grow' style={{
                   backgroundColor: 'transparent',
                   fontSize: '1em',
                   padding: '.5em 0',
@@ -1034,7 +1040,7 @@ class App extends React.Component {
                 }} value={this.state.levelTwo} onChange={this.setChannel}></input>
               </div>
             </div>
-            <div className="flex-shrink">
+            <div className='flex-shrink'>
               <a style={{
                 margin: '0 1em',
                 color: 'black',
@@ -1057,29 +1063,30 @@ class App extends React.Component {
             left: '0'
           }}>{' '}</div>
           <div style={{
-            left: '50%',
-            top: '30%',
-            marginLeft: '-300px',
+            top: '25%',
+            left: '0',
+            margin: '0 auto',
+            width: '100%',
             zIndex: 2,
             position: 'fixed',
-            backgroundColor: '#FCFCFC',
-            border: '1px solid #DDD',
-            width: '600px'
+            backgroundColor: 'transparent'
           }}>
-            <div style={{padding: '1em'}}>
-              <h1>Please link an account</h1>
-              <div style={{padding: '1em 0'}}>{
-                'CredSign was unable to detect your Ethereum account. '+
-                'If you do not have an account, please install Mist or '+
-                'MetaMask and create one. You will need an account to '+
-                'publish and sign content.'
-              }</div>
-              <span onClick={() => this.setState({warn: false})} style={{
-                borderBottom: '2px solid black',
-                padding: '.5em 0',
-                display: 'inline-block',
-                cursor: 'pointer'
-              }}>Close</span>
+            <div style={{maxWidth: '600px', margin: '0 auto', backgroundColor: '#FCFCFC', border: '1px solid #DDD'}}>
+              <div style={{padding: '1em'}}>
+                <h1>Please link an account</h1>
+                <div style={{padding: '1em 0'}}>{
+                  'CredSign was unable to detect your Ethereum account. '+
+                  'If you do not have an account, please install Mist or '+
+                  'MetaMask and create one. You will need an account to '+
+                  'publish and sign content.'
+                }</div>
+                <span onClick={() => this.setState({warn: false})} style={{
+                  borderBottom: '2px solid black',
+                  padding: '.5em 0',
+                  display: 'inline-block',
+                  cursor: 'pointer'
+                }}>Close</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1098,23 +1105,25 @@ class App extends React.Component {
           textAlign: 'center',
           zIndex: 10
         }}>
-          <span>{'Message us on '}</span>
+          <span className='collapsable'>{'Message us on '}</span>
           <a href={'https://facebook.com/CredSign'} style={{
             padding: '.5em 0',
             borderBottom: '2px solid gray',
             display: 'inline-block',
             color: 'gray'
           }}>Facebook</a>
-          <span>{' · View source on '}</span>
+          <span>{' · '}</span>
+          <span className='collapsable'>{'View source on '}</span>
           <a href={'https://github.com/CredSign/credsign.github.io'} style={{
             padding: '.5em 0',
             borderBottom: '2px solid gray',
             display: 'inline-block',
             color: 'gray'
           }}>Github</a>
-          <span>{' · Usage governed by '}</span>
+          <span>{' · '}</span>
+          <span className='collapsable'>{'Usage governed by '}</span>
           <a
-            href="https://github.com/CredSign/credsign.github.io/blob/master/LICENSE"
+            href='https://github.com/CredSign/credsign.github.io/blob/master/LICENSE'
             style={{
               color: 'gray',
               padding: '.5em 0',

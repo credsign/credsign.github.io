@@ -62,6 +62,9 @@ h1 {
   .medium-editor-toolbar li button.medium-editor-action {
     border-bottom: 1px solid #5b3a0e;
   }
+  .collapsable {
+    display: none;
+  }
 }
 
 blockquote {
@@ -110,8 +113,8 @@ div.medium-editor-placeholder:after {
 }
 
 .view-align {
-  padding: 0 1em;
-  width: 600px;
+  padding: 0;
+  max-width: 600px;
   margin: 0 auto;
 }
 .view-align > div {
@@ -173,8 +176,8 @@ li a {
 }
 
 .flex-shrink {
-  -webkit-flex: 0 1 auto,
-  flex: 0 1 auto,
+  -webkit-flex: 0 1 auto;
+  flex: 0 1 auto;
 }
 .flex {
   display: -webkit-flex;
