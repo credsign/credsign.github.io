@@ -57,7 +57,7 @@ class Post extends React.Component {
       credsign.Store({contentID: contentID}, {fromBlock: 0, toBlock: 'latest'}).get((error, content) => {
         credrank.getCredRanksByContents(credsign.address, [this.props.id], (error, credRanks) => {
           var funds = 0;
-          if (window.accountSignatures.hasOwnProperty(this.props.account)) {
+          if (window.accountSignatures !== undefined) {
             funds = window.accountSignatures[this.props.account].funds[this.props.id] || 0;
           }
           this.setState({
