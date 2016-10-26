@@ -32,18 +32,20 @@ a, a:visited, a:hover {
 <body>
   <div style="max-width: 600px; margin: 0em auto; display: table; height: 100%;">
     <div style="padding: 0 1em; height: 100%; vertical-align: middle; display: table-cell;">
-      <div style="float: left">
-        <img id="logo" src="/terminal/logo.svg" alt="¢" />
-      </div>
-      <div style="float: left">
-        <div style="font-size: 3em; padding-bottom: .0em">CredSign <a href="/terminal" id="go" style="text-decoration: none; display: none">GO➝</a></div>
-        <div style="font-size: 1.5em">The Distributed News Terminal</div>
+      <div style="display: table">
+        <div style="display: table-cell; vertical-align: middle">
+          <img id="logo" src="/terminal/logo.svg" alt="¢" />
+        </div>
+        <div style="display: table-cell; vertical-align: middle">
+          <div style="font-size: 3em;">CredSign <a href="/terminal" id="go" style="text-decoration: none; display: none">GO➝</a></div>
+          <div style="font-size: 1.5em">The Distributed News Terminal</div>
+        </div>
       </div>
       <div style="float: none; clear: both; padding-top: 1em">
         <span id="description">CredSign is an information ranking platform built by a community of publishers and stakeholders. Information is published to the Ethereum blockchain and ranked by the money associated with it. The more money one piece of information has relative to others, the higher its rank. Anyone can associate their money with information in a process known as Signing. Signed funds are retrieved by re-signing old information with less money.</span>
         <span id="warning" style="visibility: hidden; font-weight: bold;">Note: You need <a href="https://github.com/ethereum/mist/releases">Mist</a> or <a href="https://metamask.io">MetaMask</a> to proceed with using CredSign.</span>
       </div>
-      <br><br><br><br><br><br><br><br><br><br>
+      <br><br><br><br><br><br><br>
     </div>
     <script>
     window.addEventListener('load', function () {
