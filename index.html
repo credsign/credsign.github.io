@@ -15,17 +15,17 @@ body {
   height: 100%;
 }
 #logo {
-  width: 7.5em;
-  height: 7.5em;
-}
-#description {
-    text-align: justify;
-    text-justify: inter-word;
+  width: 5.5em;
+  height: 5.5em;
 }
 @media(max-width:600px) {
   #logo {
     display: none;
   }
+}
+a, a:visited, a:hover {
+  text-decoration: none;
+  color: #0645AD;
 }
   </style>
 </head>
@@ -36,12 +36,12 @@ body {
         <img id="logo" src="/terminal/logo.svg" alt="¢" />
       </div>
       <div style="float: left">
-        <div style="font-size: 4em; padding-bottom: .0em">CredSign <a href="/terminal" id="go" style="text-decoration: none; color: gray; display: none">GO➝</a></div>
-        <div style="font-size: 2em">The Distributed News Terminal</div>
+        <div style="font-size: 3em; padding-bottom: .0em">CredSign <a href="/terminal" id="go" style="text-decoration: none; display: none">GO➝</a></div>
+        <div style="font-size: 1.5em">The Distributed News Terminal</div>
       </div>
       <div style="float: none; clear: both; padding-top: 1em">
         <span id="description">CredSign is an information ranking platform built by a community of publishers and stakeholders. Information is published to the Ethereum blockchain and ranked by the money associated with it. The more money one piece of information has relative to others, the higher its rank. Anyone can associate their money with information in a process known as Signing. Signed funds are retrieved by re-signing old information with less money.</span>
-        <span id="warning" style="visibility: hidden; font-weight: bold;">Note: You need Mist or MetaMask to use the CredSign terminal.</span>
+        <span id="warning" style="visibility: hidden; font-weight: bold;">Note: You need <a href="https://github.com/ethereum/mist/releases">Mist</a> or <a href="https://metamask.io">MetaMask</a> to proceed with using CredSign.</span>
       </div>
       <br><br><br><br><br><br><br><br><br><br>
     </div>
