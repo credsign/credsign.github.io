@@ -11,6 +11,7 @@ contract CredSign {
         uint256 parentID;
         uint256 channelID;
         uint256 timestamp;
+        // Store the amount of cred signed into each indexer by each account
         mapping(address => mapping(address => uint256)) indexedAccountCred;
     }
 
