@@ -56,7 +56,7 @@ a, a:visited, a:hover {
       else {
         web3.version.getNetwork(function (error, networkID) {
           // Only grant access to testnet unless on http (running locally)
-          if (networkID == 2 || window.location.protocol = 'http:') {
+          if (networkID == 2 || window.location.protocol == 'http:') {
             document.getElementById('go').style.display = 'inline';
           }
           else {
