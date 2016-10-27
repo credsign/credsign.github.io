@@ -287,62 +287,65 @@ class Create extends React.Component {
   }
 
   submitPost() {
-
-    var errors = [];
-    var title = document.getElementById('new-post-title').value;
-    var body = toMarkdown(document.getElementById('new-post-body'));
-
-    var attributes = JSON.stringify({
-      version: '1.0',
-      title: title
-    });
-    var doc = JSON.stringify({
-      version: '1.0',
-      body: body
-    });
-
-    if (credsign.getChannelByName(this.props.channel) == 0) {
-      errors.push('Channel must be between 3 and 30 characters and consist of only letters numbers and underscores');
-    }
-    if (title.length < 10 || title > 100) {
-      errors.push('Title must be between 10 and 100 characters');
-    }
     this.setState({
-      error: errors.join('. '),
       view: 'submit'
     });
+    credsign.getChannelByName(this.props.channel, (error, channelID) => {
+      var errors = [];
+      var title = document.getElementById('new-post-title').value;
+      var body = toMarkdown(document.getElementById('new-post-body'));
 
-    if (errors.length == 0) {
-      var nonce = web3.sha3(web3.toBigNumber(0).constructor.random().toString());
-      this.setState({
-        nonce: nonce
-      })
-      credsign.post.estimateGas(this.props.channel, attributes, doc, nonce, 0, credrank.address, {from: this.props.account, value: 0}, (error, gasEstimate) => {
-        console.log(gasEstimate);
-        gasEstimate += 100000;
-        credsign.post(this.props.channel, attributes, doc, nonce, 0, credrank.address, {from: this.props.account, value: 0, gas: gasEstimate}, (error) => {
-          if (error) {
-            this.setState({
-              error: error.toString()
-            });
-          }
-          else {
-            var watcher = credsign.Store({accountID: this.props.account, nonce: this.state.nonce}, {fromBlock: 'latest'});
-            watcher.watch((error, post) => {
-              watcher.stopWatching();
-              if (error) {
-                this.setState({
-                  error: error.toString()
-                });
-              }
-              else {
-                window.location.hash = `#/channel/${this.props.channel}/post/0x${post.args.contentID.toString(16)}`;
-              }
-            });
-          }
-        });
+      var attributes = JSON.stringify({
+        version: '1.0',
+        title: title
       });
-    }
+      var doc = JSON.stringify({
+        version: '1.0',
+        body: body
+      });
+
+      if (channelID == 0) {
+        errors.push('Channel must be between 3 and 30 characters and consist of only letters numbers and underscores');
+      }
+      if (title.length < 10 || title > 100) {
+        errors.push('Title must be between 10 and 100 characters');
+      }
+      this.setState({
+        error: errors.join('. ')
+      });
+
+      if (errors.length == 0) {
+        var nonce = web3.sha3(web3.toBigNumber(0).constructor.random().toString());
+        this.setState({
+          nonce: nonce
+        })
+        credsign.post.estimateGas(this.props.channel, attributes, doc, nonce, 0, credrank.address, {from: this.props.account, value: 0}, (error, gasEstimate) => {
+          console.log(gasEstimate);
+          gasEstimate += 100000;
+          credsign.post(this.props.channel, attributes, doc, nonce, 0, credrank.address, {from: this.props.account, value: 0, gas: gasEstimate}, (error) => {
+            if (error) {
+              this.setState({
+                error: error.toString()
+              });
+            }
+            else {
+              var watcher = credsign.Store({accountID: this.props.account, nonce: this.state.nonce}, {fromBlock: 'latest'});
+              watcher.watch((error, post) => {
+                watcher.stopWatching();
+                if (error) {
+                  this.setState({
+                    error: error.toString()
+                  });
+                }
+                else {
+                  window.location.hash = `#/channel/${this.props.channel}/post/0x${post.args.contentID.toString(16)}`;
+                }
+              });
+            }
+          });
+        });
+      }
+    });
   }
 
   render() {
