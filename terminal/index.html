@@ -71,6 +71,9 @@
             if (error) {
               console.log(error.toString());
             }
+            else if (networkID == 1) {
+              window.location = '/';
+            }
             else {
               var network = networkID == '2' ? 'testnet' : 'privnet';
               getContracts(network, function () {
