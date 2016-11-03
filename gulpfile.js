@@ -165,31 +165,13 @@ function deploy(network, mode, done) {
         }
         catch (e) { }
 
-        if (mode == 'index' && oldContracts.CredSign) {
-          contracts.Indexer = {
-            address: oldContracts.Indexer.address,
-            interface: oldContracts.Indexer.interface
-          };
-          contracts.CredSign = {
-            address: oldContracts.CredSign.address,
-            interface: oldContracts.CredSign.interface
-          };
-          deployContract('IterableSet', [], () => {
-            deployContract('RankingTree', [], () => {
-              deployContract('CredRank', [], writeContracts);
-            });
+        if (mode == 'store') {
+          deployContract('Indexer', [], () => {
+            deployContract('Publisher', [], writeContracts);
           });
         }
         else {
-          deployContract('Indexer', [], () => {
-            deployContract('CredSign', [], () => {
-              deployContract('IterableSet', [], () => {
-                deployContract('RankingTree', [], () => {
-                  deployContract('CredRank', [], writeContracts);
-                });
-              });
-            });
-          });
+          throw new Error(`Deploy mode ${mode} not defined`);
         }
       }
     });

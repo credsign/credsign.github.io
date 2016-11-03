@@ -105,14 +105,25 @@ div.medium-editor-placeholder:after {
   transition: background-color .2s ease-in,color .2s ease-in;
 }
 
-.view-align ul > li:first-child {
+ul.dropdown {
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+}
+
+ul.dropdown > li {
+  background-color: #FFF;
+  padding: .5em 1em;
+}
+
+ul.dropdown > li:first-child {
   border-radius: 5px 5px 0 0;
   border-top: 0;
 }
-.view-align ul > li:last-child {
+ul.dropdown > li:last-child {
   border-radius: 0 0 5px 5px;
 }
-.view-align ul > li:hover {
+ul.dropdown > li:hover {
   background-color: #FCFCFC;
 }
 
@@ -145,7 +156,7 @@ div.medium-editor-placeholder:after {
 }
 
 .view-align > ol > li span {
-  text-transform: uppercase;
+  /*text-transform: uppercase;*/
   color: gray;
   font-weight: normal;
   font-size: 69%;
@@ -160,6 +171,16 @@ div.medium-editor-placeholder:after {
 a {
   cursor: pointer;
   text-decoration: none;
+}
+
+.post a {
+  text-decoration: underline;
+  color: inherit;
+}
+
+.post p {
+  font-family: 'Martel', serif;
+  line-height: 1.5em;
 }
 
 img {

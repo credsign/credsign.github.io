@@ -23,53 +23,39 @@ function getContentTitle(attributes) {
   return title;
 }
 
-function aggregateSignature(result, signature) {
-  var contentID = '0x' + signature.args.contentID.toString(16);
-  if (result.funds[contentID] === undefined) {
-    result.sequence.unshift(contentID);
-  }
-  result.funds[contentID] = signature.args.newCred.toString();
-}
-
 class Post extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      newCred: '',
       title: '',
       body: '',
       publisher: '0x0',
       timestamp: '0',
-      cred: 0,
-      rank: 0,
-      funds: 0,
-      signed: false,
-      signing: false,
+      loading: true,
+      retries: 10,
       error: ''
     };
-    this.signPost = this.signPost.bind(this);
-    this.onCredChange = this.onCredChange.bind(this);
   }
 
   componentDidMount() {
     var contentID = web3.toBigNumber(this.props.id);
-    credsign.Post({contentID: contentID}, {fromBlock: 0, toBlock: 'latest'}).get((error, post) => {
-      credsign.Store({contentID: contentID}, {fromBlock: 0, toBlock: 'latest'}).get((error, content) => {
-        credrank.getCredRanksByContents(credsign.address, [this.props.id], (error, credRanks) => {
-          var funds = 0;
-          if (window.accountSignatures !== undefined) {
-            funds = window.accountSignatures[this.props.account].funds[this.props.id] || 0;
-          }
+    publisher.Publish({contentID: contentID}, {fromBlock: 0, toBlock: 'latest'}).get((error, post) => {
+      publisher.Store({contentID: contentID}, {fromBlock: 0, toBlock: 'latest'}).get((error, content) => {
+        if (!post || !content || post.length == 0 || content.length == 0) {
+          this.setState({
+            loading: false,
+            retries: 0
+          });
+        }
+        else {
           this.setState({
             title: getContentTitle(content[0].args.attributes),
             body: JSON.parse(content[0].args.document).body,
             publisher: post[0].args.accountID,
             timestamp: post[0].args.timestamp,
-            cred: credRanks[0][0].toNumber(),
-            rank: credRanks[1][0].toNumber(),
-            funds: funds
+            loading: false
           });
-        });
+        }
       });
     });
   }
@@ -78,113 +64,35 @@ class Post extends React.Component {
     document.getElementById('post-'+this.props.id).innerHTML = marked(this.state.body);
   }
 
-  onCredChange(e) {
-    this.setState({
-      newCred: e.target.value
-    });
-  }
-
-  signPost() {
-    this.setState({
-      signing: true
-    });
-    var newCred = this.state.newCred;
-    var oldCred = parseInt(this.state.funds);
-    var value = newCred > oldCred ? web3.toBigNumber(10).pow(16).times(newCred - oldCred) : 0;
-    credsign.sign.estimateGas(this.props.id, newCred, credrank.address, {from: this.props.account, value: value}, (error, gasEstimate) => {
-      console.log(gasEstimate);
-      gasEstimate += 100000;
-      credsign.sign(this.props.id, newCred, credrank.address, {from: this.props.account, value: value, gas: gasEstimate}, (error, result) => {
-        if (error) {
-          this.setState({
-            error: error.toString()
-          });
-        }
-        else {
-          var watcher = credsign.Sign({accountID: this.props.account, contentID: this.props.id}, {fromBlock: 'latest'});
-          watcher.watch((error, signature) => {
-            watcher.stopWatching();
-            if (error) {
-              this.setState({
-                error: error.toString()
-              });
-            }
-            else {
-              credrank.getCredRanksByContents(credsign.address, [this.props.id], (error, credRanks) => {
-                this.setState({
-                  signing: false,
-                  cred: credRanks[0][0].toNumber(),
-                  rank: credRanks[1][0].toNumber(),
-                  newCred: '',
-                  signed: true,
-                  funds: signature.args.newCred.toNumber()
-                });
-              });
-            }
-          });
-        }
-      });
-    });
-  }
-
   render() {
-    var rankCaption = this.state.rank > 0
-      ? `Rank ${this.state.rank} with ${this.state.cred}¢`
-      : `Currently unranked`;
     return (
       <div>
         <div style={{backgroundColor: '#FFF'}}>
           <div style={{maxWidth: '600px', margin: '0 auto'}}>
-            <div style={{padding: '1.5em 1em'}}>
+            <div style={{padding: '1.5em 1em', display: this.state.loading ? 'none' : 'block', wordWrap: 'break-word'}}>
               <div style={{color: 'gray', paddingBottom: '1em'}}>
-                <span>{`Posted ${new Date(this.state.timestamp* 1000).toLocaleString()} by `}</span>
+                <span>{`Published ${new Date(this.state.timestamp* 1000).toLocaleString()} by `}</span>
                 <a href={`#/account/${this.state.publisher}`} style={{
-                  borderBottom: '2px solid gray',
-                  padding: '.5em 0',
+                  paddingBottom: '1px',
+                  borderBottom: '1px solid gray',
                   color: 'gray'
                 }}>{`${this.state.publisher.substr(0,5)}...${this.state.publisher.substr(-3)}`}</a>
                 <span>{` in `}</span>
                 <a href={`#/channel/${this.props.channel}`} style={{
                   color:'gray',
-                  borderBottom: '2px solid gray',
-                  paddingBottom: '.5em'}}>{
+                  paddingBottom: '1px',
+                  borderBottom: '1px solid gray'
+                }}>{
                   `#${this.props.channel}`
                 }</a>
               </div>
               <h1>{this.state.title}</h1>
-              <div id={'post-'+this.props.id}></div>
+              <div id={'post-'+this.props.id} className='post'></div>
             </div>
-          </div>
-        </div>
-        <div style={{maxWidth: '600px', margin: '0 auto'}}>
-          <div className='flex' style={{padding: '1.5em 1em'}}>
-            <div className='flex-grow' style={{display: 'block', textAlign: 'left'}}>
-              <div>
-                <span>{rankCaption}</span>
-              </div>
-            </div>
-            <div className='flex-grow' style={{
-              textAlign: 'right',
-              display: (this.props.account == '') ? 'none' : 'block'
-            }}>
-              <div style={{display: !this.state.signing ? 'block' : 'none'}}>
-                <input type='text' name='cred' placeholder={this.state.funds} value={this.state.newCred} onChange={this.onCredChange} style={{
-                  textAlign: 'right',
-                  fontSize: '1em',
-                  border: '0',
-                  backgroundColor: 'transparent',
-                  outline: 'none'
-                }} />
-                <span style={{paddingRight: '.5em'}}>¢</span>
-                <a onClick={this.signPost} style={{
-                  color: 'black',
-                  display: 'inline-block',
-                  borderBottom: '2px solid black',
-                  paddingBottom: '.5em'
-                }}>Sign</a>
-              </div>
-              <div style={{display: this.state.signing ? 'block' : 'none'}}>
-                <span>Signing, please wait...</span>
+            <div style={{padding: '1.5em 1em', display: this.state.loading ? 'block' : 'none', fontStyle: 'italic'}}>
+              <div style={{color: 'gray'}}>
+                <span style={{display: this.state.retries == 0 ? 'block' : 'none'}}>Unable to fetch content</span>
+                <span style={{display: this.state.retries != 0 ? 'block' : 'none'}}>Loading...</span>
               </div>
             </div>
           </div>
@@ -290,61 +198,54 @@ class Create extends React.Component {
     this.setState({
       view: 'submit'
     });
-    credsign.getChannelByName(this.props.channel, (error, channelID) => {
-      var errors = [];
-      var title = document.getElementById('new-post-title').value;
-      var body = toMarkdown(document.getElementById('new-post-body'));
+    var errors = [];
+    var title = document.getElementById('new-post-title').value;
+    var body = toMarkdown(document.getElementById('new-post-body'));
 
-      var attributes = JSON.stringify({
-        version: '1.0',
-        title: title
-      });
-      var doc = JSON.stringify({
-        version: '1.0',
-        body: body
-      });
-
-      if (channelID == 0) {
-        errors.push('Channel must be between 3 and 30 characters and consist of only letters numbers and underscores');
-      }
-      if (title.length < 10 || title > 100) {
-        errors.push('Title must be between 10 and 100 characters');
-      }
-      this.setState({
-        error: errors.join('. ')
-      });
-
-      if (errors.length == 0) {
-        var nonce = web3.sha3(web3.toBigNumber(0).constructor.random().toString());
+    var attributes = JSON.stringify({
+      version: '1.0',
+      title: title
+    });
+    var doc = JSON.stringify({
+      version: '1.0',
+      body: body
+    });
+    publisher.getChannelByName(this.props.channel, (error, channelID) => {
+      publisher.getContentByData(this.props.account, channelID, attributes, doc, (error, contentID) => {
+        if (channelID == 0) {
+          errors.push('Channel must be between 3 and 30 characters and consist of only letters numbers and underscores');
+        }
         this.setState({
-          nonce: nonce
-        })
-        credsign.post.estimateGas(this.props.channel, attributes, doc, nonce, 0, credrank.address, {from: this.props.account, value: 0}, (error, gasEstimate) => {
-          console.log(gasEstimate);
-          gasEstimate += 100000;
-          credsign.post(this.props.channel, attributes, doc, nonce, 0, credrank.address, {from: this.props.account, value: 0, gas: gasEstimate}, (error) => {
-            if (error) {
-              this.setState({
-                error: error.toString()
-              });
-            }
-            else {
-              var watcher = credsign.Store({accountID: this.props.account, nonce: this.state.nonce}, {fromBlock: 'latest'});
-              watcher.watch((error, post) => {
-                watcher.stopWatching();
-                if (error) {
-                  this.setState({
-                    error: error.toString()
-                  });
-                }
-                else {
-                  window.location.hash = `#/channel/${this.props.channel}/post/0x${post.args.contentID.toString(16)}`;
-                }
-              });
-            }
-          });
+          error: errors.join('. ')
         });
-      }
+        if (errors.length == 0) {
+          publisher.publish.estimateGas(this.props.channel, attributes, doc, indexer.address, {from: this.props.account, value: 0}, (error, gasEstimate) => {
+            console.log(gasEstimate);
+            gasEstimate += 100000;
+            publisher.publish(this.props.channel, attributes, doc, indexer.address, {from: this.props.account, value: 0, gas: gasEstimate}, (error) => {
+              if (error) {
+                this.setState({
+                  error: error.toString()
+                });
+              }
+              else {
+                var watcher = publisher.Publish({contentID: contentID}, {fromBlock: 'latest'});
+                watcher.watch((error, post) => {
+                  watcher.stopWatching();
+                  if (error) {
+                    this.setState({
+                      error: error.toString()
+                    });
+                  }
+                  else {
+                    window.location.hash = `#/channel/${this.props.channel}/post/0x${post.args.contentID.toString(16)}`;
+                  }
+                });
+              }
+            });
+          });
+        }
+      });
     });
   }
 
@@ -353,14 +254,14 @@ class Create extends React.Component {
       <div style={{width: '100%', margin: '0 auto'}}>
         <div style={{width: '100%', backgroundColor: '#FFF'}}>
           <div style={{maxWidth: '600px', margin: '0 auto'}}>
-            <div style={{padding: '2em 1em'}}>
+            <div style={{padding: '1em', wordWrap: 'break-word'}}>
               <div style={{display: this.state.view == 'edit' ? 'block' : 'none'}}>
                 <textarea id='new-post-title' type='text' placeholder='title'></textarea>
-                <div id='new-post-body' contentEditable='true'></div>
+                <div id='new-post-body' contentEditable='true' className='post'></div>
               </div>
               <div style={{display: this.state.view != 'edit' ? 'block' : 'none'}}>
                 <h1 id='new-post-title-preview'></h1>
-                <div id='new-post-body-preview'></div>
+                <div id='new-post-body-preview' className='post'></div>
               </div>
             </div>
           </div>
@@ -447,256 +348,131 @@ class Create extends React.Component {
   }
 }
 
-class RankedChannels extends React.Component {
+class NewestPosts extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      loaded: false,
       listItems: [],
-      count: 0
-    };
-  }
-
-  componentDidMount() {
-    credrank.getNumChannels(credsign.address, (error, numRanks) => {
-      if (numRanks == 0) {
-        this.setState({
-          loaded: true,
-          listItems: [],
-          count: 0
-        });
-        return;
-      }
-      credrank.getChannelsByRanks(credsign.address, 1, numRanks, (error, tuple) => {
-        var ids = tuple[0];
-        var cred = tuple[1].map((cred) => cred.toNumber());
-        var ranks = tuple[2].map((rank) => rank.toNumber());
-
-        var listItems = [];
-        for (var i = 0; i < ids.length; i++) {
-          listItems.push({
-            id: '0x' + ids[i].toString(16),
-            channelName: getChannelName(ids[i]),
-            rank: ranks[i].toString(),
-            cred: cred[i].toString()
-          });
-        }
-        this.setState({
-          loaded: true,
-          listItems: listItems,
-          count: numRanks
-        });
-      });
-    });
-  }
-
-  render() {
-    var listItems = this.state.listItems.map((listItem) => {
-      return (
-        <li key={'li-'+listItem.id}>
-          <a href={`#/channel/${listItem.channelName}`}>
-            <div>{'#' + listItem.channelName}</div>
-            <span>{'Rank '+listItem.rank + ' with '+listItem.cred + '¢ signed'}</span>
-          </a>
-        </li>
-      );
-    });
-    return (
-      <div className='view-align'>
-        <div>
-          <span>{'Top channels'}</span>
-          <span>{' (' + this.state.count + ')'}</span>
-          </div>
-        <ol>{listItems}</ol>
-        <span style={{paddingLeft: '1em', display: listItems.length == 0 ? 'block' : 'none', fontStyle: 'italic'}}>Nothing to see here</span>
-      </div>
-    );
-  }
-}
-
-class ChannelPosts extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      channelID: -1,
-      listItems: [],
-      filter: 'Top',
-      count: 0
+      size: 0
     };
     this.getPosts = this.getPosts.bind(this);
-    this.getTopPosts = this.getTopPosts.bind(this);
-    this.getNewPosts = this.getNewPosts.bind(this);
-    this.onFilterChange = this.onFilterChange.bind(this);
   }
 
   componentDidMount() {
-    this.getPosts(this.state.filter, this.props.channel);
+    this.getPosts(this.props.channel);
   }
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.channel != this.props.channel) {
-      this.getPosts(this.state.filter, nextProps.channel);
+      this.getPosts(nextProps.channel);
     }
   }
 
-  onFilterChange(e) {
-    this.getPosts(e.target.innerHTML, this.props.channel);
-  }
-
-  getPosts(filter, channel) {
+  getPosts(channel) {
     this.setState({
       loading: true,
-      filter: filter,
       menu: false
     });
-    if (filter == 'Top') {
-      this.getTopPosts(channel);
-    }
-    else if (filter == 'New') {
-      this.getNewPosts(channel);
-    }
-  }
-
-  getTopPosts(channel) {
-    credsign.getChannelByName(channel, (error, channelID) => {
-      credrank.getNumContents(credsign.address, channelID, (error, numRanks) => {
-        if (numRanks == 0 || channelID == 0) {
+    if (channel == '') {
+      publisher.getOverallSize((error, overallSize) => {
+        overallSize = overallSize.toNumber();
+        if (overallSize == 0) {
           this.setState({
             loading: false,
             listItems: [],
-            channelID: channelID,
-            count: 0
+            size: 0
           });
-          return;
         }
         else {
-          this.setState({
-            channelID: channelID,
-            channelName: getChannelName(channelID)
-          });
-        }
-        credrank.getContentsByRanks(credsign.address, channelID, 1, numRanks, (error, tuple) => {
-          var listItems = [];
-          var idToIndex = {};
-          for (var i = 0; i < tuple[0].length; i++) {
-            var id = '0x' + tuple[0][i].toString(16);
-            idToIndex[id] = i;
-            listItems.push({
-              id: id,
-              cred: tuple[1][i].toNumber(),
-              rank: tuple[2][i].toNumber()
-            });
-          }
-          credsign.Post({contentID: tuple[0]}, {fromBlock: 0, toBlock: 'latest'}).get((error, posts) => {
-            posts.forEach((post) => {
-              var index = idToIndex['0x' + post.args.contentID.toString(16)];
-              listItems[index].title = getContentTitle(post.args.attributes);
-              listItems[index].timestamp = post.args.timestamp;
-            });
-            this.setState({
-              listItems: listItems,
-              count: numRanks,
-              loading: false
-            });
-          });
-        });
-      });
-    });
-  }
-
-  getNewPosts(channel) {
-    this.setState({
-      loading: true
-    });
-    credsign.getChannelByName(channel, (error, channelID) => {
-      credsign.getNumContents(channelID, (error, numRanks) => {
-        numRanks = numRanks.toNumber();
-        if (numRanks == 0) {
-          this.setState({
-            loading: false,
-            listItems: [],
-            count: 0
-          });
-          return;
-        }
-        else {
-          this.setState({
-            channelID: channelID,
-            channelName: getChannelName(channelID)
-          });
-        }
-        var sequenceNums = Array.from(Array(2)).map((_, i) => i + 1);
-        credsign.ChannelSequence({channelID: channelID, sequenceNum: sequenceNums}, {fromBlock: 0, toBlock: 'latest'}).get((error, seqNums) => {
-          var ids = seqNums.map((seqNum) => seqNum.args.contentID);
-          var listItems = [];
-          credsign.Post({contentID: ids}, {fromBlock: 0, toBlock: 'latest'}).get((error, posts) => {
-            for (var i = 0; i < posts.length; i++) {
-              listItems.push({
-                id: '0x' + ids[i].toString(16),
-                title: getContentTitle(posts[i].args.attributes),
-                timestamp: posts[i].args.timestamp
-              });
-            };
-            credrank.getCredRanksByContents(credsign.address, ids, (error, credRanks) => {
+          var indices = Array.from(Array(overallSize)).map((_, i) => i);
+          publisher.Sequence({overallIndex: indices}, {fromBlock: 0, toBlock: 'latest'}).get((error, sequence) => {
+            var ids = sequence.map((post) => post.args.contentID);
+            var listItems = [];
+            publisher.Publish({contentID: ids}, {fromBlock: 0, toBlock: 'latest'}).get((error, posts) => {
               for (var i = 0; i < posts.length; i++) {
-                listItems[i].cred = credRanks[0][i].toNumber();
-                listItems[i].rank = credRanks[1][i].toNumber();
+                listItems.push({
+                  id: '0x' + ids[i].toString(16),
+                  title: getContentTitle(posts[i].args.attributes),
+                  channelName: getChannelName(posts[i].args.channelID),
+                  timestamp: posts[i].args.timestamp.toNumber() * 1000
+                });
               }
               this.setState({
                 loading: false,
                 listItems: listItems.reverse(),
-                count: numRanks
+                size: overallSize
               });
             });
           });
+        }
+      });
+    }
+    else {
+      publisher.getChannelByName(channel, (error, channelID) => {
+        publisher.getChannelSize(channelID, (error, channelSize) => {
+          channelSize = channelSize.toNumber();
+          if (channelID == 0 || channelSize == 0) {
+            this.setState({
+              loading: false,
+              listItems: [],
+              size: 0
+            });
+          }
+          else {
+            var channelName = getChannelName(channelID);
+            var indices = Array.from(Array(channelSize)).map((_, i) => i);
+            publisher.Sequence({channelID: channelID, channelIndex: indices}, {fromBlock: 0, toBlock: 'latest'}).get((error, sequence) => {
+              var ids = sequence.map((post) => post.args.contentID);
+              var listItems = [];
+              publisher.Publish({contentID: ids}, {fromBlock: 0, toBlock: 'latest'}).get((error, posts) => {
+                for (var i = 0; i < posts.length; i++) {
+                  listItems.push({
+                    id: '0x' + ids[i].toString(16),
+                    title: getContentTitle(posts[i].args.attributes),
+                    channelName: channelName,
+                    timestamp: posts[i].args.timestamp.toNumber() * 1000
+                  });
+                }
+                this.setState({
+                  loading: false,
+                  listItems: listItems.reverse(),
+                  size: channelSize
+                });
+              });
+            });
+          }
         });
-      })
-    });
+      });
+    }
   }
 
   render() {
+    var now = new Date().getTime();
     var listItems = this.state.listItems.map((listItem) => {
-      var caption = '';
-      if (listItem.rank > 0) {
-        caption = `Rank ${listItem.rank} with ${listItem.cred}¢`;
-        if (listItem.signed) {
-          if (listItem.funds > 0) {
-            caption += ` - Signed with ${listItem.funds}¢`;
-          }
-          else {
-            caption += ` - Signed`;
-          }
-        }
+      var age = now - listItem.timestamp;
+      if (age > 3600000) {
+        age -= (age % 3600000);
       }
-      else {
-        caption = `Unranked in #${this.state.channelName}`;
+      if (age > 60000) {
+        age -= age % 60000;
+      }
+      if (age > 1000) {
+        age -= age % 1000;
       }
       return (
         <li key={'li-'+listItem.id}>
-          <a href={`#/channel/${this.props.channel}/post/${listItem.id}`}>
+          <a href={`#/channel/${listItem.channelName}/post/${listItem.id}`}>
             <div>{listItem.title}</div>
-            <span>{caption}</span>
+            <span>{`${humanizeDuration(age)} ago in #${listItem.channelName}`}</span>
           </a>
         </li>
       );
     });
     return (
       <div className='view-align'>
-        <div style={{position: 'relative', display: this.state.channelID > 0 ? 'block' : 'none'}}>
-          <span onClick={() => this.setState({menu: !this.state.menu})} style={{cursor: 'pointer'}}>{`${this.state.filter} ▾`}</span>
-          <ul onMouseLeave={() => this.setState({menu: false})} style={{position: 'absolute', top: '1.5em', left: '0', display: this.state.menu ? 'block' : 'none'}}>
-            <li onClick={this.onFilterChange}>Top</li>
-            <li onClick={this.onFilterChange}>New</li>
-          </ul>
-          <span>{` posts in #${this.props.channel}`}</span>
-          <span>{' (' + this.state.count + ')'}</span>
-        </div>
-        <div style={{display: this.state.channelID == 0 ? 'block' : 'none'}}>Invalid channel</div>
         <ol>{listItems}</ol>
         <span style={{paddingLeft: '1em', display: listItems.length == 0 ? 'block' : 'none', fontStyle: 'italic'}}>{
-          this.state.channelID != 0
-            ? (this.state.loading ? 'Loading...' : 'Nothing to see here')
-            : 'Channels must be between 3 and 30 characters consisting of letters, numbers, and underscores.'
+          this.state.loading ? 'Loading...' : 'Nothing to see here'
         }</span>
       </div>
     );
@@ -707,14 +483,11 @@ class Account extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      filter: this.props.filter || 'Posted',
-      listItems: [],
-      count: 0
+      listItems: []
     };
 
     this.getPosts = this.getPosts.bind(this);
     this.getAddress = this.getAddress.bind(this);
-    this.onFilterChange = this.onFilterChange.bind(this);
   }
 
   getAddress(input) {
@@ -732,158 +505,50 @@ class Account extends React.Component {
   componentWillReceiveProps(nextProps) {
     var account = this.getAddress(nextProps.account);
     if (account != this.props.account) {
-      this.getPosts(this.state.filter, account);
+      this.getPosts(account);
     }
   }
 
-  getPosts(filter, account) {
+  getPosts(account) {
     this.setState({
       loading: true,
       menu: false,
-      filter: filter
     });
     var listItems = [];
-    var signedContents = {
-      sequence: [],
-      funds: {}
-    };
-    if (filter == 'Posted') {
-      credsign.Post({accountID: account}, {fromBlock: 0, toBlock: 'latest'}).get((error, posts) => {
-        var ids = [];
-        posts.forEach((post) => {
-          ids.push(post.args.contentID);
-          listItems.push({
-            id: '0x' + post.args.contentID.toString(16),
-            title: getContentTitle(post.args.attributes),
-            channelName: getChannelName(post.args.channelID),
-            timestamp: post.args.timestamp
-          });
-        });
-        credsign.Sign({accountID: account}, {fromBlock: 0, toBlock: 'latest'}).get((error, signatures) => {
-          signatures.forEach((signature) => {
-            aggregateSignature(signedContents, signature);
-          });
-          credrank.getCredRanksByContents(credsign.address, ids, (error, credRanks) => {
-            listItems.forEach((listItem, i) => {
-              listItem.cred = credRanks[0][i].toNumber();
-              listItem.rank = credRanks[1][i].toNumber();
-              listItem.signed = signedContents.funds[listItem.id] !== undefined;
-              listItem.funds = signedContents.funds[listItem.id] || 0;
-            })
-            this.setState({
-              loading: false,
-              listItems: listItems.reverse()
-            });
-          });
+    publisher.Publish({accountID: account}, {fromBlock: 0, toBlock: 'latest'}).get((error, posts) => {
+      posts.forEach((post) => {
+        listItems.push({
+          id: '0x' + post.args.contentID.toString(16),
+          title: getContentTitle(post.args.attributes),
+          channelName: getChannelName(post.args.channelID),
+          timestamp: post.args.timestamp.toNumber() * 1000
         });
       });
-    }
-    else if (filter == 'Funded') {
-      credsign.Sign({accountID: account}, {fromBlock: 0, toBlock: 'latest'}).get((error, signatures) => {
-        signatures.forEach((signature) => {
-          aggregateSignature(signedContents, signature);
-        });
-        var fundedIDs = signedContents.sequence.filter((contentID) => signedContents.funds[contentID] > 0);
-        credsign.Post({contentID: fundedIDs}, {fromBlock: 0, toBlock: 'latest'}).get((error, posts) => {
-          var idToIndex = {};
-          posts.forEach((post, i) => idToIndex['0x' + post.args.contentID.toString(16)] = i);
-          credrank.getCredRanksByContents(credsign.address, fundedIDs, (error, credRanks) => {
-            fundedIDs.forEach((contentID, i) => {
-              var post = posts[idToIndex[contentID]];
-              listItems.push({
-                id: contentID,
-                title: getContentTitle(post.args.attributes),
-                channelName: getChannelName(post.args.channelID),
-                timestamp: post.args.timestamp,
-                cred: credRanks[0][i].toNumber(),
-                rank: credRanks[1][i].toNumber(),
-                signed: true,
-                funds: signedContents.funds[contentID]
-              });
-            });
-            this.setState({
-              loading: false,
-              listItems: listItems
-            });
-          });
-        });
+      this.setState({
+        listItems: listItems.reverse(),
+        loading: false
       });
-    }
-    else if (filter == 'Signed') {
-      credsign.Sign({accountID: account}, {fromBlock: 0, toBlock: 'latest'}).get((error, signatures) => {
-        signatures.forEach((signature) => {
-          aggregateSignature(signedContents, signature);
-        });
-        credsign.Post({contentID: signedContents.sequence}, {fromBlock: 0, toBlock: 'latest'}).get((error, posts) => {
-          var idToIndex = {};
-          posts.forEach((post, i) => idToIndex['0x' + post.args.contentID.toString(16)] = i);
-          credrank.getCredRanksByContents(credsign.address, signedContents.sequence, (error, credRanks) => {
-            signedContents.sequence.forEach((contentID, i) => {
-              var post = posts[idToIndex[contentID]];
-              listItems.push({
-                id: contentID,
-                title: getContentTitle(post.args.attributes),
-                channelName: getChannelName(post.args.channelID),
-                timestamp: post.args.timestamp,
-                cred: credRanks[0][i].toNumber(),
-                rank: credRanks[1][i].toNumber(),
-                signed: true,
-                funds: signedContents.funds[contentID]
-              });
-            });
-            this.setState({
-              loading: false,
-              listItems: listItems
-            });
-          });
-        });
-      });
-    }
-  }
-
-  onFilterChange(e) {
-    var filter = e.target.innerHTML;
-    var account = this.getAddress(this.props.account);
-    this.getPosts(filter, account);
+    });
   }
 
   render() {
+    var now = new Date().getTime();
     var listItems = this.state.listItems.map((listItem) => {
-      var caption = '';
-      if (listItem.rank > 0) {
-        caption = `Rank ${listItem.rank} in #${listItem.channelName} with ${listItem.cred}¢`;
-        if (listItem.signed) {
-          if (listItem.funds > 0) {
-            caption += ` - Signed with ${listItem.funds}¢`;
-          }
-          else {
-            caption += ` - Signed`;
-          }
-        }
-      }
-      else {
-        caption = `Unranked in #${listItem.channelName}`;
+      var age = now - listItem.timestamp;
+      if (age > 60000) {
+        age -= age % 60000;
       }
       return (
         <li key={'li-'+listItem.id}>
           <a href={`#/channel/${listItem.channelName}/post/${listItem.id}`}>
             <div>{listItem.title}</div>
-            <span>{caption}</span>
+            <span>{`${humanizeDuration(age)} ago in #${listItem.channelName}`}</span>
           </a>
         </li>
       );
     });
     return (
       <div className='view-align'>
-        <div style={{position: 'relative'}}>
-          <span onClick={() => this.setState({menu: !this.state.menu})} style={{cursor: 'pointer'}}>{`${this.state.filter} ▾`}</span>
-          <ul onMouseLeave={() => this.setState({menu: false})} onClick={this.onFilterChange} style={{position: 'absolute', top: '1.5em', left: '0', display: this.state.menu ? 'block' : 'none'}}>
-            <li>Posted</li>
-            <li>Funded</li>
-            <li>Signed</li>
-          </ul>
-          <span>{` by account (${listItems.length})`}</span>
-        </div>
         <ol>{listItems}</ol>
         <span style={{paddingLeft: '1em', display: listItems.length == 0 ? 'block' : 'none', fontStyle: 'italic'}}>{
           this.state.loading ? 'Loading...' : 'Nothing to see here'
@@ -893,75 +558,6 @@ class Account extends React.Component {
   }
 }
 
-class Preview extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      title: '',
-      body: '',
-      publisher: '0x0',
-      loading: true,
-      retries: 10
-    };
-  }
-
-  componentDidMount() {
-    var contentID = web3.toBigNumber(this.props.id);
-    credsign.Store({contentID: contentID}, {fromBlock: 0, toBlock: 'latest'}).get((error, content) => {
-      // FIXME - hack to keep trying since infura may be unresponsive
-      if (error || content.length == 0) {
-        if (error) {
-          console.log(error.toString());
-        }
-        if (this.state.retries > 0) {
-          this.setState({
-            retries: this.state.retries - 1
-          });
-          setTimeout(() => {this.componentDidMount()}, 500);
-        }
-      }
-      else {
-        this.setState({
-          title: getContentTitle(content[0].args.attributes),
-          body: JSON.parse(content[0].args.document).body,
-          publisher: content[0].args.accountID,
-          channelName: getChannelName(content[0].args.channelID),
-          loading: false
-        });
-      }
-    });
-  }
-
-  componentDidUpdate() {
-    document.getElementById('post-'+this.props.id).innerHTML = marked(this.state.body);
-  }
-
-  render() {
-    return (
-      <div>
-        <div style={{backgroundColor: '#FFF'}}>
-          <div style={{maxWidth: '600px', margin: '0 auto'}}>
-            <div style={{padding: '1.5em 1em', display: this.state.loading ? 'none' : 'block'}}>
-              <div style={{color: 'gray', paddingBottom: '1em'}}>
-                <span>{`Posted in #${this.state.channelName}`}</span>
-              </div>
-              <h1>{this.state.title}</h1>
-              <div id={'post-'+this.props.id}></div>
-            </div>
-            <div style={{padding: '1.5em 1em', display: this.state.loading ? 'block' : 'none'}}>
-              <div style={{color: 'gray', paddingBottom: '1em'}}>
-                <span style={{display: this.state.retries == 0 ? 'block' : 'none'}}>Unable to fetch content</span>
-                <span style={{display: this.state.retries != 0 ? 'block' : 'none'}}>Loading...</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-}
-
-// Manage navigation
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -972,54 +568,44 @@ class App extends React.Component {
       levelThree: '',
       levelFour: '',
       account: '',
-      mounted: false,
       contentID: null
     };
 
 
     this.route = this.route.bind(this);
-    this.setChannel = this.setChannel.bind(this);
+    this.setFilter = this.setFilter.bind(this);
 
     window.addEventListener('hashchange', () => this.route(window.location.hash));
   }
 
   componentDidMount() {
     this.route(window.location.hash);
-    if (!window.infura) {
-      web3.eth.getAccounts((error, accounts) => {
-        if (accounts.length > 0) {
-          var address = accounts[0];
-          window.accountSignatures = {
-            [address]: {
-              sequence: [],
-              funds: {}
-            }
-          };
-          var watcher = credsign.Sign({accountID: address}, {fromBlock: 0, toBlock: 'latest'});
-          watcher.get((error, signatures) => {
-            watcher.watch((error, signature) => {
-              aggregateSignature(accountSignatures[address], signature);
-            });
-            signatures.forEach((signature) => {
-              aggregateSignature(accountSignatures[address], signature);
-            });
-          });
-          this.setState({
-            account: address
-          });
-        }
-        else {
-          this.setState({
-            warn: true
-          });
-        }
-      });
-    }
+    web3.eth.getAccounts((error, accounts) => {
+      if (accounts.length > 0) {
+        var address = accounts[0];
+        this.setState({
+          account: address
+        });
+      }
+      else {
+        this.setState({
+          warn: true
+        });
+      }
+    });
   }
 
-  setChannel(e) {
-    window.location.hash = `#/${this.state.levelOne}/${e.target.value}`;
-    this.route(window.location.hash);
+  setFilter(e) {
+    var filter = e.target.value;
+    if (this.state.timeout > 0) {
+      clearTimeout(this.state.timeout);
+    }
+    this.setState({
+      levelTwo: e.target.value,
+      timeout: setTimeout(() => {
+        window.location.hash = `#/${this.state.levelOne}/${filter}`;
+      }, 500)
+    });
   }
 
   componentDidUpdate() {
@@ -1036,42 +622,37 @@ class App extends React.Component {
       levelOne: path[1],
       levelTwo: path[2],
       levelThree: path[3],
-      levelFour: path[4],
-      mounted: true
+      levelFour: path[4]
     });
   }
 
   render() {
 
     var view = '';
-    if (this.state.mounted) {
-      if (window.infura) {
-        if (this.state.levelOne == 'channel' && this.state.levelThree == 'post') {
-          view = <Preview id={this.state.levelFour} channel={this.state.levelTwo} />;
-        }
-        else{
-          window.location.replace('/?err=url');
-        }
+    if (this.state.levelOne == 'channel') {
+      if (this.state.levelThree == 'post') {
+        view = <Post id={this.state.levelFour} channel={this.state.levelTwo} account={this.state.account} />;
       }
-      else if (this.state.levelOne == 'channel') {
-        if (this.state.levelThree == 'post') {
-          view = <Post id={this.state.levelFour} channel={this.state.levelTwo} account={this.state.account} />;
-        }
-        else if (this.state.levelTwo == '') {
-          view = <RankedChannels />;
-        }
-        else {
-          view = <ChannelPosts channel={this.state.levelTwo} account={this.state.account} />;
-        }
-      }
-      else if (this.state.levelOne == 'publish'){
-        view = <Create channel={this.state.levelTwo} account={this.state.account} />
-      }
-      else if (this.state.levelOne == 'account') {
-        view = <Account account={this.state.levelTwo} />;
+      else {
+        view = <NewestPosts channel={this.state.levelTwo} account={this.state.account} />;
       }
     }
-
+    else if (this.state.levelOne == 'publish'){
+      view = <Create channel={this.state.levelTwo} account={this.state.account} />
+    }
+    else if (this.state.levelOne == 'account') {
+      view = <Account account={this.state.levelTwo} />;
+    }
+    var filter;
+    if (this.state.levelOne == 'account') {
+      filter = `#/channel/`;
+    }
+    else if (this.state.levelOne == 'publish') {
+      filter = `#/publish/${this.state.levelTwo}`;
+    }
+    else {
+      filter = `#/account/${this.state.account}`;
+    }
     return (
       <div style={{padding: '3em 0'}}>
         <div style={{
@@ -1080,83 +661,54 @@ class App extends React.Component {
           backgroundColor: '#fafafa',
           borderBottom: '1px solid #DDD',
           color: 'black',
-          fontSize: '1.5em',
+          height: '3em',
           top: 0,
           fontWeight: 'bold',
-          padding: '.5em 0',
           textAlign: 'center',
           zIndex: 10
         }}>
-          <div style={{
-            maxWidth: '600px',
-            margin: '0 auto',
-            display: window.infura ? 'none' : 'block'
-          }}>
-            <div className='flex' style={{padding: '0 .66em'}}>
-              <a href='#/channel' className='flex-grow' style={{
-                color: 'black',
-                textAlign: 'left',
-                display: 'inline-block'
-              }}>Channels</a>
-              <a href='/terminal' alt='¢'><img src='logo.svg' style={{width: '1em', height: '1em', paddingTop: '2px'}} /></a>
-              <a href={`#/account/${this.state.account}`} className='flex-grow' style={{
-                color: 'black',
-                textAlign: 'right',
-                display: 'inline-block'
-              }}>Accounts</a>
-            </div>
+          <div style={{maxWidth: '600px', margin: '0 auto'}}>
+            <a href='/' alt='¢'><img src='logo.svg' style={{width: '1.5em', height: '1.5em', margin: '0 auto', padding: '.75em'}} /></a>
           </div>
-          <div style={{
-            maxWidth: '600px',
-            margin: '0 auto',
-            display: window.infura ? 'block' : 'none'
-          }}>
-            <a href='/' style={{
-              padding: '0 .66em',
-              display: 'inline-block',
-              color: 'black',
-              textDecoration: 'none'
-            }}>{
-              '¢'
-            }</a></div>
         </div>
-        <div style={{maxWidth: '600px', margin: '0 auto', display: window.infura ? 'none' : 'block', padding: '1.5em 0'}}>
+        <div style={{maxWidth: '600px', margin: '0 auto', padding: '1.5em 0'}}>
           <div className='flex'>
-            <div className='flex-grow'>
-              <div className='flex' style={{
-                padding: '0 1em',
-                backgroundColor: 'white',
-                borderTop: '2px solid white',
-                borderBottom: '2px solid white',
-                borderRight: '0',
-                borderLeft: '0'
-              }}>
-                <span className='flex-shrink' style={{
-                  color: 'gray',
-                  padding: '.5em 0',
-                  fontWeight: 'normal'
-                }}>{this.state.levelOne == 'account' ? '@' : '#'}</span>
-                <input type='text' placeholder={this.state.levelOne == 'account' ? '0x321...' : 'channel'} id='channel' className='flex-grow' style={{
-                  backgroundColor: 'transparent',
-                  fontSize: '1em',
-                  padding: '.5em 0',
-                  margin: 0,
-                  border: 0,
-                  outline: 0,
-                  placeholderTextColor: 'gray',
-                  color: 'black'
-                }} value={this.state.levelTwo} onChange={this.setChannel}></input>
-              </div>
-            </div>
-            <div className='flex-shrink'>
-              <a style={{
-                margin: '0 1em',
-                color: 'black',
-                display: (this.state.levelOne == 'publish' || this.state.account == '') ? 'none' : 'block',
-                borderBottom: '2px solid black',
-                padding: '.5em 0'
-              }} href={`#/publish/${this.state.levelOne == 'channel' ? this.state.levelTwo : ''}`}>Publish</a>
-            </div>
+            <a className='flex-shrink' href={filter} style={{
+              color: this.state.levelOne == 'publish' ? 'gray' : 'purple',
+              padding: '.5em 0',
+              paddingLeft: '1em',
+              border: '1px solid #DDD',
+              borderRight: '0',
+              textAlign: 'center',
+              fontWeight: 'bold',
+              backgroundColor: 'white'
+            }}>
+              <i style={{paddingTop: '.05em'}} className={this.state.levelOne == 'account' ? 'fa fa-user' : 'fa fa-hashtag'}></i>
+            </a>
+            <input type='text' placeholder={this.state.levelOne == 'account' ? '0x321...' : 'channel'} id='channel' className='flex-grow' style={{
+              backgroundColor: 'transparent',
+              fontSize: '1em',
+              padding: '.5em',
+              margin: 0,
+              border: '1px solid #DDD',
+              borderLeft: 0,
+              backgroundColor: 'white',
+              outline: 0,
+              color: 'black'
+            }} value={this.state.levelTwo} onChange={this.setFilter}></input>
+            <a className='flex-shrink' style={{
+              color: 'white',
+              backgroundColor: 'purple',
+              display: (this.state.levelOne == 'publish' || this.state.account == '') ? 'none' : 'block',
+              padding: '.5em 0',
+              marginLeft: '1em',
+              borderTop: '1px solid purple',
+              borderBottom: '1px solid purple',
+              width: '3em',
+              textAlign: 'center'
+            }} href={`#/publish/${this.state.levelOne == 'channel' ? this.state.levelTwo : ''}`}>
+              <i className='fa fa-pencil'></i>
+            </a>
           </div>
         </div>
         <div style={{display: this.state.warn ? 'block': 'none'}}>
@@ -1185,8 +737,9 @@ class App extends React.Component {
                 <div style={{padding: '1em 0'}}>{
                   'CredSign was unable to detect your Ethereum account. '+
                   'If you do not have an account, please install Mist or '+
-                  'MetaMask and create one. You will need an account to '+
-                  'publish and sign content.'
+                  'MetaMask and create one. If you do, please ensure you '+
+                  'are configured to use the test network. You will need '+
+                  'an account to publish content.'
                 }</div>
                 <span onClick={() => this.setState({warn: false})} style={{
                   borderBottom: '2px solid black',
@@ -1206,38 +759,42 @@ class App extends React.Component {
           borderTop: '1px solid #DDD',
           color: 'gray',
           bottom: 0,
-          fontSize: '69%',
-          fontWeight: 'bold',
+          height: '1em',
           padding: '1em 0',
-          textTransform: 'uppercase',
-          textAlign: 'center',
           zIndex: 10
         }}>
-          <span className='collapsable'>{'Message us on '}</span>
-          <a href={'https://facebook.com/CredSign'} style={{
-            padding: '.5em 0',
-            borderBottom: '2px solid gray',
-            display: 'inline-block',
-            color: 'gray'
-          }}>Facebook</a>
-          <span>{' · '}</span>
-          <span className='collapsable'>{'View source on '}</span>
-          <a href={'https://github.com/CredSign/credsign.github.io'} style={{
-            padding: '.5em 0',
-            borderBottom: '2px solid gray',
-            display: 'inline-block',
-            color: 'gray'
-          }}>Github</a>
-          <span>{' · '}</span>
-          <span className='collapsable'>{'Usage governed by '}</span>
-          <a
-            href='https://github.com/CredSign/credsign.github.io/blob/master/LICENSE'
-            style={{
-              color: 'gray',
-              padding: '.5em 0',
+          <div style={{
+            fontSize: '69%',
+            fontWeight: 'bold',
+            textTransform: 'uppercase',
+            textAlign: 'center'
+          }}>
+            <span className='collapsable'>{'Message us on '}</span>
+            <a href={'https://facebook.com/CredSign'} style={{
+              paddingBottom: '1px',
+              borderBottom: '1px solid gray',
               display: 'inline-block',
-              borderBottom: '2px solid gray'
-            }}>terms</a>
+              color: 'gray'
+            }}>Facebook</a>
+            <span>{' · '}</span>
+            <span className='collapsable'>{'View source on '}</span>
+            <a href={'https://github.com/CredSign/credsign.github.io'} style={{
+              paddingBottom: '1px',
+              borderBottom: '1px solid gray',
+              display: 'inline-block',
+              color: 'gray'
+            }}>Github</a>
+            <span>{' · '}</span>
+            <span className='collapsable'>{'Usage governed by '}</span>
+            <a
+              href='https://github.com/CredSign/credsign.github.io/blob/master/LICENSE'
+              style={{
+                color: 'gray',
+                display: 'inline-block',
+                paddingBottom: '1px',
+                borderBottom: '1px solid gray'
+              }}>terms</a>
+          </div>
         </div>
       </div>
     );

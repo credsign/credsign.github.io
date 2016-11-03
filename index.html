@@ -27,6 +27,9 @@ a, a:visited, a:hover {
   text-decoration: none;
   color: #0645AD;
 }
+#go {
+  color: purple;
+}
   </style>
 </head>
 <body>
@@ -37,35 +40,16 @@ a, a:visited, a:hover {
           <img id="logo" src="/terminal/logo.svg" alt="¢" />
         </div>
         <div style="display: table-cell; vertical-align: middle">
-          <div style="font-size: 3em;">CredSign <a href="/terminal" id="go" style="text-decoration: none; display: none">GO➝</a></div>
+          <div style="font-size: 3em;">CredSign <a href="/terminal" id="go" style="text-decoration: none">GO➝</a></div>
           <div style="font-size: 1.5em">The Distributed News Terminal</div>
         </div>
       </div>
       <div style="float: none; clear: both; padding-top: 1em">
-        <span id="description">CredSign is an information ranking platform built by a community of publishers and stakeholders. Information is published to the Ethereum blockchain and ranked by the money associated with it. The more money one piece of information has relative to others, the higher its rank. Anyone can associate their money with information in a process known as Signing. Signed funds are retrieved by re-signing old information with less money.</span>
-        <span id="warning" style="display: none; font-weight: bold; float: left">Note: You need <a href="https://github.com/ethereum/mist/releases">Mist</a> or <a href="https://metamask.io">MetaMask</a> to proceed with using CredSign.</span>
+        <span id="description">CredSign lets you publish content to the Ethereum blockchain. The result is an always available, censorship resistant source of information. CredSign is currently in beta on the Ethereum test network. Tell us what you think!</span>
         <span id="network" style="display: none; font-weight: bold; float: left">Note: Connect to the Test network to proceed with using CredSign.</span>
       </div>
       <br><br><br><br><br><br><br>
     </div>
-    <script>
-    window.addEventListener('load', function () {
-      if (window.web3 === undefined) {
-        document.getElementById('warning').style.display = 'inline';
-      }
-      else {
-        web3.version.getNetwork(function (error, networkID) {
-          // Only grant access to testnet unless on http (running locally)
-          if (networkID == 2 || window.location.protocol == 'http:') {
-            document.getElementById('go').style.display = 'inline';
-          }
-          else {
-            document.getElementById('network').style.display = 'inline';
-          }
-        });
-      }
-    });
-    </script>
   </div>
 </body>
 </html>
