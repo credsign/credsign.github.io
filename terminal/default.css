@@ -1,3 +1,8 @@
+html {
+    /* Prevent font scaling in landscape */
+    -webkit-text-size-adjust: 100%;
+}
+
 body {
   /* Font family adapted from medium.com */
   font-family: -apple-system, BlinkMacSystemFont,
