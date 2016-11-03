@@ -52,7 +52,8 @@ class Post extends React.Component {
             title: getContentTitle(content[0].args.attributes),
             body: JSON.parse(content[0].args.document).body,
             publisher: post[0].args.accountID,
-            timestamp: post[0].args.timestamp,
+            channelName: getChannelName(post[0].args.channelID),
+            timestamp: post[0].args.timestamp * 1000,
             loading: false
           });
         }
@@ -67,25 +68,24 @@ class Post extends React.Component {
   render() {
     return (
       <div>
+        <div style={{maxWidth: '600px', margin: '0 auto', padding: '2em 0', visibility: this.state.loading ? 'hidden' : 'visible'}}>
+          <div style={{padding: '0 1em', color: 'dimgray'}}>
+            <div style={{float: 'left'}}>
+              <span>Published by </span>
+              <a href={`#/account/${this.state.publisher}`}>{`${this.state.publisher.substr(0,5)}...${this.state.publisher.substr(-3)}`}</a>
+              <span>{` in `}</span>
+              <a href={`#/channel/${this.state.channelName}`}>{`#${this.state.channelName}`}</a>
+              &nbsp;
+            </div>
+            <div style={{float: 'left'}}>
+              <span>{`at ${new Date(this.state.timestamp).toLocaleString()}`}</span>
+            </div>
+            <div style={{float: 'none', clear: 'both'}}></div>
+          </div>
+        </div>
         <div style={{backgroundColor: '#FFF'}}>
           <div style={{maxWidth: '600px', margin: '0 auto'}}>
             <div style={{padding: '1.5em 1em', display: this.state.loading ? 'none' : 'block', wordWrap: 'break-word'}}>
-              <div style={{color: 'gray', paddingBottom: '1em'}}>
-                <span>{`Published ${new Date(this.state.timestamp* 1000).toLocaleString()} by `}</span>
-                <a href={`#/account/${this.state.publisher}`} style={{
-                  paddingBottom: '1px',
-                  borderBottom: '1px solid gray',
-                  color: 'gray'
-                }}>{`${this.state.publisher.substr(0,5)}...${this.state.publisher.substr(-3)}`}</a>
-                <span>{` in `}</span>
-                <a href={`#/channel/${this.props.channel}`} style={{
-                  color:'gray',
-                  paddingBottom: '1px',
-                  borderBottom: '1px solid gray'
-                }}>{
-                  `#${this.props.channel}`
-                }</a>
-              </div>
               <h1>{this.state.title}</h1>
               <div id={'post-'+this.props.id} className='post'></div>
             </div>
@@ -267,16 +267,19 @@ class Create extends React.Component {
           </div>
         </div>
         <div style={{width: '100%'}}>
-          <div style={{maxWidth: '600px', margin: '0 auto'}}>
+          <div style={{maxWidth: '600px', margin: '0 auto', color: 'black'}}>
             <div className='flex' style={{padding: '1.5em 1em'}}>
               <div className='flex-grow' style={{textAlign: 'left'}}>
                 <a style={{
-                  color: 'black',
+                  color: 'inherit',
+                  textDecoration: 'none',
                   display: this.state.view == 'edit' ? 'inline-block' : 'none',
                   borderBottom: '2px solid black',
                   paddingBottom: '.5em'
                 }} href={'#/channel/'+this.props.channel}>Cancel</a>
                 <a style={{
+                  color: 'inherit',
+                  textDecoration: 'none',
                   display: this.state.view != 'edit' ? 'inline-block' : 'none',
                   borderBottom: '2px solid black',
                   paddingBottom: '.5em'
@@ -284,11 +287,15 @@ class Create extends React.Component {
               </div>
               <div className='flex-grow' style={{textAlign: 'right'}}>
                 <a style={{
+                  color: 'inherit',
+                  textDecoration: 'none',
                   display: this.state.view == 'edit' ? 'inline-block' : 'none',
                   borderBottom: '2px solid black',
                   paddingBottom: '.5em'
                 }} onClick={this.previewPost}>Preview</a>
                 <a style={{
+                  color: 'inherit',
+                  textDecoration: 'none',
                   display: this.state.view != 'edit' ? 'inline-block' : 'none',
                   borderBottom: '2px solid black',
                   paddingBottom: '.5em'
@@ -371,16 +378,15 @@ class NewestPosts extends React.Component {
   getPosts(channel) {
     this.setState({
       loading: true,
-      menu: false
+      listItems: [],
+      size: 0
     });
     if (channel == '') {
       publisher.getOverallSize((error, overallSize) => {
         overallSize = overallSize.toNumber();
         if (overallSize == 0) {
           this.setState({
-            loading: false,
-            listItems: [],
-            size: 0
+            loading: false
           });
         }
         else {
@@ -393,6 +399,7 @@ class NewestPosts extends React.Component {
                 listItems.push({
                   id: '0x' + ids[i].toString(16),
                   title: getContentTitle(posts[i].args.attributes),
+                  publisher: posts[i].args.accountID,
                   channelName: getChannelName(posts[i].args.channelID),
                   timestamp: posts[i].args.timestamp.toNumber() * 1000
                 });
@@ -429,6 +436,7 @@ class NewestPosts extends React.Component {
                   listItems.push({
                     id: '0x' + ids[i].toString(16),
                     title: getContentTitle(posts[i].args.attributes),
+                    publisher: posts[i].args.accountID,
                     channelName: channelName,
                     timestamp: posts[i].args.timestamp.toNumber() * 1000
                   });
@@ -459,11 +467,14 @@ class NewestPosts extends React.Component {
       if (age > 1000) {
         age -= age % 1000;
       }
+      console.log(listItem);
       return (
         <li key={'li-'+listItem.id}>
           <a href={`#/channel/${listItem.channelName}/post/${listItem.id}`}>
             <div>{listItem.title}</div>
-            <span>{`${humanizeDuration(age)} ago in #${listItem.channelName}`}</span>
+            <span>{`${humanizeDuration(age)} ago`}</span>
+            <span>{` by ${listItem.publisher.substr(0,5)}...${listItem.publisher.substr(-3)}`}</span>
+            <span>{` in #${listItem.channelName}`}</span>
           </a>
         </li>
       );
@@ -487,32 +498,22 @@ class Account extends React.Component {
     };
 
     this.getPosts = this.getPosts.bind(this);
-    this.getAddress = this.getAddress.bind(this);
-  }
-
-  getAddress(input) {
-    if (parseInt(input) > 0)
-      return input;
-    else
-      return '-1';
   }
 
   componentDidMount() {
-    var account = this.getAddress(this.props.account);
-    this.getPosts(this.state.filter, account);
+    this.getPosts(this.props.account);
   }
 
   componentWillReceiveProps(nextProps) {
-    var account = this.getAddress(nextProps.account);
-    if (account != this.props.account) {
-      this.getPosts(account);
+    if (nextProps.account != this.props.account) {
+      this.getPosts(nextProps.account);
     }
   }
 
   getPosts(account) {
     this.setState({
       loading: true,
-      menu: false,
+      listItems: []
     });
     var listItems = [];
     publisher.Publish({accountID: account}, {fromBlock: 0, toBlock: 'latest'}).get((error, posts) => {
@@ -520,6 +521,7 @@ class Account extends React.Component {
         listItems.push({
           id: '0x' + post.args.contentID.toString(16),
           title: getContentTitle(post.args.attributes),
+          publisher: post.args.accountID,
           channelName: getChannelName(post.args.channelID),
           timestamp: post.args.timestamp.toNumber() * 1000
         });
@@ -542,7 +544,9 @@ class Account extends React.Component {
         <li key={'li-'+listItem.id}>
           <a href={`#/channel/${listItem.channelName}/post/${listItem.id}`}>
             <div>{listItem.title}</div>
-            <span>{`${humanizeDuration(age)} ago in #${listItem.channelName}`}</span>
+            <span>{`${humanizeDuration(age)} ago`}</span>
+            <span>{` by ${listItem.publisher.substr(0,5)}...${listItem.publisher.substr(-3)}`}</span>
+            <span>{` in #${listItem.channelName}`}</span>
           </a>
         </li>
       );
@@ -629,9 +633,11 @@ class App extends React.Component {
   render() {
 
     var view = '';
+    var showNav = true;
     if (this.state.levelOne == 'channel') {
       if (this.state.levelThree == 'post') {
         view = <Post id={this.state.levelFour} channel={this.state.levelTwo} account={this.state.account} />;
+        showNav = false;
       }
       else {
         view = <NewestPosts channel={this.state.levelTwo} account={this.state.account} />;
@@ -643,6 +649,7 @@ class App extends React.Component {
     else if (this.state.levelOne == 'account') {
       view = <Account account={this.state.levelTwo} />;
     }
+
     var filter;
     if (this.state.levelOne == 'account') {
       filter = `#/channel/`;
@@ -671,7 +678,7 @@ class App extends React.Component {
             <a href='/' alt='¢'><img src='logo.svg' style={{width: '1.5em', height: '1.5em', margin: '0 auto', padding: '.75em'}} /></a>
           </div>
         </div>
-        <div style={{maxWidth: '600px', margin: '0 auto', padding: '1.5em 0'}}>
+        <div style={{maxWidth: '600px', margin: '0 auto', padding: '1.5em 0', display: showNav ? 'block' : 'none'}}>
           <div className='flex'>
             <a className='flex-shrink' href={filter} style={{
               color: this.state.levelOne == 'publish' ? 'gray' : 'purple',
@@ -759,7 +766,7 @@ class App extends React.Component {
           position: 'fixed',
           backgroundColor: '#fafafa',
           borderTop: '1px solid #DDD',
-          color: 'gray',
+          color: 'dimgray',
           bottom: 0,
           height: '1em',
           padding: '1em 0',
@@ -767,34 +774,27 @@ class App extends React.Component {
         }}>
           <div style={{
             fontSize: '69%',
-            fontWeight: 'bold',
             textTransform: 'uppercase',
             textAlign: 'center'
           }}>
             <span className='collapsable'>{'Message us on '}</span>
             <a href={'https://facebook.com/CredSign'} style={{
-              paddingBottom: '1px',
-              borderBottom: '1px solid gray',
               display: 'inline-block',
-              color: 'gray'
+              color: 'inherit'
             }}>Facebook</a>
             <span>{' · '}</span>
             <span className='collapsable'>{'View source on '}</span>
             <a href={'https://github.com/CredSign/credsign.github.io'} style={{
-              paddingBottom: '1px',
-              borderBottom: '1px solid gray',
               display: 'inline-block',
-              color: 'gray'
+              color: 'inherit'
             }}>Github</a>
             <span>{' · '}</span>
             <span className='collapsable'>{'Usage governed by '}</span>
             <a
               href='https://github.com/CredSign/credsign.github.io/blob/master/LICENSE'
               style={{
-                color: 'gray',
-                display: 'inline-block',
-                paddingBottom: '1px',
-                borderBottom: '1px solid gray'
+                color: 'inherit',
+                display: 'inline-block'
               }}>terms</a>
           </div>
         </div>
