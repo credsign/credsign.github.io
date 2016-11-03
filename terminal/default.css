@@ -212,3 +212,8 @@ li a {
 #channel::-webkit-input-placeholder {
   color: gray;
 }
+
+/* Remove shadow around border */
+input[type="text"] {
+  -webkit-appearance: none;
+}
