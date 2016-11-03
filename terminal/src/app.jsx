@@ -691,6 +691,8 @@ class App extends React.Component {
               padding: '.5em',
               margin: 0,
               border: '1px solid #DDD',
+              borderRadius: 0,
+              boxShadow: 'none',
               borderLeft: 0,
               backgroundColor: 'white',
               outline: 0,
