@@ -467,7 +467,6 @@ class NewestPosts extends React.Component {
       if (age > 1000) {
         age -= age % 1000;
       }
-      console.log(listItem);
       return (
         <li key={'li-'+listItem.id}>
           <a href={`#/channel/${listItem.channelName}/post/${listItem.id}`}>
@@ -537,8 +536,14 @@ class Account extends React.Component {
     var now = new Date().getTime();
     var listItems = this.state.listItems.map((listItem) => {
       var age = now - listItem.timestamp;
+      if (age > 3600000) {
+        age -= (age % 3600000);
+      }
       if (age > 60000) {
         age -= age % 60000;
+      }
+      if (age > 1000) {
+        age -= age % 1000;
       }
       return (
         <li key={'li-'+listItem.id}>
