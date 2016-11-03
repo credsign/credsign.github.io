@@ -254,7 +254,7 @@ class Create extends React.Component {
       <div style={{width: '100%', margin: '0 auto'}}>
         <div style={{width: '100%', backgroundColor: '#FFF'}}>
           <div style={{maxWidth: '600px', margin: '0 auto'}}>
-            <div style={{padding: '1em', wordWrap: 'break-word'}}>
+            <div style={{padding: '1.5em 1em', wordWrap: 'break-word'}}>
               <div style={{display: this.state.view == 'edit' ? 'block' : 'none'}}>
                 <textarea id='new-post-title' type='text' placeholder='title'></textarea>
                 <div id='new-post-body' contentEditable='true' className='post'></div>
