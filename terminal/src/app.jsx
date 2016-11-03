@@ -307,7 +307,7 @@ class Create extends React.Component {
               }}>{' '}</div>
               <div style={{
                 display: this.state.view == 'submit' ? 'block' : 'none',
-                top: '25%',
+                top: '15%',
                 left: '0',
                 width: '100%',
                 position: 'fixed',
@@ -725,7 +725,7 @@ class App extends React.Component {
             left: '0'
           }}>{' '}</div>
           <div style={{
-            top: '25%',
+            top: '15%',
             left: '0',
             margin: '0 auto',
             width: '100%',
