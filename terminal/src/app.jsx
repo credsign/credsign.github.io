@@ -68,19 +68,22 @@ class Post extends React.Component {
   render() {
     return (
       <div>
-        <div style={{maxWidth: '600px', margin: '0 auto', padding: '2em 0', visibility: this.state.loading ? 'hidden' : 'visible'}}>
+        <div style={{maxWidth: '600px', margin: '0 auto', padding: '1.5em 0'}}>
           <div style={{padding: '0 1em', color: 'dimgray'}}>
-            <div style={{float: 'left'}}>
-              <span>Published by </span>
-              <a href={`#/account/${this.state.publisher}`}>{`${this.state.publisher.substr(0,5)}...${this.state.publisher.substr(-3)}`}</a>
-              <span>{` in `}</span>
-              <a href={`#/channel/${this.state.channelName}`}>{`#${this.state.channelName}`}</a>
-              &nbsp;
+            <div style={{display: !this.state.loading ? 'block' : 'none'}}>
+              <div style={{float: 'left'}}>
+                <span>Published by </span>
+                <a href={`#/account/${this.state.publisher}`}>{`${this.state.publisher.substr(0,5)}...${this.state.publisher.substr(-3)}`}</a>
+                <span>{` in `}</span>
+                <a href={`#/channel/${this.state.channelName}`}>{`#${this.state.channelName}`}</a>
+                &nbsp;
+              </div>
+              <div style={{float: 'left'}}>
+                <span>{`on ${new Date(this.state.timestamp).toLocaleString()}`}</span>
+              </div>
+              <div style={{float: 'none', clear: 'both'}}></div>
             </div>
-            <div style={{float: 'left'}}>
-              <span>{`at ${new Date(this.state.timestamp).toLocaleString()}`}</span>
-            </div>
-            <div style={{float: 'none', clear: 'both'}}></div>
+            <div style={{fontStyle: 'italic', display: this.state.loading ? 'block' : 'none'}}>Loading...</div>
           </div>
         </div>
         <div style={{backgroundColor: '#FFF'}}>
@@ -88,12 +91,6 @@ class Post extends React.Component {
             <div style={{padding: '1.5em 1em', display: this.state.loading ? 'none' : 'block', wordWrap: 'break-word'}}>
               <h1>{this.state.title}</h1>
               <div id={'post-'+this.props.id} className='post'></div>
-            </div>
-            <div style={{padding: '1.5em 1em', display: this.state.loading ? 'block' : 'none', fontStyle: 'italic'}}>
-              <div style={{color: 'gray'}}>
-                <span style={{display: this.state.retries == 0 ? 'block' : 'none'}}>Unable to fetch content</span>
-                <span style={{display: this.state.retries != 0 ? 'block' : 'none'}}>Loading...</span>
-              </div>
             </div>
           </div>
         </div>
@@ -370,7 +367,14 @@ class NewestPosts extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.channel != this.props.channel) {
+    if (nextProps.channel != window.location.hash.split('/').slice(-1)) {
+      this.setState({
+        loading: true,
+        listItems: [],
+        size: 0
+      });
+    }
+    else {
       this.getPosts(nextProps.channel);
     }
   }
@@ -478,12 +482,15 @@ class NewestPosts extends React.Component {
         </li>
       );
     });
+    var inChannel = this.props.channel.length != 0 ? ' in channel' : '';
     return (
       <div className='view-align'>
+        <div style={{paddingLeft: '1em', paddingBottom: '1em'}}>
+          <div style={{fontStyle: 'italic', display: this.state.loading ? 'block'  : 'none'}}>Loading...</div>
+          <div style={{display: !this.state.loading && this.state.size == 0 ? 'block'  : 'none'}}>No posts found</div>
+          <div style={{display: this.state.size != 0 ? 'block'  : 'none'}}>{`Newest posts${inChannel} (${this.state.size})`}</div>
+        </div>
         <ol>{listItems}</ol>
-        <span style={{paddingLeft: '1em', display: listItems.length == 0 ? 'block' : 'none', fontStyle: 'italic'}}>{
-          this.state.loading ? 'Loading...' : 'Nothing to see here'
-        }</span>
       </div>
     );
   }
@@ -493,7 +500,8 @@ class Account extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      listItems: []
+      listItems: [],
+      size: 0
     };
 
     this.getPosts = this.getPosts.bind(this);
@@ -504,7 +512,14 @@ class Account extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.account != this.props.account) {
+    if (nextProps.account != window.location.hash.split('/').slice(-1)) {
+      this.setState({
+        loading: true,
+        listItems: [],
+        size: 0
+      });
+    }
+    else {
       this.getPosts(nextProps.account);
     }
   }
@@ -512,7 +527,8 @@ class Account extends React.Component {
   getPosts(account) {
     this.setState({
       loading: true,
-      listItems: []
+      listItems: [],
+      size: 0
     });
     var listItems = [];
     publisher.Publish({accountID: account}, {fromBlock: 0, toBlock: 'latest'}).get((error, posts) => {
@@ -527,6 +543,7 @@ class Account extends React.Component {
       });
       this.setState({
         listItems: listItems.reverse(),
+        size: listItems.length,
         loading: false
       });
     });
@@ -556,12 +573,15 @@ class Account extends React.Component {
         </li>
       );
     });
+    var byAccount = this.props.account.length != 0 ? ' by account' : '';
     return (
       <div className='view-align'>
+        <div style={{paddingLeft: '1em', paddingBottom: '1em'}}>
+          <div style={{fontStyle: 'italic', display: this.state.loading ? 'block'  : 'none'}}>Loading...</div>
+          <div style={{display: !this.state.loading && this.state.size == 0 ? 'block'  : 'none'}}>No posts found</div>
+          <div style={{display: this.state.size != 0 ? 'block'  : 'none'}}>{`Newest posts${byAccount} (${this.state.size})`}</div>
+        </div>
         <ol>{listItems}</ol>
-        <span style={{paddingLeft: '1em', display: listItems.length == 0 ? 'block' : 'none', fontStyle: 'italic'}}>{
-          this.state.loading ? 'Loading...' : 'Nothing to see here'
-        }</span>
       </div>
     );
   }
@@ -610,15 +630,11 @@ class App extends React.Component {
       clearTimeout(this.state.timeout);
     }
     this.setState({
-      levelTwo: e.target.value,
+      levelTwo: filter,
       timeout: setTimeout(() => {
         window.location.hash = `#/${this.state.levelOne}/${filter}`;
       }, 500)
     });
-  }
-
-  componentDidUpdate() {
-    document.getElementById('channel').innerHTML = this.state.levelTwo;
   }
 
   route(href) {
@@ -666,7 +682,7 @@ class App extends React.Component {
       filter = `#/account/${this.state.account}`;
     }
     return (
-      <div style={{padding: '3em 0'}}>
+      <div style={{position: 'relative', minHeight: '100%'}}>
         <div style={{
           position: 'fixed',
           width: '100%',
@@ -683,7 +699,8 @@ class App extends React.Component {
             <a href='/' alt='¢'><img src='logo.svg' style={{width: '1.5em', height: '1.5em', margin: '0 auto', padding: '.75em'}} /></a>
           </div>
         </div>
-        <div style={{maxWidth: '600px', margin: '0 auto', padding: '1.5em 0', display: showNav ? 'block' : 'none'}}>
+        <div style={{height: '3em'}}>&nbsp;</div>
+        <div style={{maxWidth: '600px', margin: '0 auto', padding: '1em 0', display: showNav ? 'block' : 'none'}}>
           <div className='flex'>
             <a className='flex-shrink' href={filter} style={{
               color: this.state.levelOne == 'publish' ? 'gray' : 'purple',
@@ -766,9 +783,10 @@ class App extends React.Component {
           </div>
         </div>
         <div>{view}</div>
+        <div style={{height: '3em'}}>&nbsp;</div>
         <div style={{
           width: '100%',
-          position: 'fixed',
+          position: 'absolute',
           backgroundColor: '#fafafa',
           borderTop: '1px solid #DDD',
           color: 'dimgray',

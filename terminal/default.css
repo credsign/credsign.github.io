@@ -14,9 +14,12 @@ body {
   background-color: #F9F9F9;
     /* Put a border to seperate Mist Nav UI */
   border-left: 1px solid #DDD;
+  width: 100%;
+  height: 100%;
 }
 div#main {
   width: 100%;
+  height: 100%;
 }
 
 #new-post-title {
@@ -137,11 +140,7 @@ ul.dropdown > li:hover {
   max-width: 600px;
   margin: 0 auto;
 }
-.view-align > div {
-  padding: 0 .66em 1em;
-  font-weight: bold;
-  font-size: 1.5em;
-}
+
 .view-align > ol {
   padding: 0;
   margin: 0;
@@ -161,7 +160,6 @@ ul.dropdown > li:hover {
 }
 
 .view-align > ol > li span {
-  /*text-transform: uppercase;*/
   color: gray;
   font-weight: normal;
   font-size: 69%;
