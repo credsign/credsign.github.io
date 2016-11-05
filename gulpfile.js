@@ -60,8 +60,8 @@ gulp.task('testnet', (done) => {
   });
 });
 
-gulp.task('terminal-build', () => {
-  return gulp.src(['./terminal/src/*'])
+gulp.task('terminal-app', () => {
+  return gulp.src(['./app/src/*'])
     .pipe(sourcemaps.init())
     .pipe(babel({
         'presets': ['es2015', 'react']
@@ -72,12 +72,12 @@ gulp.task('terminal-build', () => {
     .pipe(concat('app.min.js'))
     .pipe(uglify())
     .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest('./terminal/dist'));
+    .pipe(gulp.dest('./app/dist'));
 });
 
 gulp.task('terminal-server', (done) => {
   server = spawn('python', ['-m', 'SimpleHTTPServer']);
-  gulp.watch('./terminal/src/*', ['terminal-build']).on('change', (event) => {
+  gulp.watch('./app/src/*', ['terminal-app']).on('change', (event) => {
     console.log('Frontend file ' + event.path + ' was ' + event.type + ', rebuilding');
   });
 });

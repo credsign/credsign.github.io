@@ -696,7 +696,7 @@ class App extends React.Component {
           zIndex: 10
         }}>
           <div style={{maxWidth: '600px', margin: '0 auto'}}>
-            <a href='/' alt='¢'><img src='logo.svg' style={{width: '1.5em', height: '1.5em', margin: '0 auto', padding: '.75em'}} /></a>
+            <a href='/' alt='¢'><img src='./app/logo.svg' style={{width: '1.5em', height: '1.5em', margin: '0 auto', padding: '.75em'}} /></a>
           </div>
         </div>
         <div style={{height: '3em'}}>&nbsp;</div>
