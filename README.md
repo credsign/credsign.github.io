@@ -1,5 +1,5 @@
 # CredSign Terminal
-The terminal lets you publish and view content using the Ethereum blockchain. The result is an always available, censorship resistant source of information. The termnal is currently in beta on the Ethereum test network, available at <https://credsign.github.io/terminal>.
+The terminal lets you publish and view content using the Ethereum blockchain. The result is an always available, censorship resistant source of information. The terminal is currently in beta on the Ethereum test network, available at <https://credsign.github.io/terminal>.
 
 # Development enviroment setup
 
