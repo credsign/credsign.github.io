@@ -807,14 +807,14 @@ class App extends React.Component {
             }}>Facebook</a>
             <span>{' · '}</span>
             <span className='collapsable'>{'View source on '}</span>
-            <a href={'https://github.com/CredSign/credsign.github.io'} style={{
+            <a href={'https://github.com/credsign/terminal'} style={{
               display: 'inline-block',
               color: 'inherit'
             }}>Github</a>
             <span>{' · '}</span>
             <span className='collapsable'>{'Usage governed by '}</span>
             <a
-              href='https://github.com/CredSign/credsign.github.io/blob/master/LICENSE'
+              href='https://github.com/credsign/terminal/blob/master/LICENSE'
               style={{
                 color: 'inherit',
                 display: 'inline-block'
