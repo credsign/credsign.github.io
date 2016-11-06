@@ -1,5 +1,5 @@
-# CredSign - The Distributed News Terminal
-CredSign is a content ranking app on the Ethereum network. It provides users with an interface to write and publish content to the Ethereum blockchain. Users can influence content rankings by signing content with their own funds. Signed funds are stored in the contract and can be retrieved at any time. When funds are signed, the rank goes up; when funds are retrieved the rank goes down.
+# CredSign Terminal
+The terminal lets you publish and view content using the Ethereum blockchain. The result is an always available, censorship resistant source of information. The termnal is currently in beta on the Ethereum test network, available at <https://credsign.github.io/terminal>.
 
 # Development enviroment setup
 
@@ -18,11 +18,11 @@ First, copy or link `geth` to the `./networks` directory of this repo.
 3. In another terminal tab run `npm run testnet-deploy`
 4. Leave `testnet-server` running to access the app on <http://localhost:8000>
 
-Modifications to the react source files in `./webapp` will automatically recompile while the server is running.
+Modifications to the react source files in `./app/src` will automatically recompile while the server is running.
 
 # License
 
-CredSign - The Distributed News Terminal - Copyright (C) 2016 Cameron Hejazi
+CredSign Terminal - Copyright (C) 2016 Cameron Hejazi
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
