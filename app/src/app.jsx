@@ -766,7 +766,7 @@ class App extends React.Component {
               <div style={{padding: '1em'}}>
                 <h1>Please link an account</h1>
                 <div style={{padding: '1em 0'}}>{
-                  'CredSign was unable to detect your Ethereum account. '+
+                  'Credsign was unable to detect your Ethereum account. '+
                   'If you do not have an account, please install Mist or '+
                   'MetaMask and create one. If you do, please ensure you '+
                   'are configured to use the test network. You will need '+
@@ -801,7 +801,7 @@ class App extends React.Component {
             textAlign: 'center'
           }}>
             <span className='collapsable'>{'Message us on '}</span>
-            <a href={'https://facebook.com/CredSign'} style={{
+            <a href={'https://facebook.com/Credsign'} style={{
               display: 'inline-block',
               color: 'inherit'
             }}>Facebook</a>
