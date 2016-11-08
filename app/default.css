@@ -85,6 +85,7 @@ blockquote {
   padding-left: 9px;
   margin-left: -15px;
   color: #555;
+  font-family: 'Martel', serif;
 }
 
 div.medium-editor-placeholder:after {
