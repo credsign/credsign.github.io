@@ -610,7 +610,7 @@ class App extends React.Component {
   componentDidMount() {
     this.route(window.location.hash);
     web3.eth.getAccounts((error, accounts) => {
-      if (accounts.length > 0) {
+      if (!window.infura && accounts && accounts.length > 0) {
         var address = accounts[0];
         this.setState({
           account: address
