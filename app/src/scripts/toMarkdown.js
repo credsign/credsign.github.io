@@ -1,7 +1,7 @@
 // Adapted from https://gist.github.com/Youwotma/1762527
 // No license provided in original, so assume license of this repo.
 
-export function toMarkdown(node) {
+export default function toMarkdown(node) {
 
     var markdownEscape = (text) => {
         return text ? text.replace(/\s+/g, " ").replace(/[\\\-*_>#]/g, "\\$&") : '';

@@ -1451,7 +1451,7 @@
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
-	exports.toMarkdown = toMarkdown;
+	exports.default = toMarkdown;
 	// Adapted from https://gist.github.com/Youwotma/1762527
 	// No license provided in original, so assume license of this repo.
 
