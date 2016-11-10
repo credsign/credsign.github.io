@@ -12,9 +12,6 @@ contract Publisher {
         uint256 timestamp;
     }
 
-    // contentID: fetch document metadata
-    // accountID: generate profile
-    // parentID: fetch responses
     event Publish (
         uint256 indexed contentID,
         address indexed accountID,
@@ -24,9 +21,6 @@ contract Publisher {
         uint256 timestamp
     );
 
-    // contentID: fetch the document
-    // accountID: notify successful publish
-    // nonce: notify successful publish
     event Store (
         uint256 indexed contentID,
         address indexed accountID,
@@ -35,9 +29,6 @@ contract Publisher {
         string document
     );
 
-    // contentID: find content sequence
-    // channelID: generate channel timeline
-    // sequenceNum: lookup based on ordering
     event Sequence (
         uint256 indexed channelID,
         uint256 indexed channelIndex,
@@ -55,9 +46,10 @@ contract Publisher {
 
     function publish(string channelName, string attributes, string document, address indexer) {
         uint256 channelID = getChannelByName(channelName);
-        uint256 contentID = uint256(sha256(msg.sender, channelID, attributes, document));
-        if (contents[contentID].timestamp != 0) {
-            // content id collision
+        uint256 contentID = getContentByData(msg.sender, channelID, attributes, document);
+
+        // Bail if a colliding id is generated
+        if (contentExists(contentID)) {
             throw;
         }
 
@@ -94,6 +86,9 @@ contract Publisher {
     }
     function getChannelSize(uint256 channelID) constant returns (uint256) {
         return channelSize[channelID];
+    }
+    function contentExists(uint256 contentID) constant returns (bool) {
+        return contents[contentID].timestamp != 0;
     }
     function getContentAccount(uint256 contentID) constant returns (address) {
         return contents[contentID].accountID;
