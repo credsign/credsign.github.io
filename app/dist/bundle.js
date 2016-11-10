@@ -1238,7 +1238,7 @@
 	                } else {
 	                  var watcher = publisher.Publish({ contentID: contentID }, { fromBlock: 'latest' });
 	                  watcher.watch(function (error, post) {
-	                    watcher.stopWatching();
+	                    watcher.stopWatching(function () {});
 	                    if (error) {
 	                      _this2.setState({
 	                        error: error.toString()

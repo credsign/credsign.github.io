@@ -129,7 +129,7 @@ class Publish extends React.Component {
               else {
                 var watcher = publisher.Publish({contentID: contentID}, {fromBlock: 'latest'});
                 watcher.watch((error, post) => {
-                  watcher.stopWatching();
+                  watcher.stopWatching(() => {});
                   if (error) {
                     this.setState({
                       error: error.toString()
