@@ -1,36 +1,63 @@
-var gulp = require('gulp');
-var sourcemaps = require('gulp-sourcemaps');
-var babel = require('gulp-babel');
-var concat = require('gulp-concat');
-var uglify = require('gulp-uglify');
-
-var solc = require('solc');
-var Web3 = require('web3');
-var spawn = require('child_process').spawn;
-
-var solc = require('solc');
+var argv = require('yargs').argv;
 var fs = require('fs');
-var net = require('net');
 var path = require('path');
+var readlineSync = require('readline-sync');
+var Socket = require('net').Socket;
+var solc = require('solc');
+var spawn = require('child_process').spawn;
+var Web3 = require('web3');
+var webpack = require('webpack');
 
-var geth, server;
+var geth, server, socket;
 
-gulp.task('privnet', (done) => {
-  geth = spawn('./networks/geth', [
-    '--datadir', './networks/privnet/datadir',
-    'init', './networks/privnet/genesis.json'
+
+process.on('exit', () => {
+  server && server.close();
+  geth && geth.close();
+  socket && socket.end();
+});
+
+if (argv.privnet) {
+  startPrivnetServer(() => {});
+}
+else if (argv.testnet) {
+  startTestnetServer(() => {});
+}
+else if (argv.frontend) {
+  buildFrontend();
+}
+else if (argv.contracts) {
+  var network = argv.network || '';
+  var mode = argv.deploy || 'storage';
+  deploy(network, mode, () => {});
+}
+else {
+  console.error(
+    '\nCommands:\n'+
+    '\t--privnet\n'+
+    '\t--testnet\n'+
+    '\t--frontend\n'+
+    '\t--contracts --network=[testnet|privnet] --mode=[storage]\n'
+  );
+}
+
+function startPrivnetServer(callback) {
+  geth = spawn('./geth', [
+    '--datadir', './privnet/node/datadir',
+    'init', './privnet/node/genesis.json'
   ]);
   geth.on('close', (code) => {
-    geth = spawn('./networks/geth', [
-      '--datadir=./networks/privnet/datadir',
+    geth = spawn('./geth', [
+      '--datadir=./privnet/node/datadir',
       '--ipcpath='+getIPCPath(),
       '--rpc',
       '--rpccorsdomain=*',
       '--nodiscover',
       '--networkid=1337',
       '--verbosity=4',
-      'js', './networks/privnet/miner.js'
+      'js', './privnet/node/miner.js'
     ]);
+    callback();
     geth.stdout.on('data', (data) => {
       console.log(`stdout: ${data}`);
     });
@@ -38,12 +65,10 @@ gulp.task('privnet', (done) => {
       console.log(`stderr: ${data}`);
     });
   })
-});
+}
 
-
-gulp.task('testnet', (done) => {
-
-  geth = spawn('./networks/geth', [
+function startTestnetServer(callback) {
+  geth = spawn('./geth', [
     '--ipcpath='+getIPCPath(),
     '--cache=1024',
     // '--fast',
@@ -52,46 +77,50 @@ gulp.task('testnet', (done) => {
     '--testnet',
     '--verbosity=4'
   ]);
+  callback();
   geth.stdout.on('data', (data) => {
     console.log(`stdout: ${data}`);
   });
   geth.stderr.on('data', (data) => {
     console.log(`stderr: ${data}`);
   });
-});
+}
 
-gulp.task('terminal-app', () => {
-  return gulp.src(['./app/src/*'])
-    .pipe(sourcemaps.init())
-    .pipe(babel({
-        'presets': ['es2015', 'react']
-    })).on('error', function (error) {
-      console.error(error.toString());
-      this.emit('end');
-    })
-    .pipe(concat('app.min.js'))
-    .pipe(uglify())
-    .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest('./app/dist'));
-});
-
-gulp.task('terminal-server', (done) => {
+function buildFrontend() {
   server = spawn('python', ['-m', 'SimpleHTTPServer']);
-  gulp.watch('./app/src/*', ['terminal-app']).on('change', (event) => {
-    console.log('Frontend file ' + event.path + ' was ' + event.type + ', rebuilding');
+  webpack({
+    context: path.resolve(process.cwd(), 'app', 'src'),
+    entry: './scripts/initialize.jsx',
+    module: {
+      loaders: [
+        {
+          test: /\.(js|jsx)$/,
+          loader: 'babel-loader',
+          // exclude: /node_modules/,
+          plugins: [
+            // new webpack.optimize.UglifyJsPlugin({
+            //   compress: { warnings: false }
+            // })
+          ],
+          query: {
+            presets: ['es2015', 'react']
+          }
+        }
+      ]
+    },
+    output: { path: './app/dist/', filename: 'bundle.js' },
+    watch: true
+  }, function (err, stats) {
+    var errors = stats.compilation.errors;
+    if (errors.length == 0) {
+      console.log(`Successful build at ${new Date().toLocaleTimeString()}`);
+    }
+    else {
+      console.log(`Failed build at ${new Date().toLocaleTimeString()}`);
+      console.log(stats.compilation.errors.toString());
+    }
   });
-});
-
-gulp.task('privnet-server', ['privnet', 'terminal-server'], () => {});
-gulp.task('testnet-server', ['testnet', 'terminal-server'], () => {});
-
-gulp.task('privnet-deploy', (done) => { deploy('privnet', 'store', done) });
-gulp.task('testnet-deploy', (done) => { deploy('testnet', 'store', done) });
-
-gulp.task('privnet-deploy-index', (done) => { deploy('privnet', 'index', done) });
-gulp.task('testnet-deploy-index', (done) => { deploy('testnet', 'index', done) });
-
-gulp.task('default', () => {});
+}
 
 function getIPCPath() {
   // Geth Testnet uses a different IPC path than mainnet by default
@@ -111,7 +140,7 @@ function getIPCPath() {
 }
 
 function deploy(network, mode, done) {
-  var socket = new net.Socket();
+  socket = new Socket();
   var web3 = new Web3(new Web3.providers.IpcProvider(getIPCPath(), socket));
 
   var sources = {};
@@ -148,7 +177,7 @@ function deploy(network, mode, done) {
   }
 
   var account;
-  var password = fs.readFileSync(path.resolve('./networks', network, 'password.txt'), 'utf-8');
+  var password;
   var contracts = {};
   var oldContracts = {};
   (function waitForAccounts() {
@@ -158,14 +187,14 @@ function deploy(network, mode, done) {
       }
       else {
         account = result[0];
-        console.log('* Got account: '+account);
+        password = readlineSync.question(`Password for account ${account}: `, { hideEchoBack: true, mask: '' });
 
         try {
-          oldContracts = JSON.parse(fs.readFileSync(path.resolve('./networks', network, 'contracts.js'), 'utf-8').split('=')[1]);
+          oldContracts = JSON.parse(fs.readFileSync(path.resolve(network, 'contracts.json'), 'utf-8'));
         }
         catch (e) { }
 
-        if (mode == 'store') {
+        if (mode == 'storage') {
           deployContract('Indexer', [], () => {
             deployContract('Publisher', [], writeContracts);
           });
@@ -217,13 +246,9 @@ function deploy(network, mode, done) {
   }
 
   function writeContracts() {
-    fs.writeFileSync(path.resolve('./networks', network, 'contracts.js'), `window.contracts=${JSON.stringify(contracts)}\n`);
+    fs.writeFileSync(path.resolve(process.cwd(), network, 'contracts.json'), JSON.stringify(contracts));
     console.log('* Contract interfaces saved');
+    socket.end();
     done();
   }
 }
-
-process.on('exit', () => {
-  server && server.close();
-  geth && geth.close();
-});

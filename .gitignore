@@ -1,4 +1,4 @@
-networks/privnet/datadir
-networks/privnet/contracts.js
-networks/geth
+privnet/node/datadir
+privnet/contracts.json
+geth
 node_modules
