@@ -120,6 +120,15 @@ class Publish extends React.Component {
       value: 0
     };
     content.toChannelID(channel, (error, channelID) => {
+      if (channelID.toNumber() == 0) {
+        this.setState({
+          error: 'A valid channel must be specified. A '+
+          'channel is any combination of letters, numbers, '+
+          'and underscores between 3 and 30 characters long. '+
+          'Channels are used to group related content together.'
+        });
+        return;
+      }
       content.toContentID(window.account, channelID, header, body, (error, contentID) => {
         content.publish.estimateGas(channel, header, body, indexes, tx, (error, gasEstimate) => {
           console.log(gasEstimate);
@@ -157,7 +166,7 @@ class Publish extends React.Component {
           <div style={{padding: '1em', display: this.state.view == 'edit' ? 'block' : 'none'}}>
             <a style={{display: 'inline-block', textDecoration: 'underline'}} onClick={this.previewPost}>Preview</a>
           </div>
-          <div style={{padding: '1em', display: this.state.view == 'preview' ? 'block' : 'none'}}>
+          <div style={{padding: '1em', display: (this.state.view == 'preview' || this.state.view == 'submit') ? 'block' : 'none'}}>
             <a style={{display: 'inline-block', textDecoration: 'underline'}} onClick={this.submitPost}>Publish</a>
             <span>&nbsp;in&nbsp;#</span>
             <input
@@ -202,7 +211,7 @@ class Publish extends React.Component {
         }}>{' '}</div>
         <div style={{
           display: this.state.view == 'submit' ? 'block' : 'none',
-          top: '15%',
+          top: '25%',
           left: '0',
           width: '100%',
           position: 'fixed',
@@ -212,7 +221,11 @@ class Publish extends React.Component {
           <div style={{maxWidth: '600px', margin: '0 auto', backgroundColor: '#FCFCFC', border: '1px solid #DDD'}}>
             <div style={{padding: '1em', display: this.state.error.length > 0 ? 'block' : 'none'}}>
               <h1>Unable to publish</h1>
-              <div style={{padding: '1em 0'}}>{this.state.error}</div>
+              <div style={{
+                padding: '1em 0',
+                maxHeight: '10em',
+                overflow: 'scroll'
+              }}>{this.state.error}</div>
               <span onClick={() => this.setState({view: 'preview', error: ''})} style={{
                 borderBottom: '2px solid black',
                 padding: '.5em 0',

@@ -13158,6 +13158,12 @@
 	        value: 0
 	      };
 	      content.toChannelID(channel, function (error, channelID) {
+	        if (channelID.toNumber() == 0) {
+	          _this2.setState({
+	            error: 'A valid channel must be specified. A ' + 'channel is any combination of letters, numbers, ' + 'and underscores between 3 and 30 characters long. ' + 'Channels are used to group related content together.'
+	          });
+	          return;
+	        }
 	        content.toContentID(window.account, channelID, header, body, function (error, contentID) {
 	          content.publish.estimateGas(channel, header, body, indexes, tx, function (error, gasEstimate) {
 	            console.log(gasEstimate);
@@ -13207,7 +13213,7 @@
 	          ),
 	          _react2.default.createElement(
 	            'div',
-	            { style: { padding: '1em', display: this.state.view == 'preview' ? 'block' : 'none' } },
+	            { style: { padding: '1em', display: this.state.view == 'preview' || this.state.view == 'submit' ? 'block' : 'none' } },
 	            _react2.default.createElement(
 	              'a',
 	              { style: { display: 'inline-block', textDecoration: 'underline' }, onClick: this.submitPost },
@@ -13282,7 +13288,7 @@
 	          'div',
 	          { style: {
 	              display: this.state.view == 'submit' ? 'block' : 'none',
-	              top: '15%',
+	              top: '25%',
 	              left: '0',
 	              width: '100%',
 	              position: 'fixed',
@@ -13302,7 +13308,11 @@
 	              ),
 	              _react2.default.createElement(
 	                'div',
-	                { style: { padding: '1em 0' } },
+	                { style: {
+	                    padding: '1em 0',
+	                    maxHeight: '10em',
+	                    overflow: 'scroll'
+	                  } },
 	                this.state.error
 	              ),
 	              _react2.default.createElement(
