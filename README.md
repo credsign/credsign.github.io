@@ -7,7 +7,7 @@ Credsign lets you publish and view content using the Ethereum blockchain. The re
 
 1. Copy or link `geth` to the root of this repo.
 2. Run `node dev --privnet` to start your local node. Leave it running.
-3. Run `node dev --contracts --deploy=storage --network=privnet` to deploy the contracts. When prompted for a password, use `credsign`.
+3. Run `node dev --deploy --network=privnet --contracts=all` to deploy the contracts. When prompted for a password, use `credsign`.
 4. Run `node dev --frontend` to compile the webapp and serve it at <http://localhost:8000/>
 
 Modifying files in `./app/src` will trigger a recompile while the frontend server is running.

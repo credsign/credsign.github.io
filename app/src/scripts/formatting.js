@@ -7,13 +7,13 @@ export function getChannelName(channelID) {
   return channelName;
 }
 
-export function getContentTitle(attributes) {
+export function getContentTitle(header) {
   var title = null;
   try {
-    title = JSON.parse(attributes).title;
+    title = JSON.parse(header).title;
   }
   catch (e) {
-    console.log(`Invalid JSON: ${attributes}`);
+    console.log(`Invalid JSON: ${header}`);
   }
 
   // If the title is empty or just spaces, return empty

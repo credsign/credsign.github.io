@@ -14,7 +14,6 @@ body {
   background-color: #F9F9F9;
     /* Put a border to seperate Mist Nav UI */
   border-left: 1px solid #DDD;
-  width: 100%;
   height: 100%;
 }
 div#main {
@@ -74,9 +73,6 @@ h1 {
   .medium-editor-toolbar li button.medium-editor-action {
     border-bottom: 1px solid #5b3a0e;
   }
-  .collapsable {
-    display: none;
-  }
 }
 
 blockquote {
@@ -94,7 +90,7 @@ div.medium-editor-placeholder:after {
 }
 
 /** ----------- LIST CSS ------------- */
-.view-align ul {
+#filter ul {
   list-style-type: none;
   padding: 0;
   margin: 0;
@@ -102,7 +98,7 @@ div.medium-editor-placeholder:after {
   border-radius: 5px;
   cursor: pointer;
 }
-.view-align ul > li {
+#filter ul > li {
   display: block;
   background-color: white;
   padding: .5em 1em;
@@ -112,6 +108,11 @@ div.medium-editor-placeholder:after {
   border-top: 1px solid #EEE;
   -webkit-transition: background-color .2s ease-in,color .2s ease-in;
   transition: background-color .2s ease-in,color .2s ease-in;
+}
+
+#suggestions {
+  -webkit-transition: max-height .2s ease-in;
+  transition: max-height .2s ease-in;
 }
 
 ul.dropdown {
@@ -136,19 +137,13 @@ ul.dropdown > li:hover {
   background-color: #FCFCFC;
 }
 
-.view-align {
-  padding: 0;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.view-align > ol {
+#filter ol {
   padding: 0;
   margin: 0;
   list-style-type: none;
 }
 
-.view-align > ol > li {
+#filter ol > li {
   display: block;
   margin-bottom: 1em;
   background-color: #FFF;
@@ -156,11 +151,11 @@ ul.dropdown > li:hover {
   -webkit-transition: background-color .2s ease-in,color .2s ease-in;
   transition: background-color .2s ease-in,color .2s ease-in;
 }
-.view-align > ol > li:hover {
+#filter ol > li:hover {
   background-color: #FCFCFC;
 }
 
-.view-align > ol > li span {
+#filter ol > li span {
   color: gray;
   font-weight: normal;
   font-size: 69%;
@@ -209,7 +204,7 @@ li a {
   display: flex;
 }
 
-#channel::-webkit-input-placeholder {
+#filter::-webkit-input-placeholder {
   color: gray;
 }
 

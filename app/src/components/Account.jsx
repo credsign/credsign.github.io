@@ -1,3 +1,4 @@
+import React from 'react';
 import {getContentTitle, getChannelName} from '../scripts/formatting.js';
 
 class Account extends React.Component {
