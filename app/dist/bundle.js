@@ -76,7 +76,7 @@
 	          if (network == 'privnet') {
 	            window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
 	          } else if (network == 'testnet') {
-	            if (window.location.protocol == 'https') {
+	            if (window.location.protocol == 'https:') {
 	              window.infura = true;
 	              window.web3 = new Web3(new Web3.providers.HttpProvider('https://morden.infura.io/rKXO8uv6njXPdnUsNSeE'));
 	            } else {
