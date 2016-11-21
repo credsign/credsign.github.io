@@ -50,11 +50,11 @@ class App extends React.Component {
               textTransform: 'uppercase',
               textAlign: 'center'
             }}>
-              <Link to='https://facebook.com/Credsign'>Contact</Link>
+              <a href='https://facebook.com/Credsign'>Contact</a>
               <span>{' · '}</span>
-              <Link to='https://github.com/credsign/credsign.github.io'>Source</Link>
+              <a href='https://github.com/credsign/credsign.github.io'>Source</a>
               <span>{' · '}</span>
-              <Link to='https://github.com/credsign/credsign.github.io/blob/master/LICENSE'>Terms</Link>
+              <a href='https://github.com/credsign/credsign.github.io/blob/master/LICENSE'>Terms</a>
             </div>
           </div>
         </div>
