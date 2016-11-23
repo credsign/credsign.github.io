@@ -34,7 +34,7 @@ window.addEventListener('load', function () {
       else {
         // Ensure we're connected to the right network
         web3.version.getNetwork(function (error, networkID) {
-          if (window.location.protocol == 'http:' || network == 'privnet') {
+          if (network == 'privnet') {
             window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
           }
           else if (network == 'mainnet' && networkID != 1) {

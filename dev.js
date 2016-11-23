@@ -125,11 +125,9 @@ function startTestnetServer(mine, callback) {
 
 function startMainnetServer(callback) {
   geth = spawn('./geth', [
-    // Comment out 3 params below to sync Mainnet while running another network
-    '--ipcdisable',
-    '--port=30304',
+    // '--ipcdisable',
+    // '--port=30304',
     '--ipcpath='+getIPCPath(),
-
     '--cache=1024',
     '--fast',
     '--verbosity=4'
@@ -302,7 +300,8 @@ function deploy(network, mode, socket, done) {
   }
 
   function writeContracts() {
-    var filepath = path.resolve(process.cwd(), network, 'contracts.json');
+    var directory = network == 'mainnet' ? '' : network;
+    var filepath = path.resolve(process.cwd(), directory, 'contracts.json');
     fs.writeFileSync(filepath, JSON.stringify(contracts));
     console.log(`* Contract interfaces written to: ${filepath}`);
     done();
