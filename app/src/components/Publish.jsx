@@ -122,10 +122,10 @@ class Publish extends React.Component {
     content.toChannelID(channel, (error, channelID) => {
       if (channelID.toNumber() == 0) {
         this.setState({
-          error: 'A valid channel must be specified. A '+
+          error: 'A valid channel must be specified (above the title). '+
+          'Channels are used to group related content together. A '+
           'channel is any combination of letters, numbers, '+
-          'and underscores between 3 and 30 characters long. '+
-          'Channels are used to group related content together.'
+          'and underscores between 3 and 30 characters long. '
         });
         return;
       }
@@ -163,12 +163,8 @@ class Publish extends React.Component {
     return (
       <div style={{width: '100%', margin: '0 auto'}}>
         <div style={{maxWidth: '600px', margin: '0 auto', color: 'black'}}>
-          <div style={{padding: '1em', display: this.state.view == 'edit' ? 'block' : 'none'}}>
-            <a style={{display: 'inline-block', textDecoration: 'underline'}} onClick={this.previewPost}>Preview</a>
-          </div>
-          <div style={{padding: '1em', display: (this.state.view == 'preview' || this.state.view == 'submit') ? 'block' : 'none'}}>
-            <a style={{display: 'inline-block', textDecoration: 'underline'}} onClick={this.submitPost}>Publish</a>
-            <span>&nbsp;in&nbsp;#</span>
+          <div style={{padding: '1em'}}>
+            <span style={{color: 'gray'}}>#</span>
             <input
               type='text'
               placeholder='channel'
@@ -181,7 +177,6 @@ class Publish extends React.Component {
                 outline: 0,
                 backgroundColor: 'transparent'
             }}/>
-            <a style={{display: 'inline-block', textDecoration: 'underline', float: 'right'}} onClick={this.editPost}>Edit</a>
           </div>
         </div>
         <div style={{width: '100%', backgroundColor: '#FFF'}}>
@@ -196,6 +191,15 @@ class Publish extends React.Component {
                 <div id='new-post-body-preview' className='post'></div>
               </div>
             </div>
+          </div>
+        </div>
+        <div style={{maxWidth: '600px', margin: '0 auto', color: 'black'}}>
+          <div style={{padding: '1em', display: this.state.view == 'edit' ? 'block' : 'none', textAlign: 'right'}}>
+            <a style={{display: 'inline-block', textDecoration: 'underline'}} onClick={this.previewPost}>Preview</a>
+          </div>
+          <div style={{padding: '1em', display: (this.state.view == 'preview' || this.state.view == 'submit') ? 'block' : 'none'}}>
+            <a style={{display: 'inline-block', textDecoration: 'underline'}} onClick={this.editPost}>Edit</a>
+            <a style={{display: 'inline-block', textDecoration: 'underline', float: 'right'}} onClick={this.submitPost}>Publish</a>
           </div>
         </div>
         <div className='backdrop' style={{

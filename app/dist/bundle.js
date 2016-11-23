@@ -61,45 +61,47 @@
 	window.addEventListener('load', function () {
 
 	  function getWeb3(done) {
-	    var providerURL = '';
-	    var targetNetworkID;
-	    var network = window.location.pathname.split('/')[1];
+	    var network = window.location.pathname.split('/')[1] || 'mainnet';
 	    window.network = network;
 	    window.infura = false;
-	    if (window.web3 === undefined) {
-	      // web3 is not present, fetch it and connect to the network
-	      (function (d, script) {
-	        script = d.createElement('script');
-	        script.type = 'text/javascript';
-	        script.async = true;
-	        script.onload = function () {
-	          if (network == 'privnet') {
-	            window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
-	          } else if (network == 'testnet') {
-	            if (window.location.protocol == 'https:') {
-	              window.infura = true;
-	              window.web3 = new Web3(new Web3.providers.HttpProvider('https://morden.infura.io/rKXO8uv6njXPdnUsNSeE'));
-	            } else {
-	              window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
-	            }
-	          }
-	          done();
-	        };
-	        script.src = 'https://unpkg.com/web3@0.16.0/dist/web3.js';
-	        d.getElementsByTagName('head')[0].appendChild(script);
-	      })(document);
-	    } else {
-	      // web3 is present, ensure we're connected to the right network
-	      web3.version.getNetwork(function (error, networkID) {
-	        if (network == 'privnet' && networkID <= 2) {
+
+	    // web3 is not present, fetch it and connect to the right network
+	    var script = document.createElement('script');
+	    script.type = 'text/javascript';
+	    script.async = true;
+	    script.onload = function () {
+	      if (window.web3 === undefined) {
+	        // Dev is on HTTP, unless you use something like Charles Proxy to map production host to localhost
+	        if (window.location.protocol == 'http:' || network == 'privnet') {
 	          window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
-	        } else if (network == 'testnet' && networkID != 2) {
-	          window.infura = true;
-	          window.web3 = new Web3(new Web3.providers.HttpProvider('https://morden.infura.io/rKXO8uv6njXPdnUsNSeE'));
+	        } else {
+	          if (network == 'mainnet') {
+	            window.infura = true;
+	            window.web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/rKXO8uv6njXPdnUsNSeE'));
+	          } else if (network == 'testnet') {
+	            window.infura = true;
+	            window.web3 = new Web3(new Web3.providers.HttpProvider('https://testnet.infura.io/rKXO8uv6njXPdnUsNSeE'));
+	          }
 	        }
 	        done();
-	      });
-	    }
+	      } else {
+	        // Ensure we're connected to the right network
+	        web3.version.getNetwork(function (error, networkID) {
+	          if (window.location.protocol == 'http:' || network == 'privnet') {
+	            window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
+	          } else if (network == 'mainnet' && networkID != 1) {
+	            window.infura = true;
+	            window.web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/rKXO8uv6njXPdnUsNSeE'));
+	          } else if (network == 'testnet' && networkID != 3) {
+	            window.infura = true;
+	            window.web3 = new Web3(new Web3.providers.HttpProvider('https://testnet.infura.io/rKXO8uv6njXPdnUsNSeE'));
+	          }
+	          done();
+	        });
+	      }
+	    };
+	    script.src = 'https://unpkg.com/web3@0.16.0/dist/web3.js';
+	    document.getElementsByTagName('head')[0].appendChild(script);
 	  }
 
 	  function getContracts(done) {
@@ -29409,7 +29411,7 @@
 	      content.toChannelID(channel, function (error, channelID) {
 	        if (channelID.toNumber() == 0) {
 	          _this2.setState({
-	            error: 'A valid channel must be specified. A ' + 'channel is any combination of letters, numbers, ' + 'and underscores between 3 and 30 characters long. ' + 'Channels are used to group related content together.'
+	            error: 'A valid channel must be specified (above the title). ' + 'Channels are used to group related content together. A ' + 'channel is any combination of letters, numbers, ' + 'and underscores between 3 and 30 characters long. '
 	          });
 	          return;
 	        }
@@ -29453,25 +29455,11 @@
 	          { style: { maxWidth: '600px', margin: '0 auto', color: 'black' } },
 	          _react2.default.createElement(
 	            'div',
-	            { style: { padding: '1em', display: this.state.view == 'edit' ? 'block' : 'none' } },
-	            _react2.default.createElement(
-	              'a',
-	              { style: { display: 'inline-block', textDecoration: 'underline' }, onClick: this.previewPost },
-	              'Preview'
-	            )
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { style: { padding: '1em', display: this.state.view == 'preview' || this.state.view == 'submit' ? 'block' : 'none' } },
-	            _react2.default.createElement(
-	              'a',
-	              { style: { display: 'inline-block', textDecoration: 'underline' }, onClick: this.submitPost },
-	              'Publish'
-	            ),
+	            { style: { padding: '1em' } },
 	            _react2.default.createElement(
 	              'span',
-	              null,
-	              '\xA0in\xA0#'
+	              { style: { color: 'gray' } },
+	              '#'
 	            ),
 	            _react2.default.createElement('input', {
 	              type: 'text',
@@ -29486,12 +29474,7 @@
 	                color: 'black',
 	                outline: 0,
 	                backgroundColor: 'transparent'
-	              } }),
-	            _react2.default.createElement(
-	              'a',
-	              { style: { display: 'inline-block', textDecoration: 'underline', float: 'right' }, onClick: this.editPost },
-	              'Edit'
-	            )
+	              } })
 	          )
 	        ),
 	        _react2.default.createElement(
@@ -29515,6 +29498,33 @@
 	                _react2.default.createElement('h1', { id: 'new-post-title-preview' }),
 	                _react2.default.createElement('div', { id: 'new-post-body-preview', className: 'post' })
 	              )
+	            )
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { style: { maxWidth: '600px', margin: '0 auto', color: 'black' } },
+	          _react2.default.createElement(
+	            'div',
+	            { style: { padding: '1em', display: this.state.view == 'edit' ? 'block' : 'none', textAlign: 'right' } },
+	            _react2.default.createElement(
+	              'a',
+	              { style: { display: 'inline-block', textDecoration: 'underline' }, onClick: this.previewPost },
+	              'Preview'
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { style: { padding: '1em', display: this.state.view == 'preview' || this.state.view == 'submit' ? 'block' : 'none' } },
+	            _react2.default.createElement(
+	              'a',
+	              { style: { display: 'inline-block', textDecoration: 'underline' }, onClick: this.editPost },
+	              'Edit'
+	            ),
+	            _react2.default.createElement(
+	              'a',
+	              { style: { display: 'inline-block', textDecoration: 'underline', float: 'right' }, onClick: this.submitPost },
+	              'Publish'
 	            )
 	          )
 	        ),

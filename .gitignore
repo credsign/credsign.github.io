@@ -1,3 +1,4 @@
+testnet/node/datadir
 privnet/node/datadir
 privnet/contracts.json
 geth

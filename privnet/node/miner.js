@@ -1,4 +1,4 @@
-// Invoked by geth (see gulpfile)
+// Invoked by geth
 // This privnet miner only runs when there are txns to process
 
 var mining = false;

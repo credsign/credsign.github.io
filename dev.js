@@ -16,16 +16,21 @@ process.on('exit', () => {
   geth && geth.close();
 });
 
-if (argv.privnet) {
-  startPrivnetServer(() => {});
+if (argv.sync) {
+  if (argv.network == 'mainnet') {
+    startMainnetServer(() => {});
+  }
+  else if (argv.network == 'testnet') {
+    startTestnetServer(argv.mine, () => {});
+  }
+  else if (argv.network == 'privnet') {
+    startPrivnetServer(() => {});
+  }
 }
-else if (argv.testnet) {
-  startTestnetServer(() => {});
-}
-else if (argv.frontend) {
+else if (argv.serve) {
   buildFrontend();
 }
-else if (argv.contracts) {
+else if (argv.deploy) {
   var network = argv.network || '';
   var mode = argv.contracts || 'all';
   var socket = new Socket();
@@ -39,10 +44,9 @@ else if (argv.contracts) {
 else {
   console.error(
     '\nCommands:\n'+
-    '\t--privnet\n'+
-    '\t--testnet\n'+
-    '\t--frontend\n'+
-    '\t--deploy --network=[testnet|privnet] --contracts=[all]\n'
+    '\t--sync --network=[mainnet|testnet|privnet] [--mine]\n'+
+    '\t--serve\n'+
+    '\t--deploy --network=[mainnet|testnet|privnet] --contracts=[all]\n'
   );
 }
 
@@ -72,14 +76,62 @@ function startPrivnetServer(callback) {
   })
 }
 
-function startTestnetServer(callback) {
+function startTestnetServer(mine, callback) {
   geth = spawn('./geth', [
+    '--datadir', './testnet/node/datadir',
+    'init', './testnet/node/genesis.json'
+  ]);
+  geth.on('close', (code) => {
+    geth = spawn('./geth', [
+      '--datadir=./testnet/node/datadir',
+      '--ipcpath='+getIPCPath(),
+      '--networkid=3',
+      '--verbosity=4'
+    ].concat( mine ? ['js', './testnet/node/miner.js'] : [] ));
+
+    // Create an account if this is a fresh sync with no accounts
+    if (mine) {
+      var socket = new Socket();
+      var web3 = new Web3(new Web3.providers.IpcProvider(getIPCPath(), socket));
+      (function getAccount() {
+        web3.eth.getAccounts((error, result) => {
+          if (error) {
+            setTimeout(getAccount, 1000);
+          }
+          else if (result.length == 0) {
+            web3.personal.newAccount(readlineSync.question(`> Password for new account: `, { hideEchoBack: true, mask: '' }), () => {
+              socket.end();
+              callback();
+            });
+          }
+          else {
+            socket.end();
+            callback();
+          }
+        });
+      })();
+    }
+    else {
+      callback();
+    }
+    geth.stdout.on('data', (data) => {
+      console.log(`stdout: ${data}`);
+    });
+    geth.stderr.on('data', (data) => {
+      console.log(`stderr: ${data}`);
+    });
+  })
+}
+
+function startMainnetServer(callback) {
+  geth = spawn('./geth', [
+    // Comment out 3 params below to sync Mainnet while running another network
+    '--ipcdisable',
+    '--port=30304',
     '--ipcpath='+getIPCPath(),
+
     '--cache=1024',
-    // '--fast',
-    '--rpc',
-    '--rpccorsdomain=*',
-    '--testnet',
+    '--fast',
     '--verbosity=4'
   ]);
   callback();
@@ -175,8 +227,11 @@ function deploy(network, mode, socket, done) {
   var oldContracts = {};
   (function getAccount() {
     web3.eth.getAccounts((error, result) => {
-      if (error || result.length == 0) {
+      if (error) {
         setTimeout(getAccount, 1000);
+      }
+      else if (result.length == 0) {
+        throw new Error('No accounts available');
       }
       else {
         account = result[0];

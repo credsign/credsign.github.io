@@ -1,14 +1,14 @@
 # The Distributed News Terminal
-Credsign lets you publish and view content using the Ethereum blockchain. The result is an always available, censorship resistant source of information. It is currently in beta on the Ethereum test network, available at <https://credsign.github.io/testnet>.
+Credsign lets you publish and view content using the Ethereum blockchain. The result is an always available, censorship resistant source of information. It is currently in beta on the Ethereum test network at <https://credsign.github.io/testnet>.
 
 # Development enviroment setup
 
 **To setup on a local privatenet**
 
 1. Copy or link `geth` to the root of this repo.
-2. Run `node dev --privnet` to start your local node. Leave it running.
+2. Run `node dev --sync --network=privnet` to start your local node. Leave it running.
 3. Run `node dev --deploy --network=privnet --contracts=all` to deploy the contracts. When prompted for a password, use `credsign`.
-4. Run `node dev --frontend` to compile the webapp and serve it at <http://localhost:8000/>
+4. Run `node dev --serve` to compile the webapp and serve it at <http://localhost:8000/>
 
 Modifying files in `./app/src` will trigger a recompile while the frontend server is running.
 

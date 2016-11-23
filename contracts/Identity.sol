@@ -28,14 +28,14 @@ contract Identity {
     /// @dev Identify an address.
     /// @param owner The address to lookup.
     /// @return identity The identity corresponding to the address.
-    function identify(address owner) constant returns (uint256) {
+    function getIdentity(address owner) constant returns (uint256) {
         return identities[owner];
     }
 
     /// @dev Identify multiple addresses.
-    /// @param owners An Array of addresses to lookup.
+    /// @param owners An array of addresses to lookup.
     /// @return identity An array of identities corresponding to the addresses.
-    function identify(address[] owners) constant returns (uint256[]) {
+    function getIdentities(address[] owners) constant returns (uint256[]) {
         uint256[] memory results = new uint256[](owners.length);
         for (uint256 i = 0; i < owners.length; i++) {
             results[i] = identities[owners[i]];
