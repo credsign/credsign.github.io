@@ -28,7 +28,7 @@ class AllContent extends React.Component {
     var listItems = [];
     window.contentseries.getSize((error, size) => {
       size = size.toNumber();
-      var indices = Array.from(Array(size)).map((_, i) => i);
+      var indices = [...Array(size)].map((_, i) => i);
 
       window.contentseries.Series({seriesNum: indices}, {fromBlock: 0, toBlock: 'latest'}).get((error, series) => {
         var contentIDs = series.map((entry) => entry.args.contentID);

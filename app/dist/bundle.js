@@ -27688,6 +27688,8 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -27738,7 +27740,7 @@
 	      window.addressseries.getSize(address, function (error, size) {
 	        size = size.toNumber();
 	        console.log(size);
-	        var indices = Array.from(Array(size)).map(function (_, i) {
+	        var indices = [].concat(_toConsumableArray(Array(size))).map(function (_, i) {
 	          return i;
 	        });
 
@@ -28720,6 +28722,8 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -28763,7 +28767,7 @@
 	      var listItems = [];
 	      window.contentseries.getSize(function (error, size) {
 	        size = size.toNumber();
-	        var indices = Array.from(Array(size)).map(function (_, i) {
+	        var indices = [].concat(_toConsumableArray(Array(size))).map(function (_, i) {
 	          return i;
 	        });
 
@@ -28899,6 +28903,8 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -28949,7 +28955,7 @@
 	      window.content.toChannelID(channel, function (error, channelID) {
 	        window.channelseries.getSize(channelID, function (error, size) {
 	          size = size.toNumber();
-	          var indices = Array.from(Array(size)).map(function (_, i) {
+	          var indices = [].concat(_toConsumableArray(Array(size))).map(function (_, i) {
 	            return i;
 	          });
 
