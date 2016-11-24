@@ -58,9 +58,9 @@ class Content extends React.Component {
             <div style={{display: !this.state.loading ? 'block' : 'none'}}>
               <div style={{float: 'left'}}>
                 <span>Published by </span>
-                <a href={`#/filter/address/${this.state.publisher}`}>{`${this.state.publisher.substr(0,5)}...${this.state.publisher.substr(-3)}`}</a>
+                <a href={`#/address/${this.state.publisher}`}>{`${this.state.publisher.substr(0,5)}...${this.state.publisher.substr(-3)}`}</a>
                 <span>{` in `}</span>
-                <a href={`#/filter/channel/${this.state.channelName}`}>{`#${this.state.channelName}`}</a>
+                <a href={`#/channel/${this.state.channelName}`}>{`#${this.state.channelName}`}</a>
                 &nbsp;
               </div>
               <div style={{float: 'left'}}>

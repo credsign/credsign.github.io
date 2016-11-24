@@ -33,16 +33,20 @@ class Navigation extends React.Component {
           zIndex: 10
         }}>
           <div style={{maxWidth: '600px', margin: '0 auto'}} className='flex'>
-            <div className='flex-grow' style={{textAlign: 'left', marginLeft: '1em', paddingTop: '1em'}}>
-              <Link to={`/filter/address/${window.account || ''}`} onClick={this.warn} style={{textDecoration: 'none'}}><i className='fa fa-user'></i></Link>
+            <div className='flex-grow' style={{textAlign: 'left'}}>
+              <Link to={`/address/${window.account || ''}`} onClick={this.warn} style={{textDecoration: 'none', display: 'inline-block', padding: '1em'}}>
+                <i className='fa fa-user'></i>
+              </Link>
             </div>
             <div className='flex-shrink'>
-              <Link to='/filter/all/new' style={{textDecoration: 'none', display: 'inline-block'}}>
+              <Link to='/channel' style={{textDecoration: 'none', display: 'inline-block'}}>
                 <img src='/app/logo.svg' style={{width: '1.5em', height: '1.5em', margin: '0 auto', padding: '.75em'}} />
               </Link>
             </div>
-            <div className='flex-grow' style={{textAlign: 'right', marginRight: '1em', paddingTop: '1em'}}>
-              <Link to='/publish' onClick={this.warn}><i className='fa fa-pencil'></i></Link>
+            <div className='flex-grow' style={{textAlign: 'right'}}>
+              <Link to='/publish' onClick={this.warn} style={{textDecoration: 'none', display: 'inline-block', padding: '1em'}}>
+                <i className='fa fa-pencil'></i>
+              </Link>
             </div>
           </div>
         </div>

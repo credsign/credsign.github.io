@@ -1,6 +1,7 @@
 import React from 'react';
 import humanizeDuration from 'humanize-duration';
-import {getContentTitle, getChannelName} from '../../scripts/formatting.js';
+import Filter from './Filter.jsx';
+import { getContentTitle, getChannelName } from '../../scripts/formatting.js';
 
 class AllContent extends React.Component {
   constructor(props) {
@@ -79,14 +80,17 @@ class AllContent extends React.Component {
     });
     return (
       <div>
-        <div style={{padding: '1em'}}>
-          <div style={{fontStyle: 'italic'}}>
-            <div style={{display: this.state.loading ? 'block'  : 'none'}}>Loading...</div>
-            <div style={{display: !this.state.loading && this.state.size == 0 ? 'block'  : 'none'}}>No posts found</div>
+        <Filter type='' value='' />
+        <div className='feed'>
+          <div style={{padding: '1em'}}>
+            <div style={{fontStyle: 'italic'}}>
+              <div style={{display: this.state.loading ? 'block'  : 'none'}}>Loading...</div>
+              <div style={{display: !this.state.loading && this.state.size == 0 ? 'block'  : 'none'}}>No posts found</div>
+            </div>
+            <div style={{display: this.state.size != 0 ? 'block'  : 'none'}}>{`Latest posts (${this.state.size})`}</div>
           </div>
-          <div style={{display: this.state.size != 0 ? 'block'  : 'none'}}>{`Latest posts (${this.state.size})`}</div>
+          <ol>{listItems}</ol>
         </div>
-        <ol>{listItems}</ol>
       </div>
     );
   }

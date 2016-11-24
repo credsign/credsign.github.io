@@ -1,6 +1,7 @@
 import React from 'react';
 import humanizeDuration from 'humanize-duration';
-import {getContentTitle, getChannelName} from '../../scripts/formatting.js';
+import Filter from './Filter.jsx';
+import { getContentTitle, getChannelName } from '../../scripts/formatting.js';
 
 class ChannelContent extends React.Component {
   constructor(props) {
@@ -87,14 +88,17 @@ class ChannelContent extends React.Component {
     var channel = `#${this.props.params.channel}`;
     return (
       <div>
-        <div style={{padding: '1em'}}>
-          <div style={{fontStyle: 'italic'}}>
-            <div style={{display: this.state.loading ? 'block'  : 'none'}}>{`Loading posts in ${channel}...`}</div>
-            <div style={{display: !this.state.loading && this.state.size == 0 ? 'block'  : 'none'}}>{`No posts in ${channel}`}</div>
+        <Filter type='channel' value={this.props.params.channel} />
+        <div className='feed'>
+          <div style={{padding: '1em'}}>
+            <div style={{fontStyle: 'italic'}}>
+              <div style={{display: this.state.loading ? 'block'  : 'none'}}>{`Loading posts in ${channel}...`}</div>
+              <div style={{display: !this.state.loading && this.state.size == 0 ? 'block'  : 'none'}}>{`No posts in ${channel}`}</div>
+            </div>
+            <div style={{display: this.state.size != 0 ? 'block'  : 'none'}}>{`Posts in ${channel} (${this.state.size})`}</div>
           </div>
-          <div style={{display: this.state.size != 0 ? 'block'  : 'none'}}>{`Posts in ${channel} (${this.state.size})`}</div>
+          <ol>{listItems}</ol>
         </div>
-        <ol>{listItems}</ol>
       </div>
     );
   }

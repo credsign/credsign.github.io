@@ -1,10 +1,6 @@
 import React from 'react';
 import { Match, Link } from 'react-router';
 
-import AddressContent from './filters/AddressContent.jsx';
-import AllContent from './filters/AllContent.jsx';
-import ChannelContent from './filters/ChannelContent.jsx';
-
 class Filter extends React.Component {
   constructor(props, context) {
     super(props);
@@ -15,23 +11,33 @@ class Filter extends React.Component {
       contentID: null
     };
 
+
     this.setFilter = this.setFilter.bind(this);
-    this.searchNav = this.searchNav.bind(this);
+    this.resetFilter = this.resetFilter.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  resetFilter(props) {
     var filter = '';
-    if (nextProps.params.type == 'channel') {
-      filter = '#' + nextProps.params.value;
+    if (props.type == 'channel') {
+      filter = '#' + props.value;
     }
-    else if (nextProps.params.type == 'address') {
-      filter = nextProps.params.value;
+    else if (props.type == 'address') {
+      filter = props.value;
     }
     this.setState({
+      originalFilter: filter,
       filter: filter,
       channel: null,
       address: null
     });
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.resetFilter(nextProps);
+  }
+
+  componentDidMount() {
+    this.resetFilter(this.props);
   }
 
   setFilter(e) {
@@ -61,9 +67,6 @@ class Filter extends React.Component {
     });
   }
 
-  searchNav(e) {
-  }
-
   render() {
     return (
       <div id='filter' style={{width: '100%'}}>
@@ -71,11 +74,10 @@ class Filter extends React.Component {
           <div style={{maxWidth: '600px', margin: '0 auto'}}>
             <div
               onFocus={() => {this.setState({'keying': true})}}
-              onBlur={() => {this.setState({'keying': false})}}
+              onBlur={() => {this.setState({'keying': false, filter: this.state.originalFilter})}}
               style={{padding: '.5em', maxHeight: this.state.keying ? '6.5em' : '2em', overflow: 'hidden'}} id='suggestions'>
               <input
                 id='filterInput'
-                onKeyUp={this.searchNav}
                 onFocus={() => {if (!this.state.keying) { this.setState({filter: ''})}}}
                 type='text' placeholder='Filter content' id='filter' value={this.state.filter} onChange={this.setFilter}
               style={{
@@ -93,8 +95,9 @@ class Filter extends React.Component {
                 color: 'black'
               }}></input>
               <Link
+                onClick={() => this.setState({originalFilter: `#${this.state.channel}`})}
                 id='channelResult'
-                to={`/filter/channel/${this.state.channel}`}
+                to={`/channel/${this.state.channel}`}
               style={{
                 display: this.state.channel != null ? 'inline-block' : 'none',
                 padding: '.5em',
@@ -103,8 +106,9 @@ class Filter extends React.Component {
                 fontWeight: 'bold'
               }}>{`#${this.state.channel}`}</Link>
               <Link
+                onClick={() => this.setState({originalFilter: `0x${this.state.address}`})}
                 id='addressResult'
-                to={`/filter/address/0x${this.state.address}`}
+                to={`/address/0x${this.state.address}`}
               style={{
                 display: this.state.address != null ? 'inline-block' : 'none',
                 padding: '.5em',
@@ -119,11 +123,6 @@ class Filter extends React.Component {
               }}>Enter an address or channel</div>
             </div>
           </div>
-        </div>
-        <div style={{maxWidth: '600px', margin: '0 auto'}}>
-          <Match exactly pattern='/filter/all/new' component={AllContent} />
-          <Match pattern='/filter/address/:address' component={AddressContent} />
-          <Match pattern='/filter/channel/:channel' component={ChannelContent} />
         </div>
       </div>
     );

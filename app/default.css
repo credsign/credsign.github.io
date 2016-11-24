@@ -76,10 +76,11 @@ h1 {
 }
 
 blockquote {
-  margin: 25px;
-  border-left: 6px solid #df0d32;
-  padding-left: 9px;
-  margin-left: -15px;
+  border-left: .4em solid #df0d32;
+  padding-left: .6em;
+  margin-left: -1em;
+  line-height: 1.5em;
+  margin-right: 0;
   color: #555;
   font-family: 'Martel', serif;
 }
@@ -137,13 +138,18 @@ ul.dropdown > li:hover {
   background-color: #FCFCFC;
 }
 
-#filter ol {
+.feed {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.feed ol {
   padding: 0;
   margin: 0;
   list-style-type: none;
 }
 
-#filter ol > li {
+.feed ol > li {
   display: block;
   margin-bottom: 1em;
   background-color: #FFF;
@@ -151,11 +157,11 @@ ul.dropdown > li:hover {
   -webkit-transition: background-color .2s ease-in,color .2s ease-in;
   transition: background-color .2s ease-in,color .2s ease-in;
 }
-#filter ol > li:hover {
+.feed ol > li:hover {
   background-color: #FCFCFC;
 }
 
-#filter ol > li span {
+.feed ol > li span {
   color: gray;
   font-weight: normal;
   font-size: 69%;
@@ -180,6 +186,17 @@ a {
 
 .post img {
   max-width: 100%;
+}
+.post pre, .post code {
+  margin: -1em;
+  padding: 1em;
+  background-color: #F9F9F9;
+  font-family: 'Martel', serif;
+  line-height: 1.5em;
+}
+.post pre + pre {
+  margin-top: 0em;
+  padding-top: 0em;
 }
 
 li a {

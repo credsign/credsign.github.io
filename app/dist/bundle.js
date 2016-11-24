@@ -21594,9 +21594,17 @@
 
 	var _Content2 = _interopRequireDefault(_Content);
 
-	var _Filter = __webpack_require__(220);
+	var _AddressContent = __webpack_require__(221);
 
-	var _Filter2 = _interopRequireDefault(_Filter);
+	var _AddressContent2 = _interopRequireDefault(_AddressContent);
+
+	var _AllContent = __webpack_require__(223);
+
+	var _AllContent2 = _interopRequireDefault(_AllContent);
+
+	var _ChannelContent = __webpack_require__(224);
+
+	var _ChannelContent2 = _interopRequireDefault(_ChannelContent);
 
 	var _Navigation = __webpack_require__(225);
 
@@ -21648,12 +21656,14 @@
 	            { style: { height: '3em' } },
 	            '\xA0'
 	          ),
+	          _react2.default.createElement(_reactRouter.Match, { pattern: '/channel', exactly: true, component: _AllContent2.default }),
 	          _react2.default.createElement(_reactRouter.Match, { pattern: '/content/:id', component: _Content2.default }),
-	          _react2.default.createElement(_reactRouter.Match, { pattern: '/filter/:type/:value', component: _Filter2.default }),
+	          _react2.default.createElement(_reactRouter.Match, { pattern: '/channel/:channel', component: _ChannelContent2.default }),
+	          _react2.default.createElement(_reactRouter.Match, { pattern: '/address/:address', component: _AddressContent2.default }),
 	          _react2.default.createElement(_reactRouter.Match, { pattern: '/publish', component: _Publish2.default }),
 	          _react2.default.createElement(_reactRouter.Match, { pattern: '/account', component: _Account2.default }),
 	          _react2.default.createElement(_reactRouter.Miss, { render: function render() {
-	              return _react2.default.createElement(_reactRouter.Redirect, { to: '/filter/all/new' });
+	              return _react2.default.createElement(_reactRouter.Redirect, { to: '/channel' });
 	            } }),
 	          _react2.default.createElement(
 	            'div',
@@ -26204,7 +26214,7 @@
 	                ),
 	                _react2.default.createElement(
 	                  'a',
-	                  { href: '#/filter/address/' + this.state.publisher },
+	                  { href: '#/address/' + this.state.publisher },
 	                  this.state.publisher.substr(0, 5) + '...' + this.state.publisher.substr(-3)
 	                ),
 	                _react2.default.createElement(
@@ -26214,7 +26224,7 @@
 	                ),
 	                _react2.default.createElement(
 	                  'a',
-	                  { href: '#/filter/channel/' + this.state.channelName },
+	                  { href: '#/channel/' + this.state.channelName },
 	                  '#' + this.state.channelName
 	                ),
 	                '\xA0'
@@ -27455,216 +27465,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 220 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _reactRouter = __webpack_require__(179);
-
-	var _AddressContent = __webpack_require__(221);
-
-	var _AddressContent2 = _interopRequireDefault(_AddressContent);
-
-	var _AllContent = __webpack_require__(223);
-
-	var _AllContent2 = _interopRequireDefault(_AllContent);
-
-	var _ChannelContent = __webpack_require__(224);
-
-	var _ChannelContent2 = _interopRequireDefault(_ChannelContent);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var Filter = function (_React$Component) {
-	  _inherits(Filter, _React$Component);
-
-	  function Filter(props, context) {
-	    _classCallCheck(this, Filter);
-
-	    var _this = _possibleConstructorReturn(this, (Filter.__proto__ || Object.getPrototypeOf(Filter)).call(this, props));
-
-	    _this.state = {
-	      filter: '',
-	      address: null,
-	      channel: null,
-	      contentID: null
-	    };
-
-	    _this.setFilter = _this.setFilter.bind(_this);
-	    _this.searchNav = _this.searchNav.bind(_this);
-	    return _this;
-	  }
-
-	  _createClass(Filter, [{
-	    key: 'componentWillReceiveProps',
-	    value: function componentWillReceiveProps(nextProps) {
-	      var filter = '';
-	      if (nextProps.params.type == 'channel') {
-	        filter = '#' + nextProps.params.value;
-	      } else if (nextProps.params.type == 'address') {
-	        filter = nextProps.params.value;
-	      }
-	      this.setState({
-	        filter: filter,
-	        channel: null,
-	        address: null
-	      });
-	    }
-	  }, {
-	    key: 'setFilter',
-	    value: function setFilter(e) {
-	      var filter = e.target.value;
-
-	      var options = [];
-	      var channelMatch = filter.match(/(?:#)?([0-9a-zA-Z_]{3,30})/);
-	      var addressMatch = filter.match(/(?:0x)?([0-9a-fA-F]{40})/);
-
-	      var channel = null;
-	      var address = null;
-
-	      if (channelMatch) {
-	        if (filter.length < 31) {
-	          channel = channelMatch[1];
-	        }
-	      }
-
-	      if (addressMatch) {
-	        address = addressMatch[1];
-	      }
-
-	      this.setState({
-	        filter: filter,
-	        channel: channel,
-	        address: address
-	      });
-	    }
-	  }, {
-	    key: 'searchNav',
-	    value: function searchNav(e) {}
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      var _this2 = this,
-	          _ref,
-	          _React$createElement;
-
-	      return _react2.default.createElement(
-	        'div',
-	        { id: 'filter', style: { width: '100%' } },
-	        _react2.default.createElement(
-	          'div',
-	          { style: { backgroundColor: 'white' } },
-	          _react2.default.createElement(
-	            'div',
-	            { style: { maxWidth: '600px', margin: '0 auto' } },
-	            _react2.default.createElement(
-	              'div',
-	              {
-	                onFocus: function onFocus() {
-	                  _this2.setState({ 'keying': true });
-	                },
-	                onBlur: function onBlur() {
-	                  _this2.setState({ 'keying': false });
-	                },
-	                style: { padding: '.5em', maxHeight: this.state.keying ? '6.5em' : '2em', overflow: 'hidden' }, id: 'suggestions' },
-	              _react2.default.createElement('input', (_React$createElement = {
-	                id: 'filterInput',
-	                onKeyUp: this.searchNav,
-	                onFocus: function onFocus() {
-	                  if (!_this2.state.keying) {
-	                    _this2.setState({ filter: '' });
-	                  }
-	                },
-	                type: 'text', placeholder: 'Filter content' }, _defineProperty(_React$createElement, 'id', 'filter'), _defineProperty(_React$createElement, 'value', this.state.filter), _defineProperty(_React$createElement, 'onChange', this.setFilter), _defineProperty(_React$createElement, 'style', (_ref = {
-	                backgroundColor: 'transparent',
-	                fontSize: '1em',
-	                padding: '.5em',
-	                margin: 0,
-	                border: 0,
-	                borderRadius: 0,
-	                boxShadow: 'none',
-	                borderLeft: 0
-	              }, _defineProperty(_ref, 'backgroundColor', 'white'), _defineProperty(_ref, 'outline', 0), _defineProperty(_ref, 'width', '100%'), _defineProperty(_ref, 'color', 'black'), _ref)), _React$createElement)),
-	              _react2.default.createElement(
-	                _reactRouter.Link,
-	                {
-	                  id: 'channelResult',
-	                  to: '/filter/channel/' + this.state.channel,
-	                  style: {
-	                    display: this.state.channel != null ? 'inline-block' : 'none',
-	                    padding: '.5em',
-	                    textDecoration: 'none',
-	                    color: 'purple',
-	                    fontWeight: 'bold'
-	                  } },
-	                '#' + this.state.channel
-	              ),
-	              _react2.default.createElement(
-	                _reactRouter.Link,
-	                {
-	                  id: 'addressResult',
-	                  to: '/filter/address/0x' + this.state.address,
-	                  style: {
-	                    display: this.state.address != null ? 'inline-block' : 'none',
-	                    padding: '.5em',
-	                    textDecoration: 'none',
-	                    color: 'purple',
-	                    fontWeight: 'bold'
-	                  } },
-	                '0x' + this.state.address
-	              ),
-	              _react2.default.createElement(
-	                'div',
-	                { style: {
-	                    fontStyle: 'italic',
-	                    padding: '.5em',
-	                    display: this.state.channel == null && this.state.address == null ? 'block' : 'none'
-	                  } },
-	                'Enter an address or channel'
-	              )
-	            )
-	          )
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { style: { maxWidth: '600px', margin: '0 auto' } },
-	          _react2.default.createElement(_reactRouter.Match, { exactly: true, pattern: '/filter/all/new', component: _AllContent2.default }),
-	          _react2.default.createElement(_reactRouter.Match, { pattern: '/filter/address/:address', component: _AddressContent2.default }),
-	          _react2.default.createElement(_reactRouter.Match, { pattern: '/filter/channel/:channel', component: _ChannelContent2.default })
-	        )
-	      );
-	    }
-	  }]);
-
-	  return Filter;
-	}(_react2.default.Component);
-
-	Filter.contextTypes = {
-	  history: _react2.default.PropTypes.object
-	};
-
-	exports.default = Filter;
-
-/***/ },
+/* 220 */,
 /* 221 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -27683,6 +27484,10 @@
 	var _humanizeDuration = __webpack_require__(222);
 
 	var _humanizeDuration2 = _interopRequireDefault(_humanizeDuration);
+
+	var _Filter = __webpack_require__(230);
+
+	var _Filter2 = _interopRequireDefault(_Filter);
 
 	var _formatting = __webpack_require__(217);
 
@@ -27739,7 +27544,6 @@
 
 	      window.addressseries.getSize(address, function (error, size) {
 	        size = size.toNumber();
-	        console.log(size);
 	        var indices = [].concat(_toConsumableArray(Array(size))).map(function (_, i) {
 	          return i;
 	        });
@@ -27816,33 +27620,38 @@
 	      return _react2.default.createElement(
 	        'div',
 	        null,
+	        _react2.default.createElement(_Filter2.default, { type: 'address', value: this.props.params.address }),
 	        _react2.default.createElement(
 	          'div',
-	          { style: { padding: '1em' } },
+	          { className: 'feed' },
 	          _react2.default.createElement(
 	            'div',
-	            { style: { fontStyle: 'italic' } },
+	            { style: { padding: '1em' } },
 	            _react2.default.createElement(
 	              'div',
-	              { style: { display: this.state.loading ? 'block' : 'none' } },
-	              'Loading posts by ' + address
+	              { style: { fontStyle: 'italic' } },
+	              _react2.default.createElement(
+	                'div',
+	                { style: { display: this.state.loading ? 'block' : 'none' } },
+	                'Loading posts by ' + address
+	              ),
+	              _react2.default.createElement(
+	                'div',
+	                { style: { display: !this.state.loading && this.state.size == 0 ? 'block' : 'none' } },
+	                'No posts found by ' + address
+	              )
 	            ),
 	            _react2.default.createElement(
 	              'div',
-	              { style: { display: !this.state.loading && this.state.size == 0 ? 'block' : 'none' } },
-	              'No posts found by ' + address
+	              { style: { display: this.state.size != 0 ? 'block' : 'none' } },
+	              'Posts by ' + address + ' (' + this.state.size + ')'
 	            )
 	          ),
 	          _react2.default.createElement(
-	            'div',
-	            { style: { display: this.state.size != 0 ? 'block' : 'none' } },
-	            'Posts by ' + address + ' (' + this.state.size + ')'
+	            'ol',
+	            null,
+	            listItems
 	          )
-	        ),
-	        _react2.default.createElement(
-	          'ol',
-	          null,
-	          listItems
 	        )
 	      );
 	    }
@@ -28718,6 +28527,10 @@
 
 	var _humanizeDuration2 = _interopRequireDefault(_humanizeDuration);
 
+	var _Filter = __webpack_require__(230);
+
+	var _Filter2 = _interopRequireDefault(_Filter);
+
 	var _formatting = __webpack_require__(217);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -28842,33 +28655,38 @@
 	      return _react2.default.createElement(
 	        'div',
 	        null,
+	        _react2.default.createElement(_Filter2.default, { type: '', value: '' }),
 	        _react2.default.createElement(
 	          'div',
-	          { style: { padding: '1em' } },
+	          { className: 'feed' },
 	          _react2.default.createElement(
 	            'div',
-	            { style: { fontStyle: 'italic' } },
+	            { style: { padding: '1em' } },
 	            _react2.default.createElement(
 	              'div',
-	              { style: { display: this.state.loading ? 'block' : 'none' } },
-	              'Loading...'
+	              { style: { fontStyle: 'italic' } },
+	              _react2.default.createElement(
+	                'div',
+	                { style: { display: this.state.loading ? 'block' : 'none' } },
+	                'Loading...'
+	              ),
+	              _react2.default.createElement(
+	                'div',
+	                { style: { display: !this.state.loading && this.state.size == 0 ? 'block' : 'none' } },
+	                'No posts found'
+	              )
 	            ),
 	            _react2.default.createElement(
 	              'div',
-	              { style: { display: !this.state.loading && this.state.size == 0 ? 'block' : 'none' } },
-	              'No posts found'
+	              { style: { display: this.state.size != 0 ? 'block' : 'none' } },
+	              'Latest posts (' + this.state.size + ')'
 	            )
 	          ),
 	          _react2.default.createElement(
-	            'div',
-	            { style: { display: this.state.size != 0 ? 'block' : 'none' } },
-	            'Latest posts (' + this.state.size + ')'
+	            'ol',
+	            null,
+	            listItems
 	          )
-	        ),
-	        _react2.default.createElement(
-	          'ol',
-	          null,
-	          listItems
 	        )
 	      );
 	    }
@@ -28898,6 +28716,10 @@
 	var _humanizeDuration = __webpack_require__(222);
 
 	var _humanizeDuration2 = _interopRequireDefault(_humanizeDuration);
+
+	var _Filter = __webpack_require__(230);
+
+	var _Filter2 = _interopRequireDefault(_Filter);
 
 	var _formatting = __webpack_require__(217);
 
@@ -29032,33 +28854,38 @@
 	      return _react2.default.createElement(
 	        'div',
 	        null,
+	        _react2.default.createElement(_Filter2.default, { type: 'channel', value: this.props.params.channel }),
 	        _react2.default.createElement(
 	          'div',
-	          { style: { padding: '1em' } },
+	          { className: 'feed' },
 	          _react2.default.createElement(
 	            'div',
-	            { style: { fontStyle: 'italic' } },
+	            { style: { padding: '1em' } },
 	            _react2.default.createElement(
 	              'div',
-	              { style: { display: this.state.loading ? 'block' : 'none' } },
-	              'Loading posts in ' + channel + '...'
+	              { style: { fontStyle: 'italic' } },
+	              _react2.default.createElement(
+	                'div',
+	                { style: { display: this.state.loading ? 'block' : 'none' } },
+	                'Loading posts in ' + channel + '...'
+	              ),
+	              _react2.default.createElement(
+	                'div',
+	                { style: { display: !this.state.loading && this.state.size == 0 ? 'block' : 'none' } },
+	                'No posts in ' + channel
+	              )
 	            ),
 	            _react2.default.createElement(
 	              'div',
-	              { style: { display: !this.state.loading && this.state.size == 0 ? 'block' : 'none' } },
-	              'No posts in ' + channel
+	              { style: { display: this.state.size != 0 ? 'block' : 'none' } },
+	              'Posts in ' + channel + ' (' + this.state.size + ')'
 	            )
 	          ),
 	          _react2.default.createElement(
-	            'div',
-	            { style: { display: this.state.size != 0 ? 'block' : 'none' } },
-	            'Posts in ' + channel + ' (' + this.state.size + ')'
+	            'ol',
+	            null,
+	            listItems
 	          )
-	        ),
-	        _react2.default.createElement(
-	          'ol',
-	          null,
-	          listItems
 	        )
 	      );
 	    }
@@ -29145,10 +28972,10 @@
 	            { style: { maxWidth: '600px', margin: '0 auto' }, className: 'flex' },
 	            _react2.default.createElement(
 	              'div',
-	              { className: 'flex-grow', style: { textAlign: 'left', marginLeft: '1em', paddingTop: '1em' } },
+	              { className: 'flex-grow', style: { textAlign: 'left' } },
 	              _react2.default.createElement(
 	                _reactRouter.Link,
-	                { to: '/filter/address/' + (window.account || ''), onClick: this.warn, style: { textDecoration: 'none' } },
+	                { to: '/address/' + (window.account || ''), onClick: this.warn, style: { textDecoration: 'none', display: 'inline-block', padding: '1em' } },
 	                _react2.default.createElement('i', { className: 'fa fa-user' })
 	              )
 	            ),
@@ -29157,16 +28984,16 @@
 	              { className: 'flex-shrink' },
 	              _react2.default.createElement(
 	                _reactRouter.Link,
-	                { to: '/filter/all/new', style: { textDecoration: 'none', display: 'inline-block' } },
+	                { to: '/channel', style: { textDecoration: 'none', display: 'inline-block' } },
 	                _react2.default.createElement('img', { src: '/app/logo.svg', style: { width: '1.5em', height: '1.5em', margin: '0 auto', padding: '.75em' } })
 	              )
 	            ),
 	            _react2.default.createElement(
 	              'div',
-	              { className: 'flex-grow', style: { textAlign: 'right', marginRight: '1em', paddingTop: '1em' } },
+	              { className: 'flex-grow', style: { textAlign: 'right' } },
 	              _react2.default.createElement(
 	                _reactRouter.Link,
-	                { to: '/publish', onClick: this.warn },
+	                { to: '/publish', onClick: this.warn, style: { textDecoration: 'none', display: 'inline-block', padding: '1em' } },
 	                _react2.default.createElement('i', { className: 'fa fa-pencil' })
 	              )
 	            )
@@ -29461,7 +29288,7 @@
 	          { style: { maxWidth: '600px', margin: '0 auto', color: 'black' } },
 	          _react2.default.createElement(
 	            'div',
-	            { style: { padding: '1em' } },
+	            { style: { paddingLeft: '1em' } },
 	            _react2.default.createElement(
 	              'span',
 	              { style: { color: 'gray' } },
@@ -29475,7 +29302,7 @@
 	              },
 	              value: this.state.channel, style: {
 	                border: 0,
-	                padding: 0,
+	                padding: '1em 1em 1em 0',
 	                fontSize: '1em',
 	                color: 'black',
 	                outline: 0,
@@ -29575,7 +29402,7 @@
 	                'div',
 	                { style: {
 	                    padding: '1em 0',
-	                    maxHeight: '10em',
+	                    maxHeight: '5em',
 	                    overflow: 'scroll'
 	                  } },
 	                this.state.error
@@ -29585,8 +29412,8 @@
 	                { onClick: function onClick() {
 	                    return _this3.setState({ view: 'preview', error: '' });
 	                  }, style: {
-	                    borderBottom: '2px solid black',
-	                    padding: '.5em 0',
+	                    color: 'black',
+	                    textDecoration: 'underline',
 	                    display: 'inline-block',
 	                    cursor: 'pointer'
 	                  } },
@@ -29611,8 +29438,8 @@
 	                { onClick: function onClick() {
 	                    return _this3.setState({ view: 'publish', error: '' });
 	                  }, style: {
-	                    borderBottom: '2px solid black',
-	                    padding: '.5em 0',
+	                    color: 'black',
+	                    textDecoration: 'underline',
 	                    display: 'inline-block',
 	                    cursor: 'pointer'
 	                  } },
@@ -31088,6 +30915,210 @@
 
 	    return nodeToMarkdown(node, "block").replace(/[\n]{2,}/g, "\n\n").replace(/^[\n]+/, "").replace(/[\n]+$/, "");
 	}
+
+/***/ },
+/* 230 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactRouter = __webpack_require__(179);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Filter = function (_React$Component) {
+	  _inherits(Filter, _React$Component);
+
+	  function Filter(props, context) {
+	    _classCallCheck(this, Filter);
+
+	    var _this = _possibleConstructorReturn(this, (Filter.__proto__ || Object.getPrototypeOf(Filter)).call(this, props));
+
+	    _this.state = {
+	      filter: '',
+	      address: null,
+	      channel: null,
+	      contentID: null
+	    };
+
+	    _this.setFilter = _this.setFilter.bind(_this);
+	    _this.resetFilter = _this.resetFilter.bind(_this);
+	    return _this;
+	  }
+
+	  _createClass(Filter, [{
+	    key: 'resetFilter',
+	    value: function resetFilter(props) {
+	      var filter = '';
+	      if (props.type == 'channel') {
+	        filter = '#' + props.value;
+	      } else if (props.type == 'address') {
+	        filter = props.value;
+	      }
+	      this.setState({
+	        originalFilter: filter,
+	        filter: filter,
+	        channel: null,
+	        address: null
+	      });
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(nextProps) {
+	      this.resetFilter(nextProps);
+	    }
+	  }, {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.resetFilter(this.props);
+	    }
+	  }, {
+	    key: 'setFilter',
+	    value: function setFilter(e) {
+	      var filter = e.target.value;
+
+	      var options = [];
+	      var channelMatch = filter.match(/(?:#)?([0-9a-zA-Z_]{3,30})/);
+	      var addressMatch = filter.match(/(?:0x)?([0-9a-fA-F]{40})/);
+
+	      var channel = null;
+	      var address = null;
+
+	      if (channelMatch) {
+	        if (filter.length < 31) {
+	          channel = channelMatch[1];
+	        }
+	      }
+
+	      if (addressMatch) {
+	        address = addressMatch[1];
+	      }
+
+	      this.setState({
+	        filter: filter,
+	        channel: channel,
+	        address: address
+	      });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _this2 = this,
+	          _ref,
+	          _React$createElement;
+
+	      return _react2.default.createElement(
+	        'div',
+	        { id: 'filter', style: { width: '100%' } },
+	        _react2.default.createElement(
+	          'div',
+	          { style: { backgroundColor: 'white' } },
+	          _react2.default.createElement(
+	            'div',
+	            { style: { maxWidth: '600px', margin: '0 auto' } },
+	            _react2.default.createElement(
+	              'div',
+	              {
+	                onFocus: function onFocus() {
+	                  _this2.setState({ 'keying': true });
+	                },
+	                onBlur: function onBlur() {
+	                  _this2.setState({ 'keying': false, filter: _this2.state.originalFilter });
+	                },
+	                style: { padding: '.5em', maxHeight: this.state.keying ? '6.5em' : '2em', overflow: 'hidden' }, id: 'suggestions' },
+	              _react2.default.createElement('input', (_React$createElement = {
+	                id: 'filterInput',
+	                onFocus: function onFocus() {
+	                  if (!_this2.state.keying) {
+	                    _this2.setState({ filter: '' });
+	                  }
+	                },
+	                type: 'text', placeholder: 'Filter content' }, _defineProperty(_React$createElement, 'id', 'filter'), _defineProperty(_React$createElement, 'value', this.state.filter), _defineProperty(_React$createElement, 'onChange', this.setFilter), _defineProperty(_React$createElement, 'style', (_ref = {
+	                backgroundColor: 'transparent',
+	                fontSize: '1em',
+	                padding: '.5em',
+	                margin: 0,
+	                border: 0,
+	                borderRadius: 0,
+	                boxShadow: 'none',
+	                borderLeft: 0
+	              }, _defineProperty(_ref, 'backgroundColor', 'white'), _defineProperty(_ref, 'outline', 0), _defineProperty(_ref, 'width', '100%'), _defineProperty(_ref, 'color', 'black'), _ref)), _React$createElement)),
+	              _react2.default.createElement(
+	                _reactRouter.Link,
+	                {
+	                  onClick: function onClick() {
+	                    return _this2.setState({ originalFilter: '#' + _this2.state.channel });
+	                  },
+	                  id: 'channelResult',
+	                  to: '/channel/' + this.state.channel,
+	                  style: {
+	                    display: this.state.channel != null ? 'inline-block' : 'none',
+	                    padding: '.5em',
+	                    textDecoration: 'none',
+	                    color: 'purple',
+	                    fontWeight: 'bold'
+	                  } },
+	                '#' + this.state.channel
+	              ),
+	              _react2.default.createElement(
+	                _reactRouter.Link,
+	                {
+	                  onClick: function onClick() {
+	                    return _this2.setState({ originalFilter: '0x' + _this2.state.address });
+	                  },
+	                  id: 'addressResult',
+	                  to: '/address/0x' + this.state.address,
+	                  style: {
+	                    display: this.state.address != null ? 'inline-block' : 'none',
+	                    padding: '.5em',
+	                    textDecoration: 'none',
+	                    color: 'purple',
+	                    fontWeight: 'bold'
+	                  } },
+	                '0x' + this.state.address
+	              ),
+	              _react2.default.createElement(
+	                'div',
+	                { style: {
+	                    fontStyle: 'italic',
+	                    padding: '.5em',
+	                    display: this.state.channel == null && this.state.address == null ? 'block' : 'none'
+	                  } },
+	                'Enter an address or channel'
+	              )
+	            )
+	          )
+	        )
+	      );
+	    }
+	  }]);
+
+	  return Filter;
+	}(_react2.default.Component);
+
+	Filter.contextTypes = {
+	  history: _react2.default.PropTypes.object
+	};
+
+	exports.default = Filter;
 
 /***/ }
 /******/ ]);

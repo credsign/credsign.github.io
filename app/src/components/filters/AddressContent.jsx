@@ -1,6 +1,7 @@
 import React from 'react';
 import humanizeDuration from 'humanize-duration';
-import {getContentTitle, getChannelName} from '../../scripts/formatting.js';
+import Filter from './Filter.jsx';
+import { getContentTitle, getChannelName } from '../../scripts/formatting.js';
 
 class AddressContent extends React.Component {
   constructor(props) {
@@ -33,7 +34,6 @@ class AddressContent extends React.Component {
 
     window.addressseries.getSize(address, (error, size) => {
       size = size.toNumber();
-      console.log(size);
       var indices = [...Array(size)].map((_, i) => i);
 
       window.addressseries.Series({publisher: address, seriesNum: indices}, {fromBlock: 0, toBlock: 'latest'}).get((error, series) => {
@@ -86,14 +86,17 @@ class AddressContent extends React.Component {
     var address = `${this.props.params.address.substr(0,5)}...${this.props.params.address.substr(-3)}`;
     return (
       <div>
-        <div style={{padding: '1em'}}>
-          <div style={{fontStyle: 'italic'}}>
-            <div style={{display: this.state.loading ? 'block'  : 'none'}}>{`Loading posts by ${address}`}</div>
-            <div style={{display: !this.state.loading && this.state.size == 0 ? 'block'  : 'none'}}>{`No posts found by ${address}`}</div>
+        <Filter type='address' value={this.props.params.address} />
+        <div className='feed'>
+          <div style={{padding: '1em'}}>
+            <div style={{fontStyle: 'italic'}}>
+              <div style={{display: this.state.loading ? 'block'  : 'none'}}>{`Loading posts by ${address}`}</div>
+              <div style={{display: !this.state.loading && this.state.size == 0 ? 'block'  : 'none'}}>{`No posts found by ${address}`}</div>
+            </div>
+            <div style={{display: this.state.size != 0 ? 'block'  : 'none'}}>{`Posts by ${address} (${this.state.size})`}</div>
           </div>
-          <div style={{display: this.state.size != 0 ? 'block'  : 'none'}}>{`Posts by ${address} (${this.state.size})`}</div>
+          <ol>{listItems}</ol>
         </div>
-        <ol>{listItems}</ol>
       </div>
     );
   }

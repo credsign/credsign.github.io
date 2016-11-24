@@ -163,7 +163,7 @@ class Publish extends React.Component {
     return (
       <div style={{width: '100%', margin: '0 auto'}}>
         <div style={{maxWidth: '600px', margin: '0 auto', color: 'black'}}>
-          <div style={{padding: '1em'}}>
+          <div style={{paddingLeft: '1em'}}>
             <span style={{color: 'gray'}}>#</span>
             <input
               type='text'
@@ -171,7 +171,7 @@ class Publish extends React.Component {
               onChange={(e) => this.setState({'channel': e.target.value})}
               value={this.state.channel} style={{
                 border: 0,
-                padding: 0,
+                padding: '1em 1em 1em 0',
                 fontSize: '1em',
                 color: 'black',
                 outline: 0,
@@ -227,12 +227,12 @@ class Publish extends React.Component {
               <h1>Unable to publish</h1>
               <div style={{
                 padding: '1em 0',
-                maxHeight: '10em',
+                maxHeight: '5em',
                 overflow: 'scroll'
               }}>{this.state.error}</div>
               <span onClick={() => this.setState({view: 'preview', error: ''})} style={{
-                borderBottom: '2px solid black',
-                padding: '.5em 0',
+                color: 'black',
+                textDecoration: 'underline',
                 display: 'inline-block',
                 cursor: 'pointer'
               }}>Close</span>
@@ -244,8 +244,8 @@ class Publish extends React.Component {
                 'If you are not redirected after several minutes, try closing this message and publishing again.'
               }</div>
               <span onClick={() => this.setState({view: 'publish', error: ''})} style={{
-                borderBottom: '2px solid black',
-                padding: '.5em 0',
+                color: 'black',
+                textDecoration: 'underline',
                 display: 'inline-block',
                 cursor: 'pointer'
               }}>Close</span>

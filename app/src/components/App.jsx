@@ -3,7 +3,9 @@ import { HashRouter, Match, Link, Miss, Redirect } from 'react-router';
 
 import Account from './Account.jsx';
 import Content from './Content.jsx';
-import Filter from './Filter.jsx';
+import AddressContent from './filters/AddressContent.jsx';
+import AllContent from './filters/AllContent.jsx';
+import ChannelContent from './filters/ChannelContent.jsx';
 import Navigation from './Navigation.jsx';
 import Publish from './Publish.jsx';
 
@@ -28,11 +30,13 @@ class App extends React.Component {
         <div style={{position: 'relative', minHeight: '100%'}}>
           <Navigation />
           <div style={{height: '3em'}}>&nbsp;</div>
-          <Match pattern='/content/:id' component={Content}/>
-          <Match pattern='/filter/:type/:value' component={Filter}/>
-          <Match pattern='/publish' component={Publish}/>
-          <Match pattern='/account' component={Account}/>
-          <Miss render={() => <Redirect to='/filter/all/new' />} />
+          <Match pattern='/channel' exactly component={AllContent} />
+          <Match pattern='/content/:id' component={Content} />
+          <Match pattern='/channel/:channel' component={ChannelContent} />
+          <Match pattern='/address/:address' component={AddressContent} />
+          <Match pattern='/publish' component={Publish} />
+          <Match pattern='/account' component={Account} />
+          <Miss render={() => <Redirect to='/channel' />} />
           <div style={{height: '3em'}}>&nbsp;</div>
           <div style={{
             width: '100%',
