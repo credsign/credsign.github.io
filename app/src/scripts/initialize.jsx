@@ -9,6 +9,8 @@ window.addEventListener('load', function () {
     window.network = network;
     window.infura = false;
 
+    var Web3 = window.Web3 || web3.constructor;
+
     // web3 is not present, fetch it and connect to the right network
     if (window.web3 === undefined) {
       var script = document.createElement('script');
@@ -33,7 +35,6 @@ window.addEventListener('load', function () {
       document.getElementsByTagName('head')[0].appendChild(script);
     }
     else {
-      var Web3 = window.Web3 || web3.constructor;
         // Ensure we're connected to the right network
       web3.version.getNetwork(function (error, networkID) {
         if (network == 'privnet') {
