@@ -29461,7 +29461,7 @@
 	                  error: error.toString()
 	                });
 	              } else {
-	                var watcher = content.Publish({ contentID: contentID }, { fromBlock: 'latest' });
+	                var watcher = content.Publish({ contentID: contentID }, { fromBlock: 0 });
 	                watcher.watch(function (error, post) {
 	                  watcher.stopWatching(function () {});
 	                  if (error) {
