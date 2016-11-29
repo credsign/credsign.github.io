@@ -71,12 +71,17 @@ window.addEventListener('load', function () {
 
   function getAccounts(done) {
     // TODO: Robust account management
-    web3.eth.getAccounts((error, accounts) => {
-      if (!window.infura && accounts && accounts.length > 0) {
-        window.account = accounts[0];
-      }
+    if (window.infura) {
       done();
-    });
+    }
+    else {
+      web3.eth.getAccounts((error, accounts) => {
+        if (accounts && accounts.length > 0) {
+          window.account = accounts[0];
+        }
+        done();
+      });
+    }
   }
 
   getWeb3(function () {
