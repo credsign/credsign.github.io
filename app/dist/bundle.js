@@ -26090,7 +26090,7 @@
 	function getContentTitle(header) {
 	  var title = null;
 	  try {
-	    title = JSON.parse(header).title;
+	    title = JSON.parse(header).title || '(untitled)';
 	  } catch (e) {
 	    console.log('Invalid JSON: ' + header);
 	  }
