@@ -61,7 +61,7 @@ h1 {
   }
   /* Break up toolbar to two rows of 4 */
   .medium-editor-toolbar-actions {
-    max-width: 240px;
+    max-width: 180px;
 
   }
   /* Fit the link + buttons in the same line */

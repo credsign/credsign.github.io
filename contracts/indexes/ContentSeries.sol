@@ -11,7 +11,8 @@ contract ContentSeries is Index {
     /// @param seriesNum A zero-based, chronological index of all content.
     event Series (
         uint256 indexed contentID,
-        uint256 indexed seriesNum
+        uint256 indexed seriesNum,
+        uint256 timestamp
     );
 
     uint256 private contentSize;
@@ -29,7 +30,7 @@ contract ContentSeries is Index {
         if (msg.sender != address(content)) {
             throw;
         }
-        Series(contentID, contentSize++);
+        Series(contentID, contentSize++, block.timestamp);
     }
 
     /// @dev Get the number of indexed content.

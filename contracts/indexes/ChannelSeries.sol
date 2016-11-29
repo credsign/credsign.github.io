@@ -13,7 +13,8 @@ contract ChannelSeries is Index {
     event Series (
         uint256 indexed contentID,
         uint256 indexed channelID,
-        uint256 indexed seriesNum
+        uint256 indexed seriesNum,
+        uint256 timestamp
     );
 
     mapping(uint256 => uint256) channelSize;
@@ -32,7 +33,7 @@ contract ChannelSeries is Index {
             throw;
         }
         uint256 channelID = content.getChannelID(contentID);
-        Series(contentID, channelID, channelSize[channelID]++);
+        Series(contentID, channelID, channelSize[channelID]++, block.timestamp);
     }
 
     /// @dev Get the number of indexed content in the channel.

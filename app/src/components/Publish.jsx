@@ -62,7 +62,7 @@ class Publish extends React.Component {
       buttonLabels: 'fontawesome',
       keyboardCommands: false,
       toolbar: {
-        buttons: ['bold', 'italic', 'h2', 'h3', 'image', 'anchor', 'pre', 'quote'],
+        buttons: ['bold', 'italic', 'h2', 'h3', 'anchor', 'quote'],
       },
       placeholder: {
         text: 'body',

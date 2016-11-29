@@ -1,10 +1,41 @@
 // Adapted from https://gist.github.com/Youwotma/1762527
 // No license provided in original, so assume license of this repo.
+import Autolinker from 'autolinker';
 
 export default function toMarkdown(node) {
 
     var markdownEscape = (text) => {
-        return text ? text.replace(/\s+/g, " ").replace(/[\\\-*_>#]/g, "\\$&") : '';
+        if (text) {
+            return Autolinker.link(
+                text.replace(/\s+/g, " ").replace(/[\\\-*_>]|(# )/g, "\\$&"),
+                {
+                    newWindow: false,
+                    urls : {
+                        schemeMatches : true,
+                        wwwMatches    : true,
+                        tldMatches    : true
+                    },
+                    email: false,
+                    phone: false,
+                    mention: false,
+                    hashtag: 'twitter',
+                    stripPrefix: false,
+                    stripTrailingSlash: false,
+                    truncate: false,
+                    replaceFn: (match) => {
+                        switch (match.getType()) {
+                            case 'url':
+                                return '<'+match.getUrl()+'>';
+                            case 'hashtag':
+                                return '[#'+match.getHashtag()+']('+window.location.href.split('#')[0]+'#/channel/'+match.getHashtag() + ')';
+                        }
+                    }
+                }
+            );
+        }
+        else {
+            return '';
+        }
     }
 
     var repeat = (str, times) => {
