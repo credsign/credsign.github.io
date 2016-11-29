@@ -29469,7 +29469,7 @@
 	                      error: error.toString()
 	                    });
 	                  } else {
-	                    window.location.hash = '#/content/' + contentID;
+	                    window.location.hash = '#/content/0x' + contentID.toString(16);
 	                  }
 	                });
 	              }
