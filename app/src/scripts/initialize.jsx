@@ -22,7 +22,7 @@ window.addEventListener('load', function () {
         else {
           if (network == 'mainnet') {
             window.infura = true;
-            window.web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/rKXO8uv6njXPdnUsNSeE'));
+            window.web3 = new Web3(new Web3.providers.HttpProvider('https://credhot.com'));
           }
           else if (network == 'testnet') {
             window.infura = true;
@@ -39,7 +39,7 @@ window.addEventListener('load', function () {
           }
           else if (network == 'mainnet' && networkID != 1) {
             window.infura = true;
-            window.web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/rKXO8uv6njXPdnUsNSeE'));
+            window.web3 = new Web3(new Web3.providers.HttpProvider('https://credhot.com'));
           }
           else if (network == 'testnet' && networkID != 3) {
             window.infura = true;
