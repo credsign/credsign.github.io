@@ -15,6 +15,7 @@ window.addEventListener('load', function () {
       script.type = 'text/javascript';
       script.async = true;
       script.onload = function () {
+        var Web3 = window.Web3;
         // Dev is on HTTP, unless you use something like Charles Proxy to map production host to localhost
         if (window.location.protocol == 'http:' || network == 'privnet') {
           window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
