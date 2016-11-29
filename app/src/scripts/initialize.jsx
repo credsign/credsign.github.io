@@ -10,47 +10,46 @@ window.addEventListener('load', function () {
     window.infura = false;
 
     // web3 is not present, fetch it and connect to the right network
-    var script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.async = true;
-    script.onload = function () {
-      if (window.web3 === undefined) {
+    if (window.web3 === undefined) {
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.async = true;
+      script.onload = function () {
         // Dev is on HTTP, unless you use something like Charles Proxy to map production host to localhost
         if (window.location.protocol == 'http:' || network == 'privnet') {
           window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
         }
-        else {
-          if (network == 'mainnet') {
-            window.infura = true;
-            window.web3 = new Web3(new Web3.providers.HttpProvider('https://credhot.com'));
-          }
-          else if (network == 'testnet') {
-            window.infura = true;
-            window.web3 = new Web3(new Web3.providers.HttpProvider('https://testnet.infura.io/rKXO8uv6njXPdnUsNSeE'));
-          }
+        else if (network == 'mainnet') {
+          window.infura = true;
+          window.web3 = new Web3(new Web3.providers.HttpProvider('https://credhot.com'));
+        }
+        else if (network == 'testnet') {
+          window.infura = true;
+          window.web3 = new Web3(new Web3.providers.HttpProvider('https://testnet.infura.io/rKXO8uv6njXPdnUsNSeE'));
         }
         done();
-      }
-      else {
+      };
+      script.src = 'https://unpkg.com/web3@0.16.0/dist/web3.js';
+      document.getElementsByTagName('head')[0].appendChild(script);
+    }
+    else {
+      var Web3 = window.Web3 || web3.constructor;
         // Ensure we're connected to the right network
-        web3.version.getNetwork(function (error, networkID) {
-          if (network == 'privnet') {
-            window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
-          }
-          else if (network == 'mainnet' && networkID != 1) {
-            window.infura = true;
-            window.web3 = new Web3(new Web3.providers.HttpProvider('https://credhot.com'));
-          }
-          else if (network == 'testnet' && networkID != 3) {
-            window.infura = true;
-            window.web3 = new Web3(new Web3.providers.HttpProvider('https://testnet.infura.io/rKXO8uv6njXPdnUsNSeE'));
-          }
-          done();
-        });
-      }
-    };
-    script.src = 'https://unpkg.com/web3@0.16.0/dist/web3.js';
-    document.getElementsByTagName('head')[0].appendChild(script);
+      web3.version.getNetwork(function (error, networkID) {
+        if (network == 'privnet') {
+          window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
+        }
+        else if (network == 'mainnet' && networkID != 1) {
+          window.infura = true;
+          window.web3 = new Web3(new Web3.providers.HttpProvider('https://credhot.com'));
+        }
+        else if (network == 'testnet' && networkID != 3) {
+          window.infura = true;
+          window.web3 = new Web3(new Web3.providers.HttpProvider('https://testnet.infura.io/rKXO8uv6njXPdnUsNSeE'));
+        }
+        done();
+      });
+    }
   }
 
   function getContracts(done) {
