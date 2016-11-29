@@ -144,6 +144,7 @@ function startMainnetServer(callback) {
 function buildFrontend() {
   server = spawn('python', ['-m', 'SimpleHTTPServer']);
   webpack({
+    devtool: 'source-map',
     entry: './app/src/scripts/initialize.jsx',
     module: {
       loaders: [
@@ -151,11 +152,6 @@ function buildFrontend() {
           test: /\.(js|jsx)$/,
           loader: 'babel-loader',
           // exclude: /node_modules/,
-          // plugins: [
-          //   new webpack.optimize.UglifyJsPlugin({
-          //     compress: { warnings: false }
-          //   })
-          // ],
           query: {
             presets: ['es2015', 'react']
           }
@@ -163,6 +159,11 @@ function buildFrontend() {
       ]
     },
     output: { path: './app/dist/', filename: 'bundle.js' },
+    plugins: [
+      new webpack.optimize.UglifyJsPlugin({
+        compress: { warnings: true }
+      })
+    ],
     watch: true
   }, function (err, stats) {
     var errors = stats.compilation.errors;
