@@ -31024,7 +31024,7 @@
 
 	    var markdownEscape = function markdownEscape(text) {
 	        if (text) {
-	            return _autolinker2.default.link(text.replace(/\s+/g, " ").replace(/[\\\-*_>]|(# )/g, "\\$&"), {
+	            return _autolinker2.default.link(text.replace(/\s+/g, " ").replace(/[\\]|(# )/g, "\\$&"), {
 	                newWindow: false,
 	                urls: {
 	                    schemeMatches: true,

@@ -179,6 +179,10 @@ a {
   cursor: pointer;
 }
 
+.post ul, post li, post ol {
+  font-family: 'Martel', serif;
+}
+
 .post p {
   font-family: 'Martel', serif;
   line-height: 1.5em;

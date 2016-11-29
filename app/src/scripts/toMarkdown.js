@@ -7,7 +7,7 @@ export default function toMarkdown(node) {
     var markdownEscape = (text) => {
         if (text) {
             return Autolinker.link(
-                text.replace(/\s+/g, " ").replace(/[\\\-*_>]|(# )/g, "\\$&"),
+                text.replace(/\s+/g, " ").replace(/[\\]|(# )/g, "\\$&"),
                 {
                     newWindow: false,
                     urls : {
