@@ -75,9 +75,9 @@ class Navigation extends React.Component {
                 <h1>Wallet Required</h1>
                 <div style={{padding: '1em 0'}}>{
                   `No Ethereum accounts were detected. Please ensure that you have `
-                }<Link to={'https://github.com/ethereum/mist/releases'}>Mist</Link>{
+                }<a href={'https://github.com/ethereum/mist/releases'}>Mist</a>{
                   ' or '
-                }<Link to={'https://metamask.io'}>MetaMask</Link>{
+                }<a href={'https://metamask.io'}>MetaMask</a>{
                   ` installed and are connected to the proper network (${window.network}).`
                 }</div>
                 <span onClick={() => this.setState({warn: false})} style={{
