@@ -7,7 +7,7 @@ export default function toMarkdown(node) {
     var markdownEscape = (text) => {
         if (text) {
             return Autolinker.link(
-                text.replace(/\s+/g, " ").replace(/[\\]|(# )/g, "\\$&"),
+                text.replace(/\s+/g, " ").replace(/[\\]/g, "\\$&"),
                 {
                     newWindow: false,
                     urls : {
@@ -27,7 +27,7 @@ export default function toMarkdown(node) {
                             case 'url':
                                 return '<'+match.getUrl()+'>';
                             case 'hashtag':
-                                return '[#'+match.getHashtag()+']('+window.location.href.split('#')[0]+'#/channel/'+match.getHashtag() + ')';
+                                return '\\#'+match.getHashtag();
                         }
                     }
                 }

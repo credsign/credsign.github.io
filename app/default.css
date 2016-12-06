@@ -179,6 +179,10 @@ a {
   cursor: pointer;
 }
 
+#new-post-body span {
+  color: inherit !important;
+}
+
 .post ul, post li, post ol {
   font-family: 'Martel', serif;
 }
