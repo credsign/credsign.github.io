@@ -37,10 +37,7 @@ window.addEventListener('load', function () {
       var Web3 = window.Web3 || web3.constructor;
         // Ensure we're connected to the right network
       web3.version.getNetwork(function (error, networkID) {
-        if (network == 'privnet') {
-          window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
-        }
-        else if (network == 'mainnet' && networkID != 1) {
+        if (network == 'mainnet' && networkID != 1) {
           window.infura = true;
           window.web3 = new Web3(new Web3.providers.HttpProvider('https://credhot.com'));
         }

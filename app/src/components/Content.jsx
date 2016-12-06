@@ -1,6 +1,6 @@
 import React from 'react';
 import marked from 'marked';
-import { getContentTitle, getChannelName } from '../scripts/formatting.js';
+import { getContentTitle, getChannelName, decodeContentBody } from '../scripts/formatting.js';
 
 class Content extends React.Component {
   constructor(props) {
@@ -34,9 +34,10 @@ class Content extends React.Component {
         });
       }
       else {
+        var encoding = JSON.parse(post[0].args.header).encoding;
         this.setState({
           title: getContentTitle(post[0].args.header),
-          body: web3.toUtf8(post[0].args.body),
+          body: decodeContentBody(post[0].args.body, encoding),
           publisher: post[0].args.publisher,
           channelName: getChannelName(post[0].args.channelID),
           timestamp: post[0].args.timestamp * 1000,

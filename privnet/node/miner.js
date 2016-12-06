@@ -3,6 +3,7 @@
 
 var mining = false;
 var address = eth.accounts.length > 0 ? eth.accounts[eth.accounts.length - 1] : personal.newAccount("credsign");
+personal.unlockAccount(address, "credsign");
 
 (function toggleMiner() {
   if (mining) {
@@ -17,5 +18,5 @@ var address = eth.accounts.length > 0 ? eth.accounts[eth.accounts.length - 1] : 
       miner.start();
     }
   }
-  setTimeout(toggleMiner, 1000);
+  setTimeout(toggleMiner, 10000);
 })();

@@ -3,6 +3,7 @@ import marked from 'marked';
 import MediumEditor from 'medium-editor';
 import toMarkdown from '../scripts/toMarkdown.js';
 import { Match, Link } from 'react-router';
+import { encodeContentBody } from '../scripts/formatting.js';
 
 class Publish extends React.Component {
   constructor(props) {
@@ -107,9 +108,9 @@ class Publish extends React.Component {
     var header = JSON.stringify({
       title: document.getElementById('new-post-title').value,
       version: '1.0',
-      encoding: 'plain'
+      encoding: 'lz-string'
     });
-    var body = web3.toHex(toMarkdown(document.getElementById('new-post-body')));
+    var body = encodeContentBody(toMarkdown(document.getElementById('new-post-body')));
     var indexes = [
       window.addressseries.address,
       window.contentseries.address,
