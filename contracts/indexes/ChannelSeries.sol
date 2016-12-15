@@ -9,7 +9,7 @@ contract ChannelSeries is Index {
     /// @dev Series Store the index in the transaction logs.
     /// @param contentID The ID corresponding to the content.
     /// @param channelID The ID corresponding to channel the content is published in.
-    /// @param seriesNum A zero-based, chronological index of content in a channel.
+    /// @param seriesNum A one-based, chronological index of content in a channel.
     event Series (
         uint256 indexed contentID,
         uint256 indexed channelID,
@@ -17,6 +17,7 @@ contract ChannelSeries is Index {
         uint256 timestamp
     );
 
+    mapping(uint256 => bool) contentIndexed;
     mapping(uint256 => uint256) channelSize;
     Content private content;
 
@@ -29,11 +30,18 @@ contract ChannelSeries is Index {
     /// @dev Add the contentID to this index.
     /// @param contentID the contentID for a piece of published content.
     function add(uint256 contentID) {
-        if (msg.sender != address(content)) {
+        var (publisher, channelID, timestamp) = content.getAttributes(contentID);
+        if (timestamp == 0 || contentIndexed[contentID]) {
+            // content doesn't exist; content is already indexed
             throw;
         }
-        uint256 channelID = content.getChannelID(contentID);
-        Series(contentID, channelID, channelSize[channelID]++, block.timestamp);
+        contentIndexed[contentID] = true;
+        Series(
+            contentID,
+            channelID,
+            ++channelSize[channelID],
+            timestamp
+        );
     }
 
     /// @dev Get the number of indexed content in the channel.

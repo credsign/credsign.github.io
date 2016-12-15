@@ -18,7 +18,7 @@ window.addEventListener('load', function () {
         var Web3 = window.Web3;
         // Dev is on HTTP, unless you use something like Charles Proxy to map production host to localhost
         if (window.location.protocol == 'http:' || network == 'privnet') {
-          window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
+          window.web3 = new Web3(new Web3.providers.HttpProvider('http://credhot.com'));
         }
         else if (network == 'mainnet') {
           window.infura = true;

@@ -65,13 +65,19 @@ class ChannelContent extends React.Component {
     var now = new Date().getTime();
     var listItems = this.state.listItems.map((listItem) => {
       var age = now - listItem.timestamp;
-      if (age > 3600000) {
-        age -= (age % 3600000);
+      if (age > 604800000) {
+        age -= age % 604800000;
       }
-      if (age > 60000) {
+      else if (age > 86400000) {
+        age -= age % 86400000;
+      }
+      else if (age > 3600000) {
+        age -= age % 3600000;
+      }
+      else if (age > 60000) {
         age -= age % 60000;
       }
-      if (age > 1000) {
+      else if (age > 1000) {
         age -= age % 1000;
       }
       return (
@@ -97,7 +103,7 @@ class ChannelContent extends React.Component {
             </div>
             <div style={{display: this.state.size != 0 ? 'block'  : 'none'}}>{`Posts in ${channel} (${this.state.size})`}</div>
           </div>
-          <ol>{listItems}</ol>
+          <ol style={{marginBottom: '1em'}}>{listItems}</ol>
         </div>
       </div>
     );

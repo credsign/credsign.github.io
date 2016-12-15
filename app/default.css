@@ -148,6 +148,9 @@ ul.dropdown > li:hover {
   margin: 0;
   list-style-type: none;
 }
+.feed ol > li:last-child {
+  margin-bottom: 0;
+}
 
 .feed ol > li {
   display: block;

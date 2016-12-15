@@ -8,13 +8,14 @@ contract ContentSeries is Index {
 
     /// @dev Series Store the index in the transaction logs.
     /// @param contentID The ID corresponding to the content.
-    /// @param seriesNum A zero-based, chronological index of all content.
+    /// @param seriesNum A one-based, chronological index of all content.
     event Series (
         uint256 indexed contentID,
         uint256 indexed seriesNum,
         uint256 timestamp
     );
 
+    mapping(uint256 => bool) contentIndexed;
     uint256 private contentSize;
     Content private content;
 
@@ -27,10 +28,17 @@ contract ContentSeries is Index {
     /// @dev Add the contentID to this index.
     /// @param contentID the contentID for a piece of published content.
     function add(uint256 contentID) {
-        if (msg.sender != address(content)) {
+        uint256 timestamp = content.getTimestamp(contentID);
+        if (timestamp == 0 || contentIndexed[contentID]) {
+            // content doesn't exist; content is already indexed
             throw;
         }
-        Series(contentID, contentSize++, block.timestamp);
+        contentIndexed[contentID] = true;
+        Series(
+            contentID,
+            ++contentSize,
+            timestamp
+        );
     }
 
     /// @dev Get the number of indexed content.

@@ -9,7 +9,7 @@ contract AddressSeries is Index {
     /// @dev Series Store the index in the transaction logs.
     /// @param contentID The ID corresponding to the content.
     /// @param publisher The address that published content.
-    /// @param seriesNum A zero-based, chronological index of the publisher's content.
+    /// @param seriesNum A one-based, chronological index of the publisher's content.
     /// @param channelID The ID corresponding to channel the content is published in.
     /// @param timestamp The block timestamp for merging the series from multiple publishers.
     event Series (
@@ -20,6 +20,7 @@ contract AddressSeries is Index {
         uint256 timestamp
     );
 
+    mapping(uint256 => bool) contentIndexed;
     mapping(address => uint256) addressSize;
     Content private content;
 
@@ -32,16 +33,18 @@ contract AddressSeries is Index {
     /// @dev Add the contentID to this index.
     /// @param contentID the contentID for a piece of published content.
     function add(uint256 contentID) {
-        if (msg.sender != address(content)) {
+        var (publisher, channelID, timestamp) = content.getAttributes(contentID);
+        if (timestamp == 0 || contentIndexed[contentID]) {
+            // content doesn't exist; content is already indexed
             throw;
         }
-        var (publisher, channelID, timestamp) = content.getAttributes(contentID);
+        contentIndexed[contentID] = true;
         Series(
             contentID,
             publisher,
-            addressSize[publisher]++,
+            ++addressSize[publisher],
             channelID,
-            block.timestamp
+            timestamp
         );
     }
 

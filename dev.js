@@ -46,7 +46,7 @@ else {
     '\nCommands:\n'+
     '\t--sync --network=[mainnet|testnet|privnet] [--mine]\n'+
     '\t--serve\n'+
-    '\t--deploy --network=[mainnet|testnet|privnet] --contracts=[all]\n'
+    '\t--deploy --network=[mainnet|testnet|privnet] --contracts=[all|index]\n'
   );
 }
 
@@ -242,7 +242,7 @@ function deploy(network, mode, socket, done) {
         password = readlineSync.question(`> Account password (${account}): `, { hideEchoBack: true, mask: '' });
 
         try {
-          oldContracts = JSON.parse(fs.readFileSync(path.resolve(network, 'contracts.json'), 'utf-8'));
+          oldContracts = JSON.parse(fs.readFileSync(path.resolve(network == 'mainnet' ? '' : network, 'contracts.json'), 'utf-8'));
         }
         catch (e) { }
 
@@ -256,6 +256,19 @@ function deploy(network, mode, socket, done) {
                   });
                 });
               });
+            });
+          });
+        }
+        else if (mode == 'index') {
+          contracts = {
+            'Identity': oldContracts['Identity'],
+            'Index': oldContracts['Index'],
+            'Content': oldContracts['Content']
+          };
+          console.log(contracts);
+          deployContract('ChannelSeries', [ contracts['Content'].address ], () => {
+            deployContract('ContentSeries', [ contracts['Content'].address ], () => {
+              deployContract('AddressSeries', [ contracts['Content'].address ], writeContracts);
             });
           });
         }
