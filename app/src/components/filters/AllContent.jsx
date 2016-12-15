@@ -105,7 +105,7 @@ class AllContent extends React.Component {
             padding: '1em',
             display: !this.state.loading && this.state.size == 0 ? 'block'  : 'none'
           }}>No posts found</div>
-          <ol style={{marginBottom: this.state.size == listItems.length ? '1em' : '0'}}>{listItems}</ol>
+          <ol style={{marginBottom: this.state.size == listItems.length && listItems.length != 0 ? '1em' : '0'}}>{listItems}</ol>
           <div style={{
             fontStyle: 'italic',
             padding: '1em',
