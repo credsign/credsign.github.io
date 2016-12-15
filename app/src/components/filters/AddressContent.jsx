@@ -34,7 +34,7 @@ class AddressContent extends React.Component {
 
     window.addressseries.getSize(address, (error, size) => {
       size = size.toNumber();
-      var indices = [...Array(size)].map((_, i) => i);
+      var indices = [...Array(size)].map((_, i) => i + 1);
 
       window.addressseries.Series({publisher: address, seriesNum: indices}, {fromBlock: 0, toBlock: 'latest'}).get((error, series) => {
         var contentIDs = series.map((entry) => entry.args.contentID);
