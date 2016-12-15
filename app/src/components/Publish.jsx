@@ -12,7 +12,8 @@ class Publish extends React.Component {
     this.state = {
       view: 'edit',
       channel: '',
-      error: ''
+      error: '',
+      publishWatcher: 0
     };
 
     this.preventHeaderUnbold = (e) => {
@@ -80,6 +81,9 @@ class Publish extends React.Component {
   componentWillUnmount() {
     document.removeEventListener('click', this.preventHeaderUnbold);
     document.removeEventListener('keydown', this.preventFormatHotkey);
+    if (this.state.publishWatch > 0) {
+      window.clearTimeout(this.state.publishWatcher);
+    }
   }
 
   editPost() {
@@ -141,18 +145,24 @@ class Publish extends React.Component {
               });
             }
             else {
-              var watcher = content.Publish({contentID: contentID}, {fromBlock: 0});
-              watcher.watch((error, post) => {
-                watcher.stopWatching(() => {});
-                if (error) {
-                  this.setState({
-                    error: error.toString()
-                  });
-                }
-                else {
-                  window.location.hash = `#/content/0x${contentID.toString(16)}`;
-                }
-              });
+              var watcher = () => {
+                content.Publish({contentID: contentID}, {fromBlock: 0}).get((error, post) => {
+                  if (error) {
+                    this.setState({
+                      error: error.toString()
+                    });
+                  }
+                  else if (post.length == 0) {
+                    this.setState({
+                      publishWatcher: window.setTimeout(watcher, 5000)
+                    });
+                  }
+                  else {
+                    window.location.hash = `#/content/0x${contentID.toString(16)}`;
+                  }
+                });
+              }
+              watcher();
             }
           });
         });
