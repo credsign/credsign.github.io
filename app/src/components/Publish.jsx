@@ -137,7 +137,7 @@ class Publish extends React.Component {
       content.toContentID(window.account, channelID, header, body, (error, contentID) => {
         content.publish.estimateGas(channel, header, body, indexes, tx, (error, gasEstimate) => {
           console.log(gasEstimate);
-          tx.gasEstimate += gasEstimate + 100000;
+          tx.gasEstimate = gasEstimate + 200000;
           content.publish(channel, header, body, indexes, tx, (error) => {
             if (error) {
               this.setState({
@@ -254,7 +254,7 @@ class Publish extends React.Component {
                 'Your post is being published. This page will redirect to your post once published. '+
                 'If you are not redirected after several minutes, try closing this message and publishing again.'
               }</div>
-              <span onClick={() => this.setState({view: 'publish', error: ''})} style={{
+              <span onClick={() => this.setState({view: 'preview', error: ''})} style={{
                 color: 'black',
                 textDecoration: 'underline',
                 display: 'inline-block',

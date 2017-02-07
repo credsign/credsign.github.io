@@ -1,5 +1,5 @@
 # The Distributed News Terminal
-Credsign lets you publish and view content using the Ethereum blockchain. The result is an always available, censorship resistant source of information. It is currently in beta on the Ethereum test network at <https://credsign.github.io/testnet>.
+Credsign lets you publish and view content using the Ethereum blockchain. The result is an always available, censorship resistant source of information. It is currently in beta on the Ethereum network at <https://credsign.github.io/>.
 
 # Development enviroment setup
 
