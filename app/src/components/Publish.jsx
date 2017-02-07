@@ -137,7 +137,7 @@ class Publish extends React.Component {
       content.toContentID(window.account, channelID, header, body, (error, contentID) => {
         content.publish.estimateGas(channel, header, body, indexes, tx, (error, gasEstimate) => {
           console.log(gasEstimate);
-          tx.gasEstimate = gasEstimate + 200000;
+          tx.gas = gasEstimate + 100000;
           content.publish(channel, header, body, indexes, tx, (error) => {
             if (error) {
               this.setState({
