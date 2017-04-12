@@ -1,7 +1,21 @@
+<!DOCTYPE html>
 <html>
 <head>
+  window.addEventListener('load', function () {
+    var contract = web3.eth.contract([{"constant":false,"inputs":[{"name":"contentID","type":"uint256"}],"name":"add","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getSize","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"inputs":[{"name":"contentContract","type":"address"}],"type":"constructor"},{"payable":false,"type":"fallback"},{"anonymous":false,"inputs":[{"indexed":true,"name":"contentID","type":"uint256"},{"indexed":true,"name":"seriesNum","type":"uint256"},{"indexed":false,"name":"timestamp","type":"uint256"}],"name":"Series","type":"event"}]).at('0x79006e2b61099f4f76eb0e451fc4a49ceb5125d3');
+    window.contentseries.Series({seriesNum: 1}, {fromBlock: 0, toBlock: 'latest'}).get(function (error, result) {
+      if (error) {
+        console.log(error);
+        document.getElementById('result').innerHTML = error.toString();
+      }
+      else {
+        console.log(result);
+        document.getElementById('result').innerHTML = JSON.stringify(result);
+      }
+    });
+  }
 </head>
 <body>
-<div>Blank page to see if Metamask gets injected</div>
+<pre id="result">Waiting for log filter response. Result will appear here and get logged to the console.</pre>
 </body>
 </html>
