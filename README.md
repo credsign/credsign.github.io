@@ -1,4 +1,4 @@
-# The Distributed News Terminal
+# Channel: Distributed News
 Channel lets you publish and view content using the Ethereum blockchain. It is currently in beta on the Ethereum network at <https://channel.is/>. Shoutout to the folks at <https://channel.me> for letting us use this github alias.
 
 # Development enviroment setup
