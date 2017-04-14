@@ -1,5 +1,5 @@
 # The Distributed News Terminal
-Credsign lets you publish and view content using the Ethereum blockchain. It is currently in beta on the Ethereum network at <https://credsign.github.io/>.
+Channel lets you publish and view content using the Ethereum blockchain. It is currently in beta on the Ethereum network at <https://channel.github.io/>.
 
 # Development enviroment setup
 
@@ -14,7 +14,7 @@ Modifying files in `./app/src` will trigger a recompile while the frontend serve
 
 # License
 
-Credsign - The Distributed News Terminal - Copyright (C) 2016 Cameron Hejazi
+Channel - Copyright (C) 2017 Cameron Hejazi
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
