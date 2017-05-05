@@ -84,7 +84,7 @@ class Content extends React.Component {
   }
 
   tipPost() {
-    let tip = new BigNumber(this.state.tipValue).times(web3.toWei(1));
+    let tip = new web3.BigNumber(this.state.tipValue || .01).times(web3.toWei(1));
     this.setState({
       view: 'tip'
     });

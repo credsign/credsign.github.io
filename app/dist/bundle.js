@@ -40839,7 +40839,7 @@
 	    value: function tipPost() {
 	      var _this3 = this;
 	
-	      var tip = new BigNumber(this.state.tipValue).times(web3.toWei(1));
+	      var tip = new web3.BigNumber(this.state.tipValue || .01).times(web3.toWei(1));
 	      this.setState({
 	        view: 'tip'
 	      });
