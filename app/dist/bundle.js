@@ -34220,7 +34220,7 @@
 	    for (var i = 1; i < cacheBustedContentIDs.length; i++) {
 	      var ether = web3.toWei(1);
 	      var props = {
-	        contentID: contentIDs[i].toString(16),
+	        contentID: cacheBustedContentIDs[i].toString(16),
 	        block: rawProps[0][i].toNumber(),
 	        funds: rawProps[1][i].dividedBy(ether).toNumber(),
 	        token: rawProps[2][i],

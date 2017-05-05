@@ -64,7 +64,7 @@ export function getContentProps(contentIDs, callback) {
     for (let i = 1; i < cacheBustedContentIDs.length; i++) {
       let ether = web3.toWei(1);
       let props = {
-        contentID: contentIDs[i].toString(16),
+        contentID: cacheBustedContentIDs[i].toString(16),
         block: rawProps[0][i].toNumber(),
         funds: rawProps[1][i].dividedBy(ether).toNumber(),
         token: rawProps[2][i],
