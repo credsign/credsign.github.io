@@ -3,7 +3,7 @@ import Editor from './Editor.jsx';
 import { Link } from 'react-router-dom';
 
 import toMarkdown from '../scripts/toMarkdown.js';
-import { getContentProps, getContentPosts, parseHeaders, parseDocument, getContentSlug } from '../scripts/formatting.js';
+import { getContentProps, getContentPosts, parseHeaders, parseDocument, getContentSlug, getRandom } from '../scripts/formatting.js';
 
 class Replies extends React.Component {
   constructor(props) {
@@ -17,7 +17,7 @@ class Replies extends React.Component {
 
   getReplies(parentID) {
     let ether = web3.toWei(1);
-    window.read.getContentReplies(parentID, (error, contentIDs) => {
+    window.read.getContentReplies(parentID, getRandom(), (error, contentIDs) => {
       if (contentIDs.length == 0) {
         this.setState({
           listItems: [],

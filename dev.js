@@ -46,7 +46,7 @@ else {
     '\nCommands:\n'+
     '\t--sync --network=[mainnet|testnet|privnet] [--mine]\n'+
     '\t--serve\n'+
-    '\t--deploy --network=[mainnet|testnet|privnet] --contracts=[all|index]\n'
+    '\t--deploy --network=[mainnet|testnet|privnet] --contracts=[all|read]\n'
   );
 }
 
@@ -271,7 +271,8 @@ function deploy(network, mode, socket, done) {
         }
         else if (mode == 'read') {
           contracts = {
-            'Feed': oldContracts['Feed']
+            'Feed': oldContracts['Feed'],
+            'Post': oldContracts['Post']
           };
           deployContract('Read', [ contracts.Feed.address ], writeContracts);
         }

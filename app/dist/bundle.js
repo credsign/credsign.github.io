@@ -34143,6 +34143,7 @@
 	exports.serializeHeaders = serializeHeaders;
 	exports.parseDocument = parseDocument;
 	exports.serializeDocument = serializeDocument;
+	exports.getRandom = getRandom;
 	exports.getContentProps = getContentProps;
 	exports.getContentPosts = getContentPosts;
 	exports.submitPost = submitPost;
@@ -34213,15 +34214,18 @@
 	  }
 	}
 	
+	function getRandom() {
+	  return parseInt(Math.random() * 2147483647);
+	}
+	
 	function getContentProps(contentIDs, callback) {
-	  var cacheBustedContentIDs = [parseInt(Math.random() * 2147483647)].concat(contentIDs);
-	  window.read.getContents(cacheBustedContentIDs, function (error, rawProps) {
+	  window.read.getContents(contentIDs, getRandom(), function (error, rawProps) {
 	    var contentProps = [];
-	    for (var i = 1; i < cacheBustedContentIDs.length; i++) {
+	    for (var i = 0; i < contentIDs.length; i++) {
 	      var ether = web3.toWei(1);
 	      var props = {
 	        // TODO: normalize contentID inputs around "0x" formatting
-	        contentID: '0x' + cacheBustedContentIDs[i].toString(16).replace('0x', ''),
+	        contentID: '0x' + contentIDs[i].toString(16).replace('0x', ''),
 	        block: rawProps[0][i].toNumber(),
 	        funds: rawProps[1][i].dividedBy(ether).toNumber(),
 	        token: rawProps[2][i],
@@ -40519,7 +40523,8 @@
 	    value: function loadContents() {
 	      var _this2 = this;
 	
-	      window.feed.getAccountSize(this.state.address, function (error, size) {
+	      var cacheBust = (0, _formatting.getRandom)();
+	      window.read.getAccountSize(this.state.address, cacheBust, function (error, size) {
 	        size = size.toNumber();
 	        if (size == 0) {
 	          _this2.setState({
@@ -40530,7 +40535,7 @@
 	          });
 	          return;
 	        }
-	        window.read.getAccountFeed(_this2.state.address, 0, size, function (error, contentIDs) {
+	        window.read.getAccountFeed(_this2.state.address, 0, size, cacheBust, function (error, contentIDs) {
 	          // Load props for posts in channel
 	          (0, _formatting.getContentProps)(contentIDs, function (error, contentProps) {
 	            if (_this2.state.sort == 'new') {
@@ -41202,7 +41207,7 @@
 	      var _this2 = this;
 	
 	      var ether = web3.toWei(1);
-	      window.read.getContentReplies(parentID, function (error, contentIDs) {
+	      window.read.getContentReplies(parentID, (0, _formatting.getRandom)(), function (error, contentIDs) {
 	        if (contentIDs.length == 0) {
 	          _this2.setState({
 	            listItems: [],
@@ -41406,7 +41411,8 @@
 	    value: function loadContents() {
 	      var _this2 = this;
 	
-	      window.feed.getChannelSize(0, function (error, size) {
+	      var cacheBust = (0, _formatting.getRandom)();
+	      window.read.getChannelSize(0, cacheBust, function (error, size) {
 	        size = size.toNumber();
 	        if (size == 0) {
 	          _this2.setState({
@@ -41417,7 +41423,7 @@
 	          });
 	          return;
 	        }
-	        window.read.getChannelFeed(0, 0, size, function (error, contentIDs) {
+	        window.read.getChannelFeed(0, 0, size, cacheBust, function (error, contentIDs) {
 	          // Load props for posts in channel
 	          (0, _formatting.getContentProps)(contentIDs, function (error, contentProps) {
 	            if (_this2.state.sort == 'new') {

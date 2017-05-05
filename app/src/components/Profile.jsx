@@ -1,5 +1,5 @@
 import React from 'react';
-import { getContentProps, getContentPosts, parseHeaders, humanizeDuration, getContentSlug } from '../scripts/formatting.js';
+import { getContentProps, getContentPosts, parseHeaders, humanizeDuration, getContentSlug, getRandom } from '../scripts/formatting.js';
 
 
 class Profile extends React.Component {
@@ -20,7 +20,8 @@ class Profile extends React.Component {
   }
 
   loadContents() {
-    window.feed.getAccountSize(this.state.address, (error, size) => {
+    let cacheBust = getRandom();
+    window.read.getAccountSize(this.state.address, cacheBust, (error, size) => {
       size = size.toNumber();
       if (size == 0) {
         this.setState({
@@ -31,7 +32,7 @@ class Profile extends React.Component {
         });
         return;
       }
-      window.read.getAccountFeed(this.state.address, 0, size, (error, contentIDs) => {
+      window.read.getAccountFeed(this.state.address, 0, size, cacheBust, (error, contentIDs) => {
         // Load props for posts in channel
         getContentProps(contentIDs, (error, contentProps) => {
           if (this.state.sort == 'new') {

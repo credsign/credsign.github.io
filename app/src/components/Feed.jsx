@@ -1,5 +1,5 @@
 import React from 'react';
-import { getContentProps, getContentPosts, parseHeaders, humanizeDuration, getContentSlug } from '../scripts/formatting.js';
+import { getContentProps, getContentPosts, parseHeaders, humanizeDuration, getContentSlug, getRandom } from '../scripts/formatting.js';
 
 class Feed extends React.Component {
   constructor(props) {
@@ -19,7 +19,8 @@ class Feed extends React.Component {
   }
 
   loadContents() {
-    window.feed.getChannelSize(0, (error, size) => {
+    let cacheBust = getRandom();
+    window.read.getChannelSize(0, cacheBust, (error, size) => {
       size = size.toNumber();
       if (size == 0) {
         this.setState({
@@ -30,7 +31,7 @@ class Feed extends React.Component {
         });
         return;
       }
-      window.read.getChannelFeed(0, 0, size, (error, contentIDs) => {
+      window.read.getChannelFeed(0, 0, size, cacheBust, (error, contentIDs) => {
         // Load props for posts in channel
         getContentProps(contentIDs, (error, contentProps) => {
           if (this.state.sort == 'new') {
