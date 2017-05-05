@@ -58,12 +58,13 @@ export function serializeDocument(document, format, compression) {
 }
 
 export function getContentProps(contentIDs, callback) {
-  window.read.getContents(contentIDs, (error, rawProps) => {
+  var cacheBustedContentIDs = [Math.random() * 2147483647].concat(contentIDs);
+  window.read.getContents(cacheBustedContentIDs, (error, rawProps) => {
     let contentProps = [];
-    for (let i = 0; i < contentIDs.length; i++) {
+    for (let i = 1; i < cacheBustedContentIDs.length; i++) {
       let ether = web3.toWei(1);
       let props = {
-        contentID: '0x'+contentIDs[i].toString(16),
+        contentID: contentIDs[i].toString(16),
         block: rawProps[0][i].toNumber(),
         funds: rawProps[1][i].dividedBy(ether).toNumber(),
         token: rawProps[2][i],
