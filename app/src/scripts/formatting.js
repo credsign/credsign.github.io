@@ -101,8 +101,9 @@ export function cacheContent(contentID, content) {
 
 export function getContentPosts(contentIDs, blocks, callback) {
   let loaded = 0;
+  contentIDs = contentIDs.map(contentID => '0x' + contentID.toString(16).replace('0x', ''));
   for (let i = 0; i < contentIDs.length; i++) {
-    let contentID = '0x' + contentIDs[i].toString(16).replace('0x', '');
+    let contentID = contentIDs[i];
     if (window.contentCache[contentID]) {
       if (++loaded == contentIDs.length) {
         callback(null, contentIDs.map(contentID => Object.assign({}, window.contentCache[contentID])));

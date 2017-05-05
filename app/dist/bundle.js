@@ -34260,9 +34260,12 @@
 	
 	function getContentPosts(contentIDs, blocks, callback) {
 	  var loaded = 0;
+	  contentIDs = contentIDs.map(function (contentID) {
+	    return '0x' + contentID.toString(16).replace('0x', '');
+	  });
 	
 	  var _loop = function _loop(i) {
-	    var contentID = '0x' + contentIDs[i].toString(16).replace('0x', '');
+	    var contentID = contentIDs[i];
 	    if (window.contentCache[contentID]) {
 	      if (++loaded == contentIDs.length) {
 	        callback(null, contentIDs.map(function (contentID) {
