@@ -1,5 +1,5 @@
 # Channel
-Channel lets you publish and view content using the Ethereum blockchain. It is currently in beta on the Ethereum network at <https://channel.is/>. Shoutout to the folks at <https://channel.me> for letting us use this github alias.
+Channel lets you publish and view content using the Ethereum blockchain. It is currently in beta on the Ethereum main network at <https://channel.github.io/>. Shoutout to the folks at <https://channel.me> for letting us use this github alias.
 
 # Development enviroment setup
 
@@ -14,7 +14,7 @@ Modifying files in `./app/src` will trigger a recompile while the frontend serve
 
 # License
 
-Channel - Copyright (C) 2017 Cameron Hejazi
+Copyright (C) 2017 Channel
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
