@@ -1,5 +1,6 @@
 // Adapted from https://gist.github.com/Youwotma/1762527
 // No license provided in original, so assume license of this repo.
+
 import Autolinker from 'autolinker';
 
 export default function toMarkdown(node) {

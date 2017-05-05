@@ -18,7 +18,7 @@ window.addEventListener('load', function () {
         var Web3 = window.Web3;
         // Dev is on HTTP, unless you use something like Charles Proxy to map production host to localhost
         if (window.location.protocol == 'http:' || network == 'privnet') {
-          window.web3 = new Web3(new Web3.providers.HttpProvider('http://credhot.com'));
+          window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
         }
         else if (network == 'mainnet') {
           window.infura = true;
@@ -56,10 +56,9 @@ window.addEventListener('load', function () {
     xhr.onreadystatechange = function () {
       if (xhr.readyState == 4) {
         var contracts = JSON.parse(xhr.responseText);
-        window.content = web3.eth.contract(contracts.Content.interface).at(contracts.Content.address);
-        window.addressseries = web3.eth.contract(contracts.AddressSeries.interface).at(contracts.AddressSeries.address);
-        window.channelseries = web3.eth.contract(contracts.ChannelSeries.interface).at(contracts.ChannelSeries.address);
-        window.contentseries = web3.eth.contract(contracts.ContentSeries.interface).at(contracts.ContentSeries.address);
+        window.feed = web3.eth.contract(contracts.Feed.interface).at(contracts.Feed.address);
+        window.read = web3.eth.contract(contracts.Read.interface).at(contracts.Read.address);
+        window.post = web3.eth.contract(contracts.Post.interface).at(contracts.Post.address);
         done();
       }
     };
@@ -84,6 +83,7 @@ window.addEventListener('load', function () {
   getWeb3(function () {
     getContracts(function () {
       getAccounts(function () {
+        window.contentCache = {};
         render(<App />, document.getElementById('main'));
       });
     });

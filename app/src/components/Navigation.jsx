@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 
 class Navigation extends React.Component {
   constructor(props) {
@@ -22,25 +22,23 @@ class Navigation extends React.Component {
 
   render() {
     return (
-      <div>
+      <div style={{position: 'absolute', top: '0', width: '100%', zIndex: '1'}}>
         <div style={{
-          position: 'fixed',
           width: '100%',
           backgroundColor: '#fafafa',
           borderBottom: '1px solid #DDD',
           color: 'black',
-          top: 0,
           zIndex: 10
         }}>
           <div style={{maxWidth: '600px', margin: '0 auto'}} className='flex'>
             <div className='flex-grow' style={{textAlign: 'left'}}>
-              <Link to={`/address/${window.account || ''}`} onClick={this.warn} style={{textDecoration: 'none', display: 'inline-block', padding: '1em'}}>
+              <Link to={`/profile/${window.account || ''}`} onClick={this.warn} style={{textDecoration: 'none', display: 'inline-block', padding: '1em'}}>
                 <i className='fa fa-user'></i>
               </Link>
             </div>
             <div className='flex-shrink'>
-              <Link to='/channel' style={{textDecoration: 'none', display: 'inline-block'}}>
-                <img src='/app/logo.svg' style={{width: '1.5em', height: '1.5em', margin: '0 auto', padding: '.75em'}} />
+              <Link to='/' style={{textDecoration: 'none', display: 'inline-block'}}>
+                <div style={{fontSize: '2.5em', padding: '0em', marginTop: '-.10em'}}>≅</div>
               </Link>
             </div>
             <div className='flex-grow' style={{textAlign: 'right'}}>

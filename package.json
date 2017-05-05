@@ -1,11 +1,11 @@
 {
-  "name": "credsign",
-  "version": "0.0.9",
-  "description": "The Distributed News Terminal",
+  "name": "channel",
+  "version": "0.1.0",
+  "description": "Distributed News",
   "scripts": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/credsign/credsign.github.io.git"
+    "url": "git+https://github.com/channel/channel.github.io.git"
   },
   "keywords": [
     "distributed",
@@ -15,9 +15,9 @@
   "author": "Cameron Hejazi",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/credsign/credsign.github.io/issues"
+    "url": "https://github.com/channel/channel.github.io/issues"
   },
-  "homepage": "https://github.com/credsign/credsign.github.io#readme",
+  "homepage": "https://github.com/channel/channel.github.io#readme",
   "devDependencies": {
     "autolinker": "^1.4.0",
     "babel-core": "^6.18.2",
@@ -31,7 +31,8 @@
     "medium-editor": "^5.22.1",
     "react": "^15.4.0",
     "react-dom": "^15.4.0",
-    "react-router": "^4.0.0-alpha.5",
+    "react-router": "^4.0.0-beta.6",
+    "react-router-dom": "^4.0.0-beta.6",
     "readline-sync": "^1.4.5",
     "solc": "^0.4.2",
     "web3": "^0.16.0",

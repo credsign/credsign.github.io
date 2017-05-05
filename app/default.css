@@ -46,10 +46,10 @@ h1 {
 
 #new-post-body {
   outline: 0;
-  min-height: 4em;
+  /*min-height: 4em;*/
   font-size: 1em;
-  margin-bottom: 1em;
-  padding-bottom: 1em;
+  /*margin-bottom: 1em;*/
+  /*padding-bottom: 1em;*/
 }
 #new-post-body *:first-child {
   margin-top: 0;
@@ -138,14 +138,10 @@ ul.dropdown > li:hover {
   background-color: #FCFCFC;
 }
 
-.feed {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
 .feed ol {
   padding: 0;
   margin: 0;
+  width: 100%;
   list-style-type: none;
 }
 .feed ol > li:last-child {
@@ -182,17 +178,27 @@ a {
   cursor: pointer;
 }
 
+#new-post-body {
+  font-family: 'Martel', serif;
+}
+#new-post-body h2, #new-post-body h3, .post h2, .post h3 {
+    /* Font family adapted from medium.com */
+  font-family: -apple-system, BlinkMacSystemFont,
+  "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell",
+  "Fira Sans", "Droid Sans", "Helvetica Neue",
+  sans-serif;
+}
+
 #new-post-body span {
   color: inherit !important;
 }
 
-.post ul, post li, post ol {
+.post {
   font-family: 'Martel', serif;
 }
 
 .post p {
-  font-family: 'Martel', serif;
-  line-height: 1.5em;
+  /*line-height: 1.5em;*/
 }
 
 .post img {
@@ -232,6 +238,11 @@ li a {
   display: flex;
 }
 
+.flex-column {
+  -webkit-flex-direction: column;
+  flex-direction: column;
+}
+
 #filter::-webkit-input-placeholder {
   color: gray;
 }
@@ -240,3 +251,91 @@ li a {
 input[type="text"] {
   -webkit-appearance: none;
 }
+
+#vote-data {
+  width: 100%;
+  margin-bottom: 1em;
+}
+
+#vote-data td {
+  padding: .5em 0;
+}
+
+.pulsate {
+    -webkit-animation: pulsate 2s linear;
+    -webkit-animation-iteration-count: infinite;
+    opacity: 1.0;
+    color: blue !important;
+}
+@-webkit-keyframes pulsate {
+    0% {
+        opacity: 1.0;
+    }
+    50% {
+        opacity: 0.0;
+    }
+    100% {
+        opacity: 1.0;
+    }
+}
+/*
+  voting active and cast,
+  voting active and not cast,
+  voting inactive and cast,
+  voting inactive and not cast
+*/
+
+.flaggable, .flagging, .starrable, .starring {
+  cursor: pointer;
+
+}
+
+.flaggable i, .starrable i {
+  color: gray;
+}
+
+.flaggable:hover i, .flagging i {
+  color: orangered;
+}
+
+.starrable:hover i, .starring i {
+  color: gold;
+}
+
+.vote-label {
+  font-size: 1em;
+  padding: 1em;
+  padding-right: 0;
+  display: inline-block;
+  color: #3a3a3a;
+  font-weight: bold;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.vote-eth, .vote-time, .vote-cred {
+  font-size: 1em;
+  padding: 1em 1em 1em 0;
+  background-color: white;
+  text-align: right;
+  width: 100%;
+  border: 1px solid #ccc;
+}
+
+.vote-operand {
+  padding: 1em 0;
+  width: 3em;
+  text-align: center;
+  color: #3a3a3a;
+  font-weight: bold;
+}
+
+.vote-cred {
+  margin-bottom: 0;
+}
+
+.vote-time, .vote-cred {
+  background-color: #eee;
+}
+

@@ -2,7 +2,7 @@
 // This privnet miner only runs when there are txns to process
 
 var mining = false;
-var address = eth.accounts.length > 0 ? eth.accounts[eth.accounts.length - 1] : personal.newAccount("credsign");
+var address = eth.accounts.length > 0 ? eth.accounts[0] : personal.newAccount("credsign");
 personal.unlockAccount(address, "credsign");
 
 (function toggleMiner() {
@@ -18,5 +18,5 @@ personal.unlockAccount(address, "credsign");
       miner.start();
     }
   }
-  setTimeout(toggleMiner, 10000);
+  setTimeout(toggleMiner, 5000);
 })();

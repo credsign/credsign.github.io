@@ -150,8 +150,16 @@ function buildFrontend() {
       loaders: [
         {
           test: /\.(js|jsx)$/,
+          // Brittle, but improves performance:
+          exclude: /node_modules/,
+          include: [
+            /app\/src/,
+            /node_modules\/autolinker/,
+            /node_modules\/marked/,
+            /node_modules\/medium-editor/,
+            /node_modules\/react/
+          ],
           loader: 'babel-loader',
-          // exclude: /node_modules/,
           query: {
             presets: ['es2015', 'react']
           }
@@ -160,14 +168,15 @@ function buildFrontend() {
     },
     output: { path: './app/dist/', filename: 'bundle.js' },
     plugins: [
-      new webpack.DefinePlugin({
-        'process.env': {
-          NODE_ENV: JSON.stringify('production')
-        }
-      }),
-      new webpack.optimize.UglifyJsPlugin({
-        compress: { warnings: true }
-      })
+      // TODO make use of these plugins configuration driven
+      // new webpack.DefinePlugin({
+      //   'process.env': {
+      //     NODE_ENV: JSON.stringify('production')
+      //   }
+      // }),
+      // new webpack.optimize.UglifyJsPlugin({
+      //   compress: { warnings: true }
+      // })
     ],
     watch: true
   }, function (err, stats) {
@@ -224,7 +233,8 @@ function deploy(network, mode, socket, done) {
     return;
   }
   console.log('* Compiled contracts');
-
+  //!
+  // return;
   var account;
   var password;
   var contracts = {};
@@ -247,30 +257,23 @@ function deploy(network, mode, socket, done) {
         catch (e) { }
 
         if (mode == 'all') {
-          deployContract('Identity', [], () => {
-            deployContract('Index', [], () => {
-              deployContract('Content', [], () => {
-                deployContract('ChannelSeries', [ contracts['Content'].address ], () => {
-                  deployContract('ContentSeries', [ contracts['Content'].address ], () => {
-                    deployContract('AddressSeries', [ contracts['Content'].address ], writeContracts);
-                  });
-                });
-              });
+          deployContract('Feed', [], () => {
+            deployContract('Read', [ contracts.Feed.address ], () => {
+              deployContract('Post', [ contracts.Feed.address ], () => {
+                web3.eth.contract(contracts.Feed.interface).at(contracts.Feed.address).updatePublishContract(
+                  contracts.Post.address,
+                  { from: account, gas: 200000 },
+                  writeContracts
+                );
+              })
             });
           });
         }
-        else if (mode == 'index') {
+        else if (mode == 'read') {
           contracts = {
-            'Identity': oldContracts['Identity'],
-            'Index': oldContracts['Index'],
-            'Content': oldContracts['Content']
+            'Feed': oldContracts['Feed']
           };
-          console.log(contracts);
-          deployContract('ChannelSeries', [ contracts['Content'].address ], () => {
-            deployContract('ContentSeries', [ contracts['Content'].address ], () => {
-              deployContract('AddressSeries', [ contracts['Content'].address ], writeContracts);
-            });
-          });
+          deployContract('Read', [ contracts.Feed.address ], writeContracts);
         }
         else {
           throw new Error(`Deploy mode ${mode} not defined`);
@@ -280,8 +283,9 @@ function deploy(network, mode, socket, done) {
   })();
 
   function deployContract(symbolName, constructorArgs, callback) {
-    var interface = JSON.parse(compilation.contracts[symbolName].interface);
-    var bytecode = compilation.contracts[symbolName].bytecode;
+    var compiledContract = compilation.contracts[symbolName + '.sol:'+symbolName];
+    var interface = JSON.parse(compiledContract.interface);
+    var bytecode = compiledContract.bytecode;
     var dependencies = {};
     Object.keys(contracts).forEach((symbol) => {
       dependencies[symbol] = contracts[symbol].address;
@@ -300,7 +304,7 @@ function deploy(network, mode, socket, done) {
           done(error.toString());
           return;
         }
-        contract.new({data: bytecode, from: account, gas: gasEstimate}, (error, result) => {
+        contract.new({data: bytecode, from: account, gas: gasEstimate + 100000}, (error, result) => {
           if (error) {
             done(error.toString());
             return;
