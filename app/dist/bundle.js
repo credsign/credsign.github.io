@@ -41279,7 +41279,7 @@
 	              ),
 	              _react2.default.createElement(
 	                _reactRouterDom.Link,
-	                { to: '/filter/address/' + content.publisher },
+	                { to: '/profile/' + content.publisher },
 	                content.publisher.substr(0, 5) + '...' + content.publisher.substr(-3)
 	              ),
 	              _react2.default.createElement(

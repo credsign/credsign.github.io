@@ -77,7 +77,7 @@ class Replies extends React.Component {
           <div style={{padding: '1em', color: 'dimgray'}}>
             <div style={{float: 'left'}}>
               <span>by&nbsp;</span>
-              <Link to={`/filter/address/${content.publisher}`}>{`${content.publisher.substr(0,5)}...${content.publisher.substr(-3)}`}</Link>
+              <Link to={`/profile/${content.publisher}`}>{`${content.publisher.substr(0,5)}...${content.publisher.substr(-3)}`}</Link>
               <span>&nbsp;</span>
             </div>
             <div style={{float: 'left'}}>
