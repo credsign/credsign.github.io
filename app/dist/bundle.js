@@ -25843,7 +25843,7 @@
 	            });
 	          } else {
 	            var watcherFn = function watcherFn() {
-	              window.post.Content({ contentID: contentID }, { fromBlock: currentBlock }).get(function (error, post) {
+	              window.post.Content({ contentID: contentID }, { fromBlock: currentBlock, toBlock: 'latest' }).get(function (error, post) {
 	                if (error) {
 	                  _this2.setState({
 	                    error: error.toString()
@@ -40872,7 +40872,7 @@
 	              });
 	            } else {
 	              var watcherFn = function watcherFn() {
-	                window.feed.Tip({ contentID: _this3.state.contentID, tipper: window.account }, { fromBlock: currentBlock }).get(function (error, tip) {
+	                window.feed.Tip({ contentID: _this3.state.contentID, tipper: window.account }, { fromBlock: currentBlock, toBlock: 'latest' }).get(function (error, tip) {
 	                  if (error) {
 	                    _this3.setState({
 	                      error: error.toString()
@@ -40916,7 +40916,7 @@
 	            });
 	          } else {
 	            var watcherFn = function watcherFn() {
-	              window.post.Content({ contentID: contentID }, { fromBlock: currentBlock }).get(function (error, post) {
+	              window.post.Content({ contentID: contentID }, { fromBlock: currentBlock, toBlock: 'latest' }).get(function (error, post) {
 	                if (error) {
 	                  _this4.setState({
 	                    error: error.toString()

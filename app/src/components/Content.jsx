@@ -102,7 +102,7 @@ class Content extends React.Component {
           }
           else {
             var watcherFn = () => {
-              window.feed.Tip({contentID: this.state.contentID, tipper: window.account}, {fromBlock: currentBlock}).get((error, tip) => {
+              window.feed.Tip({contentID: this.state.contentID, tipper: window.account}, {fromBlock: currentBlock, toBlock: 'latest'}).get((error, tip) => {
                 if (error) {
                   this.setState({
                     error: error.toString()
@@ -147,7 +147,7 @@ class Content extends React.Component {
         }
         else {
           var watcherFn = () => {
-            window.post.Content({contentID: contentID}, {fromBlock: currentBlock}).get((error, post) => {
+            window.post.Content({contentID: contentID}, {fromBlock: currentBlock, toBlock: 'latest'}).get((error, post) => {
               if (error) {
                 this.setState({
                   error: error.toString()
