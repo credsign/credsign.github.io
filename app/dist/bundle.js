@@ -34260,7 +34260,8 @@
 	
 	function getContentPosts(contentIDs, blocks, callback) {
 	  var loaded = 0;
-	  for (var i = 0; i < contentIDs.length; i++) {
+	
+	  var _loop = function _loop(i) {
 	    var contentID = '0x' + contentIDs[i].toString(16).replace('0x', '');
 	    if (window.contentCache[contentID]) {
 	      if (++loaded == contentIDs.length) {
@@ -34272,7 +34273,7 @@
 	      window.post.Content({ contentID: contentID }, { fromBlock: blocks[i], toBlock: blocks[i] }).get(function (error, rawPost) {
 	        if (rawPost && rawPost.length == 1) {
 	          // TODO: Save to local storage here
-	          cacheContent(rawPost[0]);
+	          cacheContent(contentID, rawPost[0]);
 	        }
 	        if (++loaded == contentIDs.length) {
 	          callback(null, contentIDs.map(function (contentID) {
@@ -34281,6 +34282,10 @@
 	        }
 	      });
 	    }
+	  };
+	
+	  for (var i = 0; i < contentIDs.length; i++) {
+	    _loop(i);
 	  }
 	}
 	

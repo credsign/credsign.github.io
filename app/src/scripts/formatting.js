@@ -112,7 +112,7 @@ export function getContentPosts(contentIDs, blocks, callback) {
       window.post.Content({contentID: contentID}, {fromBlock: blocks[i], toBlock: blocks[i]}).get((error, rawPost) => {
         if (rawPost && rawPost.length == 1) {
           // TODO: Save to local storage here
-          cacheContent(rawPost[0]);
+          cacheContent(contentID, rawPost[0]);
         }
         if (++loaded == contentIDs.length) {
           callback(null, contentIDs.map(contentID => Object.assign({}, window.contentCache[contentID])));
