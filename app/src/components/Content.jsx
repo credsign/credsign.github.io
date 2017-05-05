@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { getContentProps, getContentPosts, parseHeaders, parseDocument, getContentSlug, submitPost } from '../scripts/formatting.js';
+import { getContentProps, getContentPosts, parseHeaders, parseDocument, getContentSlug, submitPost, cacheContent } from '../scripts/formatting.js';
 import Editor from './Editor.jsx';
 import Replies from './Replies.jsx';
 import Popup from './Popup.jsx';
@@ -19,6 +19,7 @@ class Content extends React.Component {
       tipValue: '',
       error: '',
       replyResetCounter: 0,
+      watcherTimeout: 0,
       contentID: this.props.match.params.slug.split('-').slice(-1)[0],
     };
     this.loadView = this.loadView.bind(this);
@@ -100,7 +101,6 @@ class Content extends React.Component {
             });
           }
           else {
-            var watcherTimeout;
             var watcherFn = () => {
               window.feed.Tip({contentID: this.state.contentID, tipper: window.account}, {fromBlock: currentBlock}).get((error, tip) => {
                 if (error) {
@@ -110,7 +110,7 @@ class Content extends React.Component {
                 }
                 else if (tip.length == 0) {
                   this.setState({
-                    publishWatcher: window.setTimeout(watcherFn, 3000)
+                    watcherTimeout: window.setTimeout(watcherFn, 3000)
                   });
                 }
                 else {
@@ -146,9 +146,8 @@ class Content extends React.Component {
           });
         }
         else {
-          var watcherTimeout;
           var watcherFn = () => {
-            window.feed.Publish({contentID: contentID}, {fromBlock: currentBlock}).get((error, post) => {
+            window.post.Content({contentID: contentID}, {fromBlock: currentBlock}).get((error, post) => {
               if (error) {
                 this.setState({
                   error: error.toString()
@@ -156,10 +155,11 @@ class Content extends React.Component {
               }
               else if (post.length == 0) {
                 this.setState({
-                  publishWatcher: window.setTimeout(watcherFn, 3000)
+                  watcherTimeout: window.setTimeout(watcherFn, 3000)
                 });
               }
               else {
+                cacheContent(contentID, post[0]);
                 this.setState({
                   view: '',
                   replyResetCounter: this.state.replyResetCounter + 1,
@@ -176,6 +176,12 @@ class Content extends React.Component {
 
   componentDidMount() {
     this.loadView(this.state.contentID);
+  }
+
+  componentWillUnmount() {
+    if (this.state.watcherTimeout > 0) {
+      window.clearTimeout(this.state.watcherTimeout);
+    }
   }
 
   render() {
@@ -208,7 +214,7 @@ class Content extends React.Component {
               <div style={{display: this.state.isValidParent && !this.state.loadingParent ? 'block' : 'none', color: '#777'}}>
                 <span><i className='fa fa-reply'></i></span>
                 <span> in response to </span>
-                <Link to={`/${getContentSlug(this.state.title)}-${this.state.parentID}`}>{this.state.title}</Link>
+                <Link to={`/eth/${getContentSlug(this.state.title)}-${this.state.parentID}`}>{this.state.title}</Link>
               </div>
               <div id={'post-'+this.state.contentID} className='post'><p><i>Loading...</i></p></div>
             </div>
@@ -248,22 +254,20 @@ class Content extends React.Component {
         {
           this.state.view == 'reply' ?
           <Popup
-            onClose={() => this.setState({view: '', error: ''})}
+            onClose={() => { clearTimeout(this.state.watcherTimeout); this.setState({view: '', error: '', watcherTimeout: -1}) } }
             errorHeader={'Unable to publish'}
             errorMessage={this.state.error}
             actionHeader={'Publishing'}
-            actionMessage={'Your reply is being published. This window will close automatically. If it does not close after several minutes, please close this window and try again.'}
-            /> : ''
+            actionMessage={'Your reply is being published. This window will close automatically. If it does not close after several minutes, please close this window and try again.'} /> : ''
         }
         {
           this.state.view == 'tip' ?
           <Popup
-            onClose={() => this.setState({view: '', error: ''})}
+            onClose={() => { clearTimeout(this.state.watcherTimeout); this.setState({view: '', error: '', watcherTimeout: -1}) } }
             errorHeader={'Unable to tip'}
             errorMessage={this.state.error}
             actionHeader={'Sending Tip'}
-            actionMessage={'Your tip is being sent! This window should close automatically within a few minutes. If it does not, try closing this message and tipping again.'}
-            /> : ''
+            actionMessage={'Your tip is being sent! This window should close automatically within a few minutes. If it does not, try closing this message and tipping again.'} /> : ''
         }
         <Replies contentID={this.state.contentID} resetCounter={this.state.replyResetCounter} />
         <div style={{height: '3em'}}>&nbsp;</div>

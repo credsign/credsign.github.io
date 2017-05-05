@@ -1,7 +1,7 @@
 import React from 'react';
 import Editor from './Editor.jsx';
 import Popup from './Popup.jsx';
-import { serializeHeaders, serializeDocument, parseDocument, getContentSlug, submitPost } from '../scripts/formatting.js';
+import { serializeHeaders, serializeDocument, parseDocument, getContentSlug, parseHeaders, submitPost, cacheContent } from '../scripts/formatting.js';
 
 class Publish extends React.Component {
   constructor(props) {
@@ -12,7 +12,7 @@ class Publish extends React.Component {
       channel: '',
       postBody: '',
       error: '',
-      publishWatcher: 0
+      watcherTimeout: 0
     };
 
     this.editPost = this.editPost.bind(this);
@@ -22,8 +22,8 @@ class Publish extends React.Component {
   }
 
   componentWillUnmount() {
-    if (this.state.publishWatcher > 0) {
-      window.clearTimeout(this.state.publishWatcher);
+    if (this.state.watcherTimeout > 0) {
+      window.clearTimeout(this.state.watcherTimeout);
     }
   }
 
@@ -70,9 +70,8 @@ class Publish extends React.Component {
           });
         }
         else {
-          var watcherTimeout;
           var watcherFn = () => {
-            window.feed.Publish({contentID: contentID}, {fromBlock: currentBlock}).get((error, post) => {
+            window.post.Content({contentID: window.account}, {fromBlock: currentBlock}).get((error, post) => {
               if (error) {
                 this.setState({
                   error: error.toString()
@@ -80,11 +79,13 @@ class Publish extends React.Component {
               }
               else if (post.length == 0) {
                 this.setState({
-                  publishWatcher: window.setTimeout(watcherFn, 3000)
+                  watcherTimeout: window.setTimeout(watcherFn, 3000)
                 });
               }
               else {
-                window.location.hash = `#/eth/${getContentSlug(title)}-0x${contentID.toString(16)}`;
+                cacheContent(contentID, post[0]);
+                let slug = getContentTitle(parseHeaders(post[0].headers).title);
+                window.location.hash = `#/eth/${slug}-${contentID}}`;
               }
             });
           }
@@ -147,7 +148,7 @@ class Publish extends React.Component {
         {
           this.state.view == 'submit' ?
           <Popup
-            onClose={() => this.setState({view: 'preview', error: ''})}
+            onClose={() => { clearTimeout(this.state.watcherTimeout); this.setState({view: 'preview', error: '', watcherTimeout: -1}) } }
             errorHeader={'Unable to publish'}
             errorMessage={this.state.error}
             actionHeader={'Publishing'}
