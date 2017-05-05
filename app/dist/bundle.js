@@ -25843,7 +25843,7 @@
 	            });
 	          } else {
 	            var watcherFn = function watcherFn() {
-	              window.post.Content({ contentID: window.account }, { fromBlock: currentBlock }).get(function (error, post) {
+	              window.post.Content({ contentID: contentID }, { fromBlock: currentBlock }).get(function (error, post) {
 	                if (error) {
 	                  _this2.setState({
 	                    error: error.toString()

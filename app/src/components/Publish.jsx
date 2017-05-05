@@ -71,7 +71,7 @@ class Publish extends React.Component {
         }
         else {
           var watcherFn = () => {
-            window.post.Content({contentID: window.account}, {fromBlock: currentBlock}).get((error, post) => {
+            window.post.Content({contentID: contentID}, {fromBlock: currentBlock}).get((error, post) => {
               if (error) {
                 this.setState({
                   error: error.toString()
