@@ -147,6 +147,9 @@ function buildFrontend() {
     devtool: 'source-map',
     entry: './app/src/scripts/initialize.jsx',
     module: {
+      preLoaders: [
+          { test: /\.json$/, /*exclude: /node_modules/,*/ loader: 'json'},
+      ],
       loaders: [
         {
           test: /\.(js|jsx)$/,
@@ -157,7 +160,8 @@ function buildFrontend() {
             /node_modules\/autolinker/,
             /node_modules\/marked/,
             /node_modules\/medium-editor/,
-            /node_modules\/react/
+            /node_modules\/react/,
+            /node_modules\/web3-provider-engine/
           ],
           loader: 'babel-loader',
           query: {
