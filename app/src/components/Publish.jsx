@@ -70,21 +70,17 @@ class Publish extends React.Component {
           });
         }
         else {
-          var cacheBust = 1;
-          var retries = 100;
           var watcherFn = () => {
-            window.post.Content({contentID: contentID}, {fromBlock: currentBlock, toBlock: currentBlock + cacheBust}).get((error, post) => {
+            window.post.Content({contentID: contentID}, {fromBlock: currentBlock, toBlock: 'latest'}).get((error, post) => {
               if (error) {
                 this.setState({
                   error: error.toString()
                 });
               }
               else if (post.length == 0) {
-                if (++cacheBust < retries) {
-                  this.setState({
-                    watcherTimeout: window.setTimeout(watcherFn, 3000)
-                  });
-                }
+                this.setState({
+                  watcherTimeout: window.setTimeout(watcherFn, 3000)
+                });
               }
               else {
                 cacheContent(contentID, post[0]);
