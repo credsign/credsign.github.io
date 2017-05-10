@@ -29,6 +29,7 @@ window.addEventListener('load', function () {
                 eth_syncing: false,
                 web3_clientVersion: 'ZeroClientProvider',
               },
+              pollingInterval: 99999999, // not interested in polling for new blocks
               rpcUrl: 'https://mainnet.infura.io/rKXO8uv6njXPdnUsNSeE',
               // account mgmt
               getAccounts: (cb) => cb(null, [])
