@@ -90,8 +90,8 @@ class Content extends React.Component {
       view: 'tip'
     });
     let tx = {from: window.account, value: tip};
-    console.log(tip.toString());
-    window.web3.eth.getBlockNumber((error, currentBlock) => {
+    getContentProps([this.state.contentID], (error, props) => {
+      let oldFunds = props[0].funds;
       window.feed.tip.estimateGas(this.state.contentID, '0x0', tip, tx, (error, gasEstimate) => {
         tx.gas = gasEstimate + 100000;
         window.feed.tip(this.state.contentID, '0x0', tip, tx, (error, result) => {
@@ -101,24 +101,20 @@ class Content extends React.Component {
             });
           }
           else {
-            var watcherFn = () => {
-              window.feed.Tip({contentID: this.state.contentID, tipper: window.account}, {fromBlock: currentBlock, toBlock: 'latest'}).get((error, tip) => {
-                if (error) {
-                  this.setState({
-                    error: error.toString()
-                  });
-                }
-                else if (tip.length == 0) {
-                  this.setState({
-                    watcherTimeout: window.setTimeout(watcherFn, 3000)
-                  });
-                }
-                else {
+            let watcherFn = () => {
+              getContentProps([this.state.contentID], (error, props) => {
+                let newFunds = props[0].funds;
+                if (newFunds != oldFunds) {
                   this.setState({
                     view: '',
                     tipValue: ''
                   });
                   this.loadView(this.state.contentID);
+                }
+                else {
+                  this.setState({
+                    watcherTimeout: window.setTimeout(watcherFn, 5000)
+                  });
                 }
               });
             }
@@ -138,39 +134,31 @@ class Content extends React.Component {
     var body = document.getElementById('new-post-body');
     var token = 0;
     var parentID = this.state.contentID;
-    window.web3.eth.getBlockNumber((error, currentBlock) => {
-      submitPost(title, body, token, parentID, (error, contentID) => {
-        if (error) {
-          this.setState({
-            error: error.toString()
+    submitPost(title, body, token, parentID, (error, contentID) => {
+      if (error) {
+        this.setState({
+          error: error.toString()
+        });
+      }
+      else {
+        let watcherFn = () => {
+          getContentProps([contentID], (error, props) => {
+            if (props[0].block > 0) {
+              this.setState({
+                view: '',
+                replyResetCounter: this.state.replyResetCounter + 1,
+              });
+              this.loadView(this.state.contentID);
+            }
+            else {
+              this.setState({
+                watcherTimeout: window.setTimeout(watcherFn, 5000)
+              });
+            }
           });
         }
-        else {
-          var watcherFn = () => {
-            window.post.Content({contentID: contentID}, {fromBlock: currentBlock, toBlock: 'latest'}).get((error, post) => {
-              if (error) {
-                this.setState({
-                  error: error.toString()
-                });
-              }
-              else if (post.length == 0) {
-                this.setState({
-                  watcherTimeout: window.setTimeout(watcherFn, 3000)
-                });
-              }
-              else {
-                cacheContent(contentID, post[0]);
-                this.setState({
-                  view: '',
-                  replyResetCounter: this.state.replyResetCounter + 1,
-                });
-                this.loadView(this.state.contentID);
-              }
-            });
-          }
-          watcherFn();
-        }
-      });
+        watcherFn();
+      }
     });
   }
 

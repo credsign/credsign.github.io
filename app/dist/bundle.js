@@ -25850,33 +25850,26 @@
 	      var title = document.getElementById('new-post-title').value;
 	      var body = document.getElementById('new-post-body');
 	      var parentID = 0;
-	      window.web3.eth.getBlockNumber(function (error, currentBlock) {
-	        (0, _formatting.submitPost)(title, body, token, parentID, function (error, contentID) {
-	          if (error) {
-	            _this2.setState({
-	              error: error.toString()
+	      (0, _formatting.submitPost)(title, body, token, parentID, function (error, contentID) {
+	        if (error) {
+	          _this2.setState({
+	            error: error.toString()
+	          });
+	        } else {
+	          var watcherFn = function watcherFn() {
+	            getContentProps([contentID], function (error, props) {
+	              if (props[0].block > 0) {
+	                var slug = (0, _formatting.getContentSlug)(title);
+	                window.location.hash = '#/eth/' + slug + '-' + contentID;
+	              } else {
+	                _this2.setState({
+	                  watcherTimeout: window.setTimeout(watcherFn, 5000)
+	                });
+	              }
 	            });
-	          } else {
-	            var watcherFn = function watcherFn() {
-	              window.post.Content({ contentID: contentID }, { fromBlock: currentBlock, toBlock: 'latest' }).get(function (error, post) {
-	                if (error) {
-	                  _this2.setState({
-	                    error: error.toString()
-	                  });
-	                } else if (post.length == 0) {
-	                  _this2.setState({
-	                    watcherTimeout: window.setTimeout(watcherFn, 3000)
-	                  });
-	                } else {
-	                  (0, _formatting.cacheContent)(contentID, post[0]);
-	                  var slug = getContentTitle((0, _formatting.parseHeaders)(post[0].headers).title);
-	                  window.location.hash = '#/eth/' + slug + '-' + contentID + '}';
-	                }
-	              });
-	            };
-	            watcherFn();
-	          }
-	        });
+	          };
+	          watcherFn();
+	        }
 	      });
 	    }
 	  }, {
@@ -40876,8 +40869,8 @@
 	        view: 'tip'
 	      });
 	      var tx = { from: window.account, value: tip };
-	      console.log(tip.toString());
-	      window.web3.eth.getBlockNumber(function (error, currentBlock) {
+	      (0, _formatting.getContentProps)([this.state.contentID], function (error, props) {
+	        var oldFunds = props[0].funds;
 	        window.feed.tip.estimateGas(_this3.state.contentID, '0x0', tip, tx, function (error, gasEstimate) {
 	          tx.gas = gasEstimate + 100000;
 	          window.feed.tip(_this3.state.contentID, '0x0', tip, tx, function (error, result) {
@@ -40887,21 +40880,18 @@
 	              });
 	            } else {
 	              var watcherFn = function watcherFn() {
-	                window.feed.Tip({ contentID: _this3.state.contentID, tipper: window.account }, { fromBlock: currentBlock, toBlock: 'latest' }).get(function (error, tip) {
-	                  if (error) {
-	                    _this3.setState({
-	                      error: error.toString()
-	                    });
-	                  } else if (tip.length == 0) {
-	                    _this3.setState({
-	                      watcherTimeout: window.setTimeout(watcherFn, 3000)
-	                    });
-	                  } else {
+	                (0, _formatting.getContentProps)([_this3.state.contentID], function (error, props) {
+	                  var newFunds = props[0].funds;
+	                  if (newFunds != oldFunds) {
 	                    _this3.setState({
 	                      view: '',
 	                      tipValue: ''
 	                    });
 	                    _this3.loadView(_this3.state.contentID);
+	                  } else {
+	                    _this3.setState({
+	                      watcherTimeout: window.setTimeout(watcherFn, 5000)
+	                    });
 	                  }
 	                });
 	              };
@@ -40923,36 +40913,29 @@
 	      var body = document.getElementById('new-post-body');
 	      var token = 0;
 	      var parentID = this.state.contentID;
-	      window.web3.eth.getBlockNumber(function (error, currentBlock) {
-	        (0, _formatting.submitPost)(title, body, token, parentID, function (error, contentID) {
-	          if (error) {
-	            _this4.setState({
-	              error: error.toString()
+	      (0, _formatting.submitPost)(title, body, token, parentID, function (error, contentID) {
+	        if (error) {
+	          _this4.setState({
+	            error: error.toString()
+	          });
+	        } else {
+	          var watcherFn = function watcherFn() {
+	            (0, _formatting.getContentProps)([contentID], function (error, props) {
+	              if (props[0].block > 0) {
+	                _this4.setState({
+	                  view: '',
+	                  replyResetCounter: _this4.state.replyResetCounter + 1
+	                });
+	                _this4.loadView(_this4.state.contentID);
+	              } else {
+	                _this4.setState({
+	                  watcherTimeout: window.setTimeout(watcherFn, 5000)
+	                });
+	              }
 	            });
-	          } else {
-	            var watcherFn = function watcherFn() {
-	              window.post.Content({ contentID: contentID }, { fromBlock: currentBlock, toBlock: 'latest' }).get(function (error, post) {
-	                if (error) {
-	                  _this4.setState({
-	                    error: error.toString()
-	                  });
-	                } else if (post.length == 0) {
-	                  _this4.setState({
-	                    watcherTimeout: window.setTimeout(watcherFn, 3000)
-	                  });
-	                } else {
-	                  (0, _formatting.cacheContent)(contentID, post[0]);
-	                  _this4.setState({
-	                    view: '',
-	                    replyResetCounter: _this4.state.replyResetCounter + 1
-	                  });
-	                  _this4.loadView(_this4.state.contentID);
-	                }
-	              });
-	            };
-	            watcherFn();
-	          }
-	        });
+	          };
+	          watcherFn();
+	        }
 	      });
 	    }
 	  }, {

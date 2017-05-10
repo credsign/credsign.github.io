@@ -62,36 +62,28 @@ class Publish extends React.Component {
     var title = document.getElementById('new-post-title').value;
     var body = document.getElementById('new-post-body');
     var parentID = 0;
-    window.web3.eth.getBlockNumber((error, currentBlock) => {
-      submitPost(title, body, token, parentID, (error, contentID) => {
-        if (error) {
-          this.setState({
-            error: error.toString()
+    submitPost(title, body, token, parentID, (error, contentID) => {
+      if (error) {
+        this.setState({
+          error: error.toString()
+        });
+      }
+      else {
+        let watcherFn = () => {
+          getContentProps([contentID], (error, props) => {
+            if (props[0].block > 0) {
+              let slug = getContentSlug(title);
+              window.location.hash = `#/eth/${slug}-${contentID}`;
+            }
+            else {
+              this.setState({
+                watcherTimeout: window.setTimeout(watcherFn, 5000)
+              });
+            }
           });
         }
-        else {
-          var watcherFn = () => {
-            window.post.Content({contentID: contentID}, {fromBlock: currentBlock, toBlock: 'latest'}).get((error, post) => {
-              if (error) {
-                this.setState({
-                  error: error.toString()
-                });
-              }
-              else if (post.length == 0) {
-                this.setState({
-                  watcherTimeout: window.setTimeout(watcherFn, 3000)
-                });
-              }
-              else {
-                cacheContent(contentID, post[0]);
-                let slug = getContentTitle(parseHeaders(post[0].headers).title);
-                window.location.hash = `#/eth/${slug}-${contentID}}`;
-              }
-            });
-          }
-          watcherFn();
-        }
-      });
+        watcherFn();
+      }
     });
   }
 
