@@ -77,7 +77,7 @@
 	          window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
 	        } else if (network == 'mainnet') {
 	          window.infura = true;
-	          window.web3 = new Web3(new Web3.providers.HttpProvider('https://credhot.com'));
+	          window.web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/rKXO8uv6njXPdnUsNSeE'));
 	        } else if (network == 'testnet') {
 	          window.infura = true;
 	          window.web3 = new Web3(new Web3.providers.HttpProvider('https://testnet.infura.io/rKXO8uv6njXPdnUsNSeE'));
@@ -92,7 +92,7 @@
 	      web3.version.getNetwork(function (error, networkID) {
 	        if (network == 'mainnet' && networkID != 1) {
 	          window.infura = true;
-	          window.web3 = new Web3(new Web3.providers.HttpProvider('https://credhot.com'));
+	          window.web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/rKXO8uv6njXPdnUsNSeE'));
 	        } else if (network == 'testnet' && networkID != 3) {
 	          window.infura = true;
 	          window.web3 = new Web3(new Web3.providers.HttpProvider('https://testnet.infura.io/rKXO8uv6njXPdnUsNSeE'));
@@ -21911,7 +21911,7 @@
 	
 	var _Content2 = _interopRequireDefault(_Content);
 	
-	var _Feed = __webpack_require__(236);
+	var _Feed = __webpack_require__(237);
 	
 	var _Feed2 = _interopRequireDefault(_Feed);
 	
@@ -25842,16 +25842,20 @@
 	              error: error.toString()
 	            });
 	          } else {
+	            var cacheBust = 1;
+	            var retries = 100;
 	            var watcherFn = function watcherFn() {
-	              window.post.Content({ contentID: contentID }, { fromBlock: currentBlock, toBlock: 'latest' }).get(function (error, post) {
+	              window.post.Content({ contentID: contentID }, { fromBlock: currentBlock, toBlock: currentBlock + cacheBust }).get(function (error, post) {
 	                if (error) {
 	                  _this2.setState({
 	                    error: error.toString()
 	                  });
 	                } else if (post.length == 0) {
-	                  _this2.setState({
-	                    watcherTimeout: window.setTimeout(watcherFn, 3000)
-	                  });
+	                  if (++cacheBust < retries) {
+	                    _this2.setState({
+	                      watcherTimeout: window.setTimeout(watcherFn, 3000)
+	                    });
+	                  }
 	                } else {
 	                  (0, _formatting.cacheContent)(contentID, post[0]);
 	                  var slug = getContentTitle((0, _formatting.parseHeaders)(post[0].headers).title);
@@ -40747,7 +40751,7 @@
 	
 	var _Editor2 = _interopRequireDefault(_Editor);
 	
-	var _Replies = __webpack_require__(237);
+	var _Replies = __webpack_require__(236);
 	
 	var _Replies2 = _interopRequireDefault(_Replies);
 	
@@ -41179,6 +41183,214 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
+	var _Editor = __webpack_require__(226);
+	
+	var _Editor2 = _interopRequireDefault(_Editor);
+	
+	var _reactRouterDom = __webpack_require__(183);
+	
+	var _toMarkdown = __webpack_require__(232);
+	
+	var _toMarkdown2 = _interopRequireDefault(_toMarkdown);
+	
+	var _formatting = __webpack_require__(229);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var Replies = function (_React$Component) {
+	  _inherits(Replies, _React$Component);
+	
+	  function Replies(props) {
+	    _classCallCheck(this, Replies);
+	
+	    var _this = _possibleConstructorReturn(this, (Replies.__proto__ || Object.getPrototypeOf(Replies)).call(this, props));
+	
+	    _this.state = {
+	      loading: true,
+	      listItems: []
+	    };
+	    _this.getReplies = _this.getReplies.bind(_this);
+	    return _this;
+	  }
+	
+	  _createClass(Replies, [{
+	    key: 'getReplies',
+	    value: function getReplies(parentID) {
+	      var _this2 = this;
+	
+	      var ether = web3.toWei(1);
+	      window.read.getContentReplies(parentID, (0, _formatting.getRandom)(), function (error, contentIDs) {
+	        if (contentIDs.length == 0) {
+	          _this2.setState({
+	            listItems: [],
+	            loading: false
+	          });
+	          return;
+	        }
+	        (0, _formatting.getContentProps)(contentIDs, function (error, contentProps) {
+	          (0, _formatting.getContentPosts)(contentIDs, contentProps.map(function (props) {
+	            return props.block;
+	          }), function (error, contentPosts) {
+	            var contents = [];
+	            for (var i = 0; i < contentIDs.length; i++) {
+	              var content = Object.assign({}, contentProps[i], contentPosts[i]);
+	              var headers = (0, _formatting.parseHeaders)(content.headers);
+	              contents.unshift({
+	                contentID: content.contentID,
+	                title: headers.title,
+	                body: (0, _formatting.parseDocument)(content.document, headers.format, headers.compression),
+	                funds: content.funds,
+	                publisher: content.publisher,
+	                replyCount: content.replyCount,
+	                timestamp: content.timestamp * 1000
+	              });
+	            }
+	            _this2.setState({
+	              listItems: contents,
+	              loading: false
+	            });
+	          });
+	        });
+	      });
+	    }
+	  }, {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.getReplies(this.props.contentID);
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(nextProps) {
+	      if (nextProps.contentID != this.props.contentID || nextProps.resetCounter > this.props.resetCounter) {
+	        this.setState({
+	          loading: true,
+	          listItems: []
+	        });
+	        this.getReplies(nextProps.contentID);
+	      }
+	    }
+	  }, {
+	    key: 'componentDidUpdate',
+	    value: function componentDidUpdate() {
+	      this.state.listItems.forEach(function (content) {
+	        document.getElementById('post-' + content.contentID).innerHTML = content.body;
+	      });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var posts = this.state.listItems.map(function (content) {
+	        return _react2.default.createElement(
+	          'div',
+	          { key: 'wrapper-' + content.contentID, style: { maxWidth: '600px', margin: '0 auto 1em auto', border: '1px solid #eee', backgroundColor: '#FFF' } },
+	          _react2.default.createElement(
+	            'div',
+	            { style: { padding: '1em', color: 'dimgray' } },
+	            _react2.default.createElement(
+	              'div',
+	              { style: { float: 'left' } },
+	              _react2.default.createElement(
+	                'span',
+	                null,
+	                'by\xA0'
+	              ),
+	              _react2.default.createElement(
+	                _reactRouterDom.Link,
+	                { to: '/profile/' + content.publisher },
+	                content.publisher.substr(0, 5) + '...' + content.publisher.substr(-3)
+	              ),
+	              _react2.default.createElement(
+	                'span',
+	                null,
+	                '\xA0'
+	              )
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              { style: { float: 'left' } },
+	              _react2.default.createElement(
+	                'span',
+	                null,
+	                'on ' + new Date(content.timestamp).toLocaleString()
+	              )
+	            ),
+	            _react2.default.createElement('div', { style: { float: 'none', clear: 'both' } })
+	          ),
+	          _react2.default.createElement('div', { id: 'post-' + content.contentID, className: 'post', style: { padding: '0 1em', wordWrap: 'break-word' } }),
+	          _react2.default.createElement(
+	            'div',
+	            { style: { height: '1em', padding: '1em' } },
+	            _react2.default.createElement(
+	              'div',
+	              { style: { color: '#777' } },
+	              _react2.default.createElement(
+	                'span',
+	                null,
+	                content.funds + ' ETH'
+	              ),
+	              _react2.default.createElement(
+	                'span',
+	                null,
+	                ' and '
+	              ),
+	              _react2.default.createElement(
+	                _reactRouterDom.Link,
+	                { to: '/eth/' + (0, _formatting.getContentSlug)(content.title) + '-' + content.contentID },
+	                content.replyCount + ' response' + (content.replyCount != 1 ? 's' : '')
+	              )
+	            )
+	          )
+	        );
+	      });
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(
+	          'div',
+	          { style: { maxWidth: '600px', margin: '0em auto' } },
+	          _react2.default.createElement(
+	            'div',
+	            { style: { padding: '1em', color: '#777', display: posts.length > 0 ? 'block' : 'none' } },
+	            'Responses below'
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { style: { display: posts.length == 0 ? 'block' : 'none', height: '1em' } },
+	            '\xA0'
+	          )
+	        ),
+	        posts
+	      );
+	    }
+	  }]);
+	
+	  return Replies;
+	}(_react2.default.Component);
+	
+	exports.default = Replies;
+
+/***/ }),
+/* 237 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
 	var _formatting = __webpack_require__(229);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -41407,214 +41619,6 @@
 	}(_react2.default.Component);
 	
 	exports.default = Feed;
-
-/***/ }),
-/* 237 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-	
-	var _react = __webpack_require__(1);
-	
-	var _react2 = _interopRequireDefault(_react);
-	
-	var _Editor = __webpack_require__(226);
-	
-	var _Editor2 = _interopRequireDefault(_Editor);
-	
-	var _reactRouterDom = __webpack_require__(183);
-	
-	var _toMarkdown = __webpack_require__(232);
-	
-	var _toMarkdown2 = _interopRequireDefault(_toMarkdown);
-	
-	var _formatting = __webpack_require__(229);
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-	
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-	
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-	
-	var Replies = function (_React$Component) {
-	  _inherits(Replies, _React$Component);
-	
-	  function Replies(props) {
-	    _classCallCheck(this, Replies);
-	
-	    var _this = _possibleConstructorReturn(this, (Replies.__proto__ || Object.getPrototypeOf(Replies)).call(this, props));
-	
-	    _this.state = {
-	      loading: true,
-	      listItems: []
-	    };
-	    _this.getReplies = _this.getReplies.bind(_this);
-	    return _this;
-	  }
-	
-	  _createClass(Replies, [{
-	    key: 'getReplies',
-	    value: function getReplies(parentID) {
-	      var _this2 = this;
-	
-	      var ether = web3.toWei(1);
-	      window.read.getContentReplies(parentID, (0, _formatting.getRandom)(), function (error, contentIDs) {
-	        if (contentIDs.length == 0) {
-	          _this2.setState({
-	            listItems: [],
-	            loading: false
-	          });
-	          return;
-	        }
-	        (0, _formatting.getContentProps)(contentIDs, function (error, contentProps) {
-	          (0, _formatting.getContentPosts)(contentIDs, contentProps.map(function (props) {
-	            return props.block;
-	          }), function (error, contentPosts) {
-	            var contents = [];
-	            for (var i = 0; i < contentIDs.length; i++) {
-	              var content = Object.assign({}, contentProps[i], contentPosts[i]);
-	              var headers = (0, _formatting.parseHeaders)(content.headers);
-	              contents.unshift({
-	                contentID: content.contentID,
-	                title: headers.title,
-	                body: (0, _formatting.parseDocument)(content.document, headers.format, headers.compression),
-	                funds: content.funds,
-	                publisher: content.publisher,
-	                replyCount: content.replyCount,
-	                timestamp: content.timestamp * 1000
-	              });
-	            }
-	            _this2.setState({
-	              listItems: contents,
-	              loading: false
-	            });
-	          });
-	        });
-	      });
-	    }
-	  }, {
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      this.getReplies(this.props.contentID);
-	    }
-	  }, {
-	    key: 'componentWillReceiveProps',
-	    value: function componentWillReceiveProps(nextProps) {
-	      if (nextProps.contentID != this.props.contentID || nextProps.resetCounter > this.props.resetCounter) {
-	        this.setState({
-	          loading: true,
-	          listItems: []
-	        });
-	        this.getReplies(nextProps.contentID);
-	      }
-	    }
-	  }, {
-	    key: 'componentDidUpdate',
-	    value: function componentDidUpdate() {
-	      this.state.listItems.forEach(function (content) {
-	        document.getElementById('post-' + content.contentID).innerHTML = content.body;
-	      });
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      var posts = this.state.listItems.map(function (content) {
-	        return _react2.default.createElement(
-	          'div',
-	          { key: 'wrapper-' + content.contentID, style: { maxWidth: '600px', margin: '0 auto 1em auto', border: '1px solid #eee', backgroundColor: '#FFF' } },
-	          _react2.default.createElement(
-	            'div',
-	            { style: { padding: '1em', color: 'dimgray' } },
-	            _react2.default.createElement(
-	              'div',
-	              { style: { float: 'left' } },
-	              _react2.default.createElement(
-	                'span',
-	                null,
-	                'by\xA0'
-	              ),
-	              _react2.default.createElement(
-	                _reactRouterDom.Link,
-	                { to: '/profile/' + content.publisher },
-	                content.publisher.substr(0, 5) + '...' + content.publisher.substr(-3)
-	              ),
-	              _react2.default.createElement(
-	                'span',
-	                null,
-	                '\xA0'
-	              )
-	            ),
-	            _react2.default.createElement(
-	              'div',
-	              { style: { float: 'left' } },
-	              _react2.default.createElement(
-	                'span',
-	                null,
-	                'on ' + new Date(content.timestamp).toLocaleString()
-	              )
-	            ),
-	            _react2.default.createElement('div', { style: { float: 'none', clear: 'both' } })
-	          ),
-	          _react2.default.createElement('div', { id: 'post-' + content.contentID, className: 'post', style: { padding: '0 1em', wordWrap: 'break-word' } }),
-	          _react2.default.createElement(
-	            'div',
-	            { style: { height: '1em', padding: '1em' } },
-	            _react2.default.createElement(
-	              'div',
-	              { style: { color: '#777' } },
-	              _react2.default.createElement(
-	                'span',
-	                null,
-	                content.funds + ' ETH'
-	              ),
-	              _react2.default.createElement(
-	                'span',
-	                null,
-	                ' and '
-	              ),
-	              _react2.default.createElement(
-	                _reactRouterDom.Link,
-	                { to: '/eth/' + (0, _formatting.getContentSlug)(content.title) + '-' + content.contentID },
-	                content.replyCount + ' response' + (content.replyCount != 1 ? 's' : '')
-	              )
-	            )
-	          )
-	        );
-	      });
-	      return _react2.default.createElement(
-	        'div',
-	        null,
-	        _react2.default.createElement(
-	          'div',
-	          { style: { maxWidth: '600px', margin: '0em auto' } },
-	          _react2.default.createElement(
-	            'div',
-	            { style: { padding: '1em', color: '#777', display: posts.length > 0 ? 'block' : 'none' } },
-	            'Responses below'
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { style: { display: posts.length == 0 ? 'block' : 'none', height: '1em' } },
-	            '\xA0'
-	          )
-	        ),
-	        posts
-	      );
-	    }
-	  }]);
-	
-	  return Replies;
-	}(_react2.default.Component);
-	
-	exports.default = Replies;
 
 /***/ })
 /******/ ]);
