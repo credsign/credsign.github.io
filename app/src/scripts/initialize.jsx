@@ -23,17 +23,18 @@ window.addEventListener('load', function () {
         }
         else if (network == 'mainnet') {
           window.infura = true;
-          let provider = ZeroClientProvider({
-            static: {
-              eth_syncing: false,
-              web3_clientVersion: 'ZeroClientProvider',
-            },
-            rpcUrl: 'https://mainnet.infura.io/rKXO8uv6njXPdnUsNSeE',
-            // account mgmt
-            getAccounts: (cb) => cb(null, [])
-          });
-          provider.stop(); // stop polling le blockchain
-          window.web3 = new Web3(provider);
+          window.web3 = new Web3(
+            ZeroClientProvider({
+              static: {
+                eth_syncing: false,
+                web3_clientVersion: 'ZeroClientProvider',
+              },
+              pollingInterval: 99999999, // not interested in polling for new blocks
+              rpcUrl: 'https://mainnet.infura.io/rKXO8uv6njXPdnUsNSeE',
+              // account mgmt
+              getAccounts: (cb) => cb(null, [])
+            })
+          );
         }
         else if (network == 'testnet') {
           window.infura = true;

@@ -81,19 +81,18 @@
 	          window.web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
 	        } else if (network == 'mainnet') {
 	          window.infura = true;
-	          var provider = (0, _zero2.default)({
+	          window.web3 = new Web3((0, _zero2.default)({
 	            static: {
 	              eth_syncing: false,
 	              web3_clientVersion: 'ZeroClientProvider'
 	            },
+	            pollingInterval: 99999999, // not interested in polling for new blocks
 	            rpcUrl: 'https://mainnet.infura.io/rKXO8uv6njXPdnUsNSeE',
 	            // account mgmt
 	            getAccounts: function getAccounts(cb) {
 	              return cb(null, []);
 	            }
-	          });
-	          provider.stop(); // stop polling le blockchain
-	          window.web3 = new Web3(provider);
+	          }));
 	        } else if (network == 'testnet') {
 	          window.infura = true;
 	          window.web3 = new Web3(new Web3.providers.HttpProvider('https://testnet.infura.io/rKXO8uv6njXPdnUsNSeE'));
