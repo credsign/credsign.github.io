@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { getContentProps, getContentPosts, parseHeaders, humanizeDuration, getContentSlug, getRandom } from '../scripts/formatting.js';
 
 class Feed extends React.Component {
@@ -9,16 +10,16 @@ class Feed extends React.Component {
       contentProps: [],
       channelSize: 0,
       loading: true,
-
+      token: props.match.params.token,
       pageLimit: 5,
-      sort: 'new'
+      sort: props.match.params.sort || 'top'
     };
 
     this.loadContents = this.loadContents.bind(this);
     this.loadMore = this.loadMore.bind(this);
   }
 
-  loadContents() {
+  loadContents(sort) {
     let cacheBust = getRandom();
     window.read.getChannelSize(0, cacheBust, (error, size) => {
       size = size.toNumber();
@@ -34,10 +35,10 @@ class Feed extends React.Component {
       window.read.getChannelFeed(0, 0, size, cacheBust, (error, contentIDs) => {
         // Load props for posts in channel
         getContentProps(contentIDs, (error, contentProps) => {
-          if (this.state.sort == 'new') {
+          if (sort == 'new') {
             contentProps = contentProps.reverse();
           }
-          else if (this.state.sort == 'top') {
+          else if (sort == 'top') {
             contentProps = contentProps.sort((a, b) => a.score > b.score ? -1 : 1);
           }
           let ids = contentProps.slice(0, this.state.pageLimit).map(props => props.contentID);
@@ -100,7 +101,19 @@ class Feed extends React.Component {
   }
 
   componentDidMount() {
-    this.loadContents();
+    this.loadContents(this.state.sort);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    let sort = nextProps.match.params.sort;
+    if (this.state.sort != sort) {
+      if (sort == 'top' || sort == 'new') {
+        this.setState({
+          sort: sort
+        });
+        this.loadContents(sort);
+      }
+    }
   }
 
   render() {
@@ -112,7 +125,7 @@ class Feed extends React.Component {
             <div>{`${content.title}`}</div>
             <span>{`${content.funds} ETH`}</span>
             <span>{` - ${content.replyCount} response${content.replyCount == 1 ? '' : 's'}`}</span>
-            <span>{` - published ${humanizeDuration(content.timestamp, now)} ago`}</span>
+            <span>{` - ${humanizeDuration(content.timestamp, now)} ago`}</span>
           </a>
         </li>
       );
@@ -122,7 +135,9 @@ class Feed extends React.Component {
       <div style={{width:'100%'}} className='feed flex-grow'>
         <div style={{maxWidth: '600px', margin: '0 auto'}}>
           <div style={{padding: '1em'}}>
-            {`All posts (${this.state.channelSize})`}
+            <Link to={`/${this.state.token}/all/top`} style={{textDecoration: this.state.sort == 'top' ? 'none' : 'underline'}}>Top</Link>
+            <span> - </span>
+            <Link to={`/${this.state.token}/all/new`} style={{textDecoration: this.state.sort == 'new' ? 'none' : 'underline'}}>New</Link>
           </div>
           <div style={{
             margin: '1em',

@@ -1,7 +1,7 @@
 import React from 'react';
 import Editor from './Editor.jsx';
 import Popup from './Popup.jsx';
-import { serializeHeaders, serializeDocument, parseDocument, getContentSlug, parseHeaders, submitPost, cacheContent } from '../scripts/formatting.js';
+import { serializeHeaders, serializeDocument, parseDocument, getContentSlug, parseHeaders, submitPost, cacheContent, getContentProps } from '../scripts/formatting.js';
 
 class Publish extends React.Component {
   constructor(props) {

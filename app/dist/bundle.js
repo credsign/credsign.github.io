@@ -25857,7 +25857,7 @@
 	          });
 	        } else {
 	          var watcherFn = function watcherFn() {
-	            getContentProps([contentID], function (error, props) {
+	            (0, _formatting.getContentProps)([contentID], function (error, props) {
 	              if (props[0].block > 0) {
 	                var slug = (0, _formatting.getContentSlug)(title);
 	                window.location.hash = '#/eth/' + slug + '-' + contentID;
@@ -41385,6 +41385,8 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
+	var _reactRouterDom = __webpack_require__(183);
+	
 	var _formatting = __webpack_require__(229);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -41408,9 +41410,9 @@
 	      contentProps: [],
 	      channelSize: 0,
 	      loading: true,
-	
+	      token: props.match.params.token,
 	      pageLimit: 5,
-	      sort: 'new'
+	      sort: props.match.params.sort || 'top'
 	    };
 	
 	    _this.loadContents = _this.loadContents.bind(_this);
@@ -41420,7 +41422,7 @@
 	
 	  _createClass(Feed, [{
 	    key: 'loadContents',
-	    value: function loadContents() {
+	    value: function loadContents(sort) {
 	      var _this2 = this;
 	
 	      var cacheBust = (0, _formatting.getRandom)();
@@ -41438,9 +41440,9 @@
 	        window.read.getChannelFeed(0, 0, size, cacheBust, function (error, contentIDs) {
 	          // Load props for posts in channel
 	          (0, _formatting.getContentProps)(contentIDs, function (error, contentProps) {
-	            if (_this2.state.sort == 'new') {
+	            if (sort == 'new') {
 	              contentProps = contentProps.reverse();
-	            } else if (_this2.state.sort == 'top') {
+	            } else if (sort == 'top') {
 	              contentProps = contentProps.sort(function (a, b) {
 	                return a.score > b.score ? -1 : 1;
 	              });
@@ -41517,7 +41519,20 @@
 	  }, {
 	    key: 'componentDidMount',
 	    value: function componentDidMount() {
-	      this.loadContents();
+	      this.loadContents(this.state.sort);
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(nextProps) {
+	      var sort = nextProps.match.params.sort;
+	      if (this.state.sort != sort) {
+	        if (sort == 'top' || sort == 'new') {
+	          this.setState({
+	            sort: sort
+	          });
+	          this.loadContents(sort);
+	        }
+	      }
 	    }
 	  }, {
 	    key: 'render',
@@ -41548,7 +41563,7 @@
 	            _react2.default.createElement(
 	              'span',
 	              null,
-	              ' - published ' + (0, _formatting.humanizeDuration)(content.timestamp, now) + ' ago'
+	              ' - ' + (0, _formatting.humanizeDuration)(content.timestamp, now) + ' ago'
 	            )
 	          )
 	        );
@@ -41563,7 +41578,21 @@
 	          _react2.default.createElement(
 	            'div',
 	            { style: { padding: '1em' } },
-	            'All posts (' + this.state.channelSize + ')'
+	            _react2.default.createElement(
+	              _reactRouterDom.Link,
+	              { to: '/' + this.state.token + '/all/top', style: { textDecoration: this.state.sort == 'top' ? 'none' : 'underline' } },
+	              'Top'
+	            ),
+	            _react2.default.createElement(
+	              'span',
+	              null,
+	              ' - '
+	            ),
+	            _react2.default.createElement(
+	              _reactRouterDom.Link,
+	              { to: '/' + this.state.token + '/all/new', style: { textDecoration: this.state.sort == 'new' ? 'none' : 'underline' } },
+	              'New'
+	            )
 	          ),
 	          _react2.default.createElement(
 	            'div',
