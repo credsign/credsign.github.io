@@ -53,7 +53,7 @@ class Editor extends React.Component {
       buttonLabels: 'fontawesome',
       keyboardCommands: false,
       toolbar: {
-        buttons: ['bold', 'italic', 'h2', 'h3', 'anchor', 'quote'],
+        buttons: ['bold', 'italic', 'h2', 'h3', 'anchor', 'quote', 'pre'],
       },
       placeholder: {
         text: this.props.placeholder,

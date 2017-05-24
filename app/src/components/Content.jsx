@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { getContentProps, getContentPosts, parseHeaders, parseDocument, getContentSlug, submitPost, cacheContent } from '../scripts/formatting.js';
+import { getContentProps, getContentPosts, parseHeaders, parseDocument, getContentSlug, submitReply, cacheContent } from '../scripts/formatting.js';
 import Editor from './Editor.jsx';
 import Replies from './Replies.jsx';
 import Popup from './Popup.jsx';
@@ -23,7 +23,7 @@ class Content extends React.Component {
       contentID: this.props.match.params.slug.split('-').slice(-1)[0],
     };
     this.loadView = this.loadView.bind(this);
-    this.submitReply = this.submitReply.bind(this);
+    this.reply = this.reply.bind(this);
     this.tipPost = this.tipPost.bind(this);
   }
 
@@ -126,7 +126,7 @@ class Content extends React.Component {
 
   }
 
-  submitReply() {
+  reply() {
     this.setState({
       view: 'reply'
     });
@@ -134,7 +134,8 @@ class Content extends React.Component {
     var body = document.getElementById('new-post-body');
     var token = 0;
     var parentID = this.state.contentID;
-    submitPost(title, body, token, parentID, (error, contentID) => {
+
+    submitReply(title, body, token, parentID, (error, contentID) => {
       if (error) {
         this.setState({
           error: error.toString()
@@ -235,7 +236,7 @@ class Content extends React.Component {
           </div>
           <div style={{padding: '1em', borderTop: '1px solid #eee'}}>
             <div style={{textAlign: 'right'}}>
-              <a style={{display: 'inline-block', textDecoration: 'underline', marginLeft: '.5em'}} onClick={this.submitReply}>Publish</a>
+              <a style={{display: 'inline-block', textDecoration: 'underline', marginLeft: '.5em'}} onClick={this.reply}>Publish</a>
             </div>
           </div>
         </div>

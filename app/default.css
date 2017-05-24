@@ -204,16 +204,24 @@ a {
 .post img {
   max-width: 100%;
 }
-.post pre, .post code {
-  margin: -1em;
+.post pre {
+  margin: 0em -1em;
   padding: 1em;
-  background-color: #F9F9F9;
-  font-family: 'Martel', serif;
+  background-color: #eee;
+  font-family: monospace;
+  font-size: 16px;
   line-height: 1.5em;
 }
 .post pre + pre {
-  margin-top: 0em;
   padding-top: 0em;
+}
+
+.post pre {
+  overflow-x: scroll;
+}
+
+.post pre > p {
+  margin: 0;
 }
 
 li a {

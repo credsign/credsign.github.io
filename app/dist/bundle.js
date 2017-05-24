@@ -25823,13 +25823,15 @@
 	  }, {
 	    key: 'previewPost',
 	    value: function previewPost() {
+	      var serializedDocument = (0, _formatting.serializeDocument)(document.getElementById('new-post-body'), 'markdown', 'lz-string-valid-utf16');
 	      this.setState({
 	        view: 'preview',
-	        error: ''
+	        error: '',
+	        serializedDocument: serializedDocument
 	      });
 	      document.getElementById('new-post-title-preview').innerHTML = document.getElementById('new-post-title').value;
 	      // document.getElementById('new-post-body-preview').innerHTML = marked(toMarkdown(document.getElementById('new-post-body')));
-	      document.getElementById('new-post-body-preview').innerHTML = (0, _formatting.parseDocument)((0, _formatting.serializeDocument)(document.getElementById('new-post-body'), 'markdown', 'lz-string-valid-utf16'), 'markdown', 'lz-string-valid-utf16');
+	      document.getElementById('new-post-body-preview').innerHTML = (0, _formatting.parseDocument)(serializedDocument, 'markdown', 'lz-string-valid-utf16');
 	    }
 	  }, {
 	    key: 'onPostEdit',
@@ -25850,7 +25852,7 @@
 	      var title = document.getElementById('new-post-title').value;
 	      var body = document.getElementById('new-post-body');
 	      var parentID = 0;
-	      (0, _formatting.submitPost)(title, body, token, parentID, function (error, contentID) {
+	      (0, _formatting.submitPost)(title, this.state.serializedDocument, token, parentID, function (error, contentID) {
 	        if (error) {
 	          _this2.setState({
 	            error: error.toString()
@@ -26086,7 +26088,7 @@
 	        buttonLabels: 'fontawesome',
 	        keyboardCommands: false,
 	        toolbar: {
-	          buttons: ['bold', 'italic', 'h2', 'h3', 'anchor', 'quote']
+	          buttons: ['bold', 'italic', 'h2', 'h3', 'anchor', 'quote', 'pre']
 	        },
 	        placeholder: {
 	          text: this.props.placeholder,
@@ -34157,6 +34159,7 @@
 	exports.cacheContent = cacheContent;
 	exports.getContentPosts = getContentPosts;
 	exports.submitPost = submitPost;
+	exports.submitReply = submitReply;
 	exports.humanizeDuration = humanizeDuration;
 	
 	var _lzString = __webpack_require__(230);
@@ -34201,7 +34204,6 @@
 	  });
 	  return headers;
 	}
-	
 	function serializeHeaders(headers) {
 	  return Object.keys(headers).map(function (header) {
 	    return header.toLowerCase() + ':' + headers[header].trim().replace(/\n/g, '');
@@ -34216,9 +34218,10 @@
 	  }
 	}
 	
-	function serializeDocument(document, format, compression) {
+	function serializeDocument(treeDocument, format, compression) {
 	  if (format == 'markdown' && compression == 'lz-string-valid-utf16') {
-	    return _lzString2.default.compressToUTF16((0, _toMarkdown2.default)(document));
+	    var x = (0, _toMarkdown2.default)(treeDocument);
+	    return _lzString2.default.compressToUTF16((0, _toMarkdown2.default)(treeDocument));
 	  } else {
 	    throw new Error('Invalid document');
 	  }
@@ -34300,7 +34303,33 @@
 	  }
 	}
 	
-	function submitPost(title, doc, token, parentID, callback) {
+	function submitPost(title, serializedDocument, token, parentID, callback) {
+	  title = title || '(untitled)';
+	  if (title.length > 140) {
+	    title = title.substr(0, 137).split(' ').slice(0, -1).join(' ') + '...';
+	  }
+	  var headers = {
+	    title: title,
+	    format: 'markdown',
+	    compression: 'lz-string-valid-utf16'
+	  };
+	  var serializedHeaders = serializeHeaders(headers);
+	  var tx = {
+	    from: window.account,
+	    value: 0
+	  };
+	  window.post.toContentID(window.account, serializedHeaders, serializedDocument, token, parentID, function (error, contentID) {
+	    window.post.publish.estimateGas(serializedHeaders, serializedDocument, token, parentID, tx, function (error, gasEstimate) {
+	      console.log(gasEstimate);
+	      tx.gas = gasEstimate + 100000;
+	      window.post.publish(serializedHeaders, serializedDocument, token, parentID, tx, function (error) {
+	        callback(error, '0x' + contentID.toString(16));
+	      });
+	    });
+	  });
+	}
+	
+	function submitReply(title, doc, token, parentID, callback) {
 	  title = title || doc.innerText || '(untitled)';
 	  if (title.length > 140) {
 	    title = title.substr(0, 137).split(' ').slice(0, -1).join(' ') + '...';
@@ -36231,12 +36260,9 @@
 	                    case "ol":
 	                        return nl + childsToMarkdown(tree, "o") + nl;
 	                    case "pre":
-	                        return nl + "    " + childsToMarkdown(tree, "inline") + nl;
 	                    case "code":
-	                        if (tree.childNodes.length == 1) {
-	                            break; // use the inline format
-	                        }
-	                        return nl + "    " + childsToMarkdown(tree, "inline") + nl;
+	                        console.log(tree.innerText.split("\n").join("\n   "));
+	                        return "    " + tree.innerText.split("\n").join("\n    ") + "\n";
 	                    case "h1":
 	                    case "h2":
 	                    case "h3":
@@ -40794,7 +40820,7 @@
 	      contentID: _this.props.match.params.slug.split('-').slice(-1)[0]
 	    };
 	    _this.loadView = _this.loadView.bind(_this);
-	    _this.submitReply = _this.submitReply.bind(_this);
+	    _this.reply = _this.reply.bind(_this);
 	    _this.tipPost = _this.tipPost.bind(_this);
 	    return _this;
 	  }
@@ -40902,8 +40928,8 @@
 	      });
 	    }
 	  }, {
-	    key: 'submitReply',
-	    value: function submitReply() {
+	    key: 'reply',
+	    value: function reply() {
 	      var _this4 = this;
 	
 	      this.setState({
@@ -40913,7 +40939,8 @@
 	      var body = document.getElementById('new-post-body');
 	      var token = 0;
 	      var parentID = this.state.contentID;
-	      (0, _formatting.submitPost)(title, body, token, parentID, function (error, contentID) {
+	
+	      (0, _formatting.submitReply)(title, body, token, parentID, function (error, contentID) {
 	        if (error) {
 	          _this4.setState({
 	            error: error.toString()
@@ -41124,7 +41151,7 @@
 	              { style: { textAlign: 'right' } },
 	              _react2.default.createElement(
 	                'a',
-	                { style: { display: 'inline-block', textDecoration: 'underline', marginLeft: '.5em' }, onClick: this.submitReply },
+	                { style: { display: 'inline-block', textDecoration: 'underline', marginLeft: '.5em' }, onClick: this.reply },
 	                'Publish'
 	              )
 	            )

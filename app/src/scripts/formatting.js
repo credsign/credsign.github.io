@@ -31,7 +31,6 @@ export function parseHeaders(headerStr) {
   });
   return headers;
 }
-
 export function serializeHeaders(headers) {
   return Object
     .keys(headers)
@@ -48,9 +47,10 @@ export function parseDocument(serializedDocument, format, compression) {
   }
 }
 
-export function serializeDocument(document, format, compression) {
+export function serializeDocument(treeDocument, format, compression) {
   if (format == 'markdown' && compression == 'lz-string-valid-utf16') {
-    return LZString.compressToUTF16(toMarkdown(document));
+    var x = toMarkdown(treeDocument);
+    return LZString.compressToUTF16(toMarkdown(treeDocument));
   }
   else {
     throw new Error('Invalid document');
@@ -123,7 +123,33 @@ export function getContentPosts(contentIDs, blocks, callback) {
   }
 }
 
-export function submitPost(title, doc, token, parentID, callback) {
+export function submitPost(title, serializedDocument, token, parentID, callback) {
+  title = title || '(untitled)';
+  if (title.length > 140) {
+    title = title.substr(0, 137).split(' ').slice(0, -1).join(' ') + '...';
+  }
+  let headers = {
+    title: title,
+    format: 'markdown',
+    compression: 'lz-string-valid-utf16'
+  };
+  let serializedHeaders = serializeHeaders(headers);
+  let tx = {
+    from: window.account,
+    value: 0
+  };
+  window.post.toContentID(window.account, serializedHeaders, serializedDocument, token, parentID, (error, contentID) => {
+    window.post.publish.estimateGas(serializedHeaders, serializedDocument, token, parentID, tx, (error, gasEstimate) => {
+      console.log(gasEstimate);
+      tx.gas = gasEstimate + 100000;
+      window.post.publish(serializedHeaders, serializedDocument, token, parentID, tx, (error) => {
+        callback(error, '0x' + contentID.toString(16));
+      });
+    });
+  });
+}
+
+export function submitReply(title, doc, token, parentID, callback) {
   title = title || doc.innerText || '(untitled)';
   if (title.length > 140) {
     title = title.substr(0, 137).split(' ').slice(0, -1).join(' ') + '...';
@@ -149,7 +175,6 @@ export function submitPost(title, doc, token, parentID, callback) {
     });
   });
 }
-
 
 export function humanizeDuration(timestamp, now) {
   var result = '';

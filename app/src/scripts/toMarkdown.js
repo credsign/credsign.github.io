@@ -75,12 +75,9 @@ export default function toMarkdown(node) {
                     case "ol":
                         return nl + childsToMarkdown(tree, "o") + nl;
                     case "pre":
-                        return nl + "    " + childsToMarkdown(tree, "inline") + nl;
                     case "code":
-                        if (tree.childNodes.length == 1) {
-                            break; // use the inline format
-                        }
-                        return nl + "    " + childsToMarkdown(tree, "inline") + nl;
+                        console.log(tree.innerText.split("\n").join("\n   "));
+                        return "    " + tree.innerText.split("\n").join("\n    ") + "\n";
                     case "h1":
                     case "h2":
                     case "h3":

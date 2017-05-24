@@ -35,17 +35,15 @@ class Publish extends React.Component {
   }
 
   previewPost() {
+    let serializedDocument = serializeDocument(document.getElementById('new-post-body'), 'markdown', 'lz-string-valid-utf16');
     this.setState({
       view: 'preview',
-      error: ''
+      error: '',
+      serializedDocument: serializedDocument
     });
     document.getElementById('new-post-title-preview').innerHTML = document.getElementById('new-post-title').value;
     // document.getElementById('new-post-body-preview').innerHTML = marked(toMarkdown(document.getElementById('new-post-body')));
-    document.getElementById('new-post-body-preview').innerHTML = parseDocument(
-      serializeDocument(document.getElementById('new-post-body'), 'markdown', 'lz-string-valid-utf16'),
-      'markdown',
-      'lz-string-valid-utf16'
-    );
+    document.getElementById('new-post-body-preview').innerHTML = parseDocument(serializedDocument, 'markdown', 'lz-string-valid-utf16');
   }
 
   onPostEdit(postBody) {
@@ -62,7 +60,7 @@ class Publish extends React.Component {
     var title = document.getElementById('new-post-title').value;
     var body = document.getElementById('new-post-body');
     var parentID = 0;
-    submitPost(title, body, token, parentID, (error, contentID) => {
+    submitPost(title, this.state.serializedDocument, token, parentID, (error, contentID) => {
       if (error) {
         this.setState({
           error: error.toString()
