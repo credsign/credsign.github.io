@@ -1,13 +1,21 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { getContentProps, getContentPosts, parseHeaders, humanizeDuration, getContentSlug, getRandom } from '../scripts/formatting.js';
+import {
+  getChannelFeed,
+  getContentsMeta,
+  getContentsData,
+  parseHeaders,
+  humanizeDuration,
+  getContentSlug,
+  prettifyTokenValue
+} from '../scripts/formatting.js';
 
-class Feed extends React.Component {
+class Channel extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       contents: [],
-      contentProps: [],
+      contentsMeta: [],
       channelSize: 0,
       loading: true,
       token: props.match.params.token,
@@ -20,45 +28,45 @@ class Feed extends React.Component {
   }
 
   loadContents(sort) {
-    let cacheBust = getRandom();
-    window.read.getChannelSize(0, cacheBust, (error, size) => {
-      size = size.toNumber();
-      if (size == 0) {
+    let token = 1;
+    window.feed.getChannel(token, (error, channel) => {
+      let postBlock = channel[0];
+      let channelSize = channel[1];
+      if (channelSize == 0) {
         this.setState({
           contents: [],
-          contentProps: [],
+          contentsMeta: [],
           channelSize: 0,
           loading: false
         });
         return;
       }
-      window.read.getChannelFeed(0, 0, size, cacheBust, (error, contentIDs) => {
+      getChannelFeed(token, postBlock, 0, (error, results) => {
         // Load props for posts in channel
-        getContentProps(contentIDs, (error, contentProps) => {
+        getContentsMeta(results.feed.map(entry => entry.contentID), (error, contentsMeta) => {
           if (sort == 'new') {
-            contentProps = contentProps.reverse();
+            contentsMeta = contentsMeta.reverse();
           }
           else if (sort == 'top') {
-            contentProps = contentProps.sort((a, b) => a.score > b.score ? -1 : 1);
+            contentsMeta = contentsMeta.sort((a, b) => a.score > b.score ? -1 : 1);
           }
-          let ids = contentProps.slice(0, this.state.pageLimit).map(props => props.contentID);
-          let blocks = contentProps.slice(0, this.state.pageLimit).map(props => props.block);
-          getContentPosts(ids, blocks, (error, contentPosts) => {
-            let contents = contentPosts.map((post, i) => {
-              let props = contentProps[i];
+          let ids = contentsMeta.slice(0, this.state.pageLimit).map(props => props.contentID);
+          let blocks = contentsMeta.slice(0, this.state.pageLimit).map(props => props.postBlock);
+          getContentsData(ids, blocks, (error, contentsData) => {
+            let contents = contentsData.map((post, i) => {
+              let props = contentsMeta[i];
               return {
                 contentID: props.contentID,
-                publisher: post.publisher,
                 title: parseHeaders(post.headers).title,
-                funds: props.funds,
+                tipped: props.tipped,
                 timestamp: post.timestamp * 1000,
                 replyCount: props.replyCount
               }
             });
             this.setState({
               contents: contents,
-              contentProps: contentProps,
-              channelSize: size,
+              contentsMeta: contentsMeta,
+              channelSize: channelSize,
               loading: false
             });
           });
@@ -71,24 +79,23 @@ class Feed extends React.Component {
     this.setState({
       loading: true
     });
-    let contentProps = this.state.contentProps;
+    let contentsMeta = this.state.contentsMeta;
     let newCount = this.state.contents.length + this.state.pageLimit;
-    if (newCount > contentProps.length) {
+    if (newCount > contentsMeta.length) {
       // TODO: this should be dependent on the channelsize,
-      // and contingently load more contentProps in the future
-      // instead of loading all the contentProps at the start
-      newCount = contentProps.length;
+      // and contingently load more contentsMeta in the future
+      // instead of loading all the contentsMeta at the start
+      newCount = contentsMeta.length;
     }
-    let ids = contentProps.slice(0, newCount).map(props => props.contentID);
-    let blocks = contentProps.slice(0, newCount).map(props => props.block);
-    getContentPosts(ids, blocks, (error, contentPosts) => {
-      let contents = contentPosts.map((post, i) => {
-        let props = contentProps[i];
+    let ids = contentsMeta.slice(0, newCount).map(props => props.contentID);
+    let blocks = contentsMeta.slice(0, newCount).map(props => props.postBlock);
+    getContentsData(ids, blocks, (error, contentsData) => {
+      let contents = contentsData.map((post, i) => {
+        let props = contentsMeta[i];
         return {
           contentID: props.contentID,
-          publisher: post.publisher,
           title: parseHeaders(post.headers).title,
-          funds: props.funds,
+          tipped: props.tipped,
           timestamp: post.timestamp * 1000,
           replyCount: props.replyCount
         }
@@ -123,7 +130,7 @@ class Feed extends React.Component {
         <li key={'li-'+content.contentID}>
           <a href={`#/eth/${getContentSlug(content.title)}-${content.contentID}`}>
             <div>{`${content.title}`}</div>
-            <span>{`${content.funds} ETH`}</span>
+            <span>{`${prettifyTokenValue(content.tipped)} ETH`}</span>
             <span>{` - ${content.replyCount} response${content.replyCount == 1 ? '' : 's'}`}</span>
             <span>{` - ${humanizeDuration(content.timestamp, now)} ago`}</span>
           </a>
@@ -160,4 +167,4 @@ class Feed extends React.Component {
   }
 }
 
-export default Feed;
+export default Channel;

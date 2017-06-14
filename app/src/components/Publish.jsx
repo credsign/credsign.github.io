@@ -1,7 +1,15 @@
 import React from 'react';
 import Editor from './Editor.jsx';
 import Popup from './Popup.jsx';
-import { serializeHeaders, serializeDocument, parseDocument, getContentSlug, parseHeaders, submitPost, cacheContent, getContentProps } from '../scripts/formatting.js';
+import {
+  serializeHeaders,
+  serializeDocument,
+  parseDocument,
+  getContentSlug,
+  parseHeaders,
+  submitPost,
+  getContentMeta
+} from '../scripts/formatting.js';
 
 class Publish extends React.Component {
   constructor(props) {
@@ -56,7 +64,7 @@ class Publish extends React.Component {
     this.setState({
       view: 'submit'
     });
-    var token = 0;
+    var token = 1;
     var title = document.getElementById('new-post-title').value;
     var body = document.getElementById('new-post-body');
     var parentID = 0;
@@ -68,8 +76,8 @@ class Publish extends React.Component {
       }
       else {
         let watcherFn = () => {
-          getContentProps([contentID], (error, props) => {
-            if (props[0].block > 0) {
+          getContentMeta(contentID, (error, contentMeta) => {
+            if (contentMeta.postBlock > 0) {
               let slug = getContentSlug(title);
               window.location.hash = `#/eth/${slug}-${contentID}`;
             }

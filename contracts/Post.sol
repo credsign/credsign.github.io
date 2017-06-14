@@ -13,12 +13,12 @@ contract Post {
     /// @param parentID The id of the content this post responds to.
     /// @param timestamp Time the content was published
     event Content (
-        uint256 indexed contentID,
+        bytes32 indexed contentID,
         address indexed publisher,
         address indexed token,
         string headers,
         string document,
-        uint256 parentID,
+        bytes32 parentID,
         uint256 timestamp
     );
 
@@ -34,12 +34,19 @@ contract Post {
     /// @param document Blob of data containing the published content.
     /// @param token The channel this post is published in.
     /// @param parentID The contentID this post is in response to.
-    function publish(string headers, string document, address token, uint256 parentID) {
+    function publish(string headers, string document, address token, bytes32 parentID) {
 
-        uint256 contentID = toContentID(msg.sender, headers, document, token, parentID);
+        bytes32 contentID = toContentID(msg.sender, headers, document, token, parentID);
 
-        if (!Feed(feedAPI).publish(msg.sender, contentID, token, parentID)) {
-            throw;
+        if (parentID == 0) {
+            if (!Feed(feedAPI).post(msg.sender, token, contentID)) {
+                throw;
+            }
+        }
+        else {
+            if (!Feed(feedAPI).reply(msg.sender, token, contentID, parentID)) {
+                throw;
+            }
         }
 
         // Save post to log storage
@@ -67,7 +74,7 @@ contract Post {
     /// @param token The channel the content will be posted into.
     /// @param parentID The id of the replied-to content.
     /// @return contentID A keccak256 digest of the publishing params.
-    function toContentID(address publisher, string headers, string document, address token, uint256 parentID) constant returns (uint256) {
-        return uint256(keccak256(publisher, headers, document, token, parentID));
+    function toContentID(address publisher, string headers, string document, address token, bytes32 parentID) constant returns (bytes32) {
+        return keccak256(publisher, headers, document, token, parentID);
     }
 }

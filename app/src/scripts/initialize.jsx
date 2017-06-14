@@ -68,8 +68,8 @@ window.addEventListener('load', function () {
     xhr.onreadystatechange = function () {
       if (xhr.readyState == 4) {
         var contracts = JSON.parse(xhr.responseText);
+        window.batch = web3.eth.contract(contracts.Batch.interface).at(contracts.Batch.address);
         window.feed = web3.eth.contract(contracts.Feed.interface).at(contracts.Feed.address);
-        window.read = web3.eth.contract(contracts.Read.interface).at(contracts.Read.address);
         window.post = web3.eth.contract(contracts.Post.interface).at(contracts.Post.address);
         done();
       }

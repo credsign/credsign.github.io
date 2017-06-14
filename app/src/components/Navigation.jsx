@@ -32,7 +32,7 @@ class Navigation extends React.Component {
         }}>
           <div style={{maxWidth: '600px', margin: '0 auto'}} className='flex'>
             <div className='flex-grow' style={{textAlign: 'left'}}>
-              <Link to={`/profile/${window.account || ''}`} onClick={this.warn} style={{textDecoration: 'none', display: 'inline-block', padding: '1em'}}>
+              <Link to={`/account/${window.account || ''}`} onClick={this.warn} style={{textDecoration: 'none', display: 'inline-block', padding: '1em'}}>
                 <i className='fa fa-user'></i>
               </Link>
             </div>

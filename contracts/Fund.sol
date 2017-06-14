@@ -6,43 +6,27 @@ contract Fund {
 
     address private contentAddress;
 
-    modifier restricted() {
-        if (msg.sender != contentAddress) {
-            throw;
-        }
-        _;
-    }
-
     function Fund() {
         contentAddress = msg.sender;
     }
 
-    function getEtherBalance() constant returns (uint256) {
-        return this.balance;
-    }
-
-    function getBalance(address token) constant returns (uint256) {
-        return Token(token).balanceOf(this);
-    }
-
-    function claimEther() restricted() returns (uint256) {
-        uint256 value = this.balance;
-        if (value > 0 && contentAddress.send(this.balance)) {
-            return value;
+    function claim(address token) returns (uint256 value) {
+        if (msg.sender != contentAddress) {
+            throw;
+        }
+        if (token == 0x1) {
+            value = this.balance;
+            if (!contentAddress.send(value)) {
+                throw;
+            }
         }
         else {
-            return 0;
+            value = Token(token).balanceOf(this);
+            if (!Token(token).transfer(contentAddress, value)) {
+                throw;
+            }
         }
-    }
-
-    function claim(address token) restricted() returns (uint256) {
-        uint256 value = Token(token).balanceOf(this);
-        if (value > 0 && Token(token).transfer(contentAddress, value)) {
-            return value;
-        }
-        else {
-            return 0;
-        }
+        return value;
     }
 
 }

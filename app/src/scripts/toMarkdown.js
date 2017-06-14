@@ -76,7 +76,6 @@ export default function toMarkdown(node) {
                         return nl + childsToMarkdown(tree, "o") + nl;
                     case "pre":
                     case "code":
-                        console.log(tree.innerText.split("\n").join("\n   "));
                         return "    " + tree.innerText.split("\n").join("\n    ") + "\n";
                     case "h1":
                     case "h2":

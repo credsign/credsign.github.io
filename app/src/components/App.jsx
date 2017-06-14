@@ -5,9 +5,9 @@ import { Switch, Route, Redirect } from 'react-router';
 import Navigation from './Navigation.jsx';
 import Footer from './Footer.jsx';
 import Publish from './Publish.jsx';
-import Profile from './Profile.jsx';
+import Account from './Account.jsx';
 import Content from './Content.jsx';
-import Feed from './Feed.jsx';
+import Channel from './Channel.jsx';
 
 class App extends React.Component {
   constructor(props) {
@@ -32,8 +32,8 @@ class App extends React.Component {
           <div style={{height: '3em'}}>&nbsp;</div>
           <Switch>
             <Route path='/publish' component={Publish} />
-            <Route path='/profile/:address' component={Profile} />
-            <Route path='/:token/all/:sort?' component={Feed} />
+            <Route path='/account/:address' component={Account} />
+            <Route path='/:token/all/:sort?' component={Channel} />
             <Route path='/:token/:slug' component={Content} />
             <Route path='/' render={(props) => <Redirect to={'/eth/all'} /> } />
           </Switch>

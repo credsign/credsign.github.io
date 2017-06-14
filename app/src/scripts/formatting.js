@@ -57,34 +57,50 @@ export function serializeDocument(treeDocument, format, compression) {
   }
 }
 
-export function getRandom() {
-  return parseInt(Math.random() * 2147483647);
+function getFeed(eventName, filterObj, nextBlockKey, blockNum, thruTime, results, callback) {
+  window.feed[eventName](filterObj, { fromBlock: blockNum, toBlock: blockNum }).get((error, result) => {
+    let entries = result.map(r => r.args).sort(r => r[nextBlockKey] < r[nextBlockKey]);
+    results.push.apply(results, entries);
+    let lastEntry = results[results.length - 1];
+    let nextBlockNum = lastEntry[nextBlockKey];
+    if (nextBlockNum == 0 || lastEntry.timestamp < thruTime) {
+      callback(null, {
+        feed: results,
+        next: nextBlockNum
+      });
+    }
+    else {
+      getFeed(eventName, filterObj, nextBlockKey, nextBlockNum, thruTime, results, callback);
+    }
+  });
 }
 
-export function getContentProps(contentIDs, callback) {
-  window.read.getContents(contentIDs, getRandom(), (error, rawProps) => {
-    let contentProps = [];
-    for (let i = 0; i < contentIDs.length; i++) {
-      let ether = web3.toWei(1);
-      let props = {
-        // TODO: normalize contentID inputs around "0x" formatting
-        contentID: '0x' + contentIDs[i].toString(16).replace('0x', ''),
-        block: rawProps[0][i].toNumber(),
-        funds: rawProps[1][i].dividedBy(ether).toNumber(),
-        token: rawProps[2][i],
-        publisher: rawProps[3][i],
-        replyCount: rawProps[4][i].toNumber()
-      };
-      // Reddit decays in 45000s intervals, or 12.5hrs
-      // Assuming 15s block time, 12.5hrs == 3000 blocks
-      props.score = props.block / 3000;
-      if (props.funds > 1) {
-        props.score += Math.log(props.funds);
-      }
-      contentProps.push(props);
-    }
-    callback(null, contentProps);
-  });
+export function getChannelFeed(token, startBlock, thruTime, callback) {
+  getFeed('Post', { token: token }, 'prevTokenPostBlock', startBlock, thruTime, [], callback);
+}
+
+export function getContentReplyFeed(contentID, startBlock, thruTime, callback) {
+  getFeed('Reply', { parentContentID: contentID }, 'prevReplyToContentBlock', startBlock, thruTime, [], callback);
+}
+
+export function getAccountPostFeed(address, startBlock, thruTime, callback) {
+  getFeed('Post', { publisher: address }, 'prevPublisherPostBlock', startBlock, thruTime, [], callback);
+}
+
+export function getAccountReplyFeed(address, startBlock, thruTime, callback) {
+  getFeed('Reply', { publisher: address }, 'prevPublisherReplyBlock', startBlock, thruTime, [], callback);
+}
+
+export function getAccountReplyToFeed(address, startBlock, thruTime, callback) {
+  getFeed('Reply', { parentPublisher: address }, 'prevReplyToPublisherBlock', startBlock, thruTime, [], callback);
+}
+
+export function getAccountTipSendFeed(address, startBlock, thruTime, callback) {
+  getFeed('Tip', { sender: address }, 'prevSenderBlock', startBlock, thruTime, [], callback);
+}
+
+export function getAccountTipReceiveFeed(address, startBlock, thruTime, callback) {
+  getFeed('Tip', { recipient: address }, 'prevRecipientBlock', startBlock, thruTime, [], callback);
 }
 
 export function cacheContent(contentID, content) {
@@ -94,14 +110,56 @@ export function cacheContent(contentID, content) {
     token: content.args.token,
     headers: content.args.headers,
     document: content.args.document,
-    parentID: '0x' + content.args.parentID.toString(16),
+    parentID: content.args.parentID,
     timestamp: content.args.timestamp.toNumber()
   };
 }
 
-export function getContentPosts(contentIDs, blocks, callback) {
+export function getContentsMeta(contentIDs, callback) {
+  window.batch.getContents(contentIDs, (error, rawProps) => {
+    let contentProps = [];
+    for (let i = 0; i < contentIDs.length; i++) {
+      let ether = web3.toWei(1);
+      let props = {
+        contentID: contentIDs[i],
+        api: rawProps[0][i],
+        publisher: rawProps[1][i],
+        token: rawProps[2][i],
+        postBlock: rawProps[3][i].toNumber(),
+        replyCount: rawProps[4][i].toNumber(),
+        tipped: rawProps[5][i].toString()
+      };
+
+      // Reddit decays in 45000s intervals, or 12.5hrs
+      // Assuming 15s block time, 12.5hrs == 3000 blocks
+      props.score = props.postBlock / 3000;
+      if (props.tipped > 1) {
+        props.score += Math.log(props.tipped);
+      }
+      contentProps.push(props);
+    }
+    callback(null, contentProps);
+  });
+}
+
+export function getContentMeta(contentID, callback) {
+  window.feed.getContent(contentID, (error, rawProps) => {
+    callback(null, {
+      contentID: contentID,
+      api: rawProps[0],
+      publisher: rawProps[1],
+      token: rawProps[2],
+      lastReplyBlock: rawProps[3].toNumber(),
+      lastTipBlock: rawProps[4].toNumber(),
+      postBlock: rawProps[5].toNumber(),
+      replyCount: rawProps[6].toNumber(),
+      tipped: rawProps[7].toString()
+    });
+  });
+}
+
+export function getContentsData(contentIDs, blocks, callback) {
   let loaded = 0;
-  contentIDs = contentIDs.map(contentID => '0x' + contentID.toString(16).replace('0x', ''));
   for (let i = 0; i < contentIDs.length; i++) {
     let contentID = contentIDs[i];
     if (window.contentCache[contentID]) {
@@ -110,7 +168,8 @@ export function getContentPosts(contentIDs, blocks, callback) {
       }
     }
     else {
-      window.post.Content({contentID: contentID}, {fromBlock: blocks[i], toBlock: blocks[i]}).get((error, rawPost) => {
+      let filter = window.post.Content({contentID: contentID}, {fromBlock: blocks[i], toBlock: blocks[i]})
+      filter.get((error, rawPost) => {
         if (rawPost && rawPost.length == 1) {
           // TODO: Save to local storage here
           cacheContent(contentID, rawPost[0]);
@@ -120,6 +179,21 @@ export function getContentPosts(contentIDs, blocks, callback) {
         }
       });
     }
+  }
+}
+
+export function getContentData(contentID, block, callback) {
+  if (window.contentCache[contentID]) {
+    callback(null, Object.assign({}, window.contentCache[contentID]));
+  }
+  else {
+    window.post.Content({contentID: contentID}, {fromBlock: block, toBlock: block}).get((error, rawPost) => {
+      if (rawPost && rawPost.length == 1) {
+        // TODO: Save to local storage here
+        cacheContent(contentID, rawPost[0]);
+      }
+      callback(null, Object.assign({}, window.contentCache[contentID]));
+    });
   }
 }
 
@@ -141,9 +215,9 @@ export function submitPost(title, serializedDocument, token, parentID, callback)
   window.post.toContentID(window.account, serializedHeaders, serializedDocument, token, parentID, (error, contentID) => {
     window.post.publish.estimateGas(serializedHeaders, serializedDocument, token, parentID, tx, (error, gasEstimate) => {
       console.log(gasEstimate);
-      tx.gas = gasEstimate + 100000;
+      tx.gas = gasEstimate;
       window.post.publish(serializedHeaders, serializedDocument, token, parentID, tx, (error) => {
-        callback(error, '0x' + contentID.toString(16));
+        callback(error, contentID);
       });
     });
   });
@@ -168,12 +242,18 @@ export function submitReply(title, doc, token, parentID, callback) {
   window.post.toContentID(window.account, serializedHeaders, serializedDocument, token, parentID, (error, contentID) => {
     window.post.publish.estimateGas(serializedHeaders, serializedDocument, token, parentID, tx, (error, gasEstimate) => {
       console.log(gasEstimate);
-      tx.gas = gasEstimate + 100000;
+      tx.gas = gasEstimate;
       window.post.publish(serializedHeaders, serializedDocument, token, parentID, tx, (error) => {
-        callback(error, '0x' + contentID.toString(16));
+        callback(error, contentID);
       });
     });
   });
+}
+
+// expects a bignumber value
+export function prettifyTokenValue(value) {
+  let ether = web3.toWei(1);
+  return new web3.BigNumber(value || 0).dividedBy(ether).toFixed(2);
 }
 
 export function humanizeDuration(timestamp, now) {

@@ -262,12 +262,10 @@ function deploy(network, mode, socket, done) {
 
         if (mode == 'all') {
           deployContract('Feed', [], () => {
-            deployContract('Read', [ contracts.Feed.address ], () => {
+            deployContract('Batch', [ contracts.Feed.address ], () => {
               deployContract('Post', [ contracts.Feed.address ], () => {
                 let feedContract = web3.eth.contract(contracts.Feed.interface).at(contracts.Feed.address);
-                feedContract.updatePublishContract(contracts.Post.address, { from: account, gas: 200000 }, () => {
-                  feedContract.updateChannelMinimum(0, 1, { from: account, gas: 200000 }, writeContracts);
-                });
+                feedContract.enableApi(contracts.Post.address, { from: account, gas: 200000 }, writeContracts);
               })
             });
           });
@@ -277,7 +275,7 @@ function deploy(network, mode, socket, done) {
             'Feed': oldContracts['Feed'],
             'Post': oldContracts['Post']
           };
-          deployContract('Read', [ contracts.Feed.address ], writeContracts);
+          deployContract('Batch', [ contracts.Feed.address ], writeContracts);
         }
         else {
           throw new Error(`Deploy mode ${mode} not defined`);
