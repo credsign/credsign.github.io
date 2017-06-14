@@ -25556,8 +25556,8 @@
 	                { to: '/', style: { textDecoration: 'none', display: 'inline-block' } },
 	                _react2.default.createElement(
 	                  'div',
-	                  { style: { fontSize: '2.5em', padding: '0em', marginTop: '-.10em' } },
-	                  '\u2245'
+	                  null,
+	                  _react2.default.createElement('img', { src: '/app/centlogo@3x.png' })
 	                )
 	              )
 	            ),
@@ -34404,7 +34404,7 @@
 	  window.post.toContentID(window.account, serializedHeaders, serializedDocument, token, parentID, function (error, contentID) {
 	    window.post.publish.estimateGas(serializedHeaders, serializedDocument, token, parentID, tx, function (error, gasEstimate) {
 	      console.log(gasEstimate);
-	      tx.gas = gasEstimate;
+	      tx.gas = gasEstimate + 100000;
 	      window.post.publish(serializedHeaders, serializedDocument, token, parentID, tx, function (error) {
 	        callback(error, contentID);
 	      });
@@ -34431,7 +34431,7 @@
 	  window.post.toContentID(window.account, serializedHeaders, serializedDocument, token, parentID, function (error, contentID) {
 	    window.post.publish.estimateGas(serializedHeaders, serializedDocument, token, parentID, tx, function (error, gasEstimate) {
 	      console.log(gasEstimate);
-	      tx.gas = gasEstimate;
+	      tx.gas = gasEstimate + 100000;
 	      window.post.publish(serializedHeaders, serializedDocument, token, parentID, tx, function (error) {
 	        callback(error, contentID);
 	      });
@@ -41764,7 +41764,7 @@
 	        var oldFunds = contentMeta.tipped;
 	        console.log(tipValue.toString());
 	        window.feed.tip.estimateGas(_this2.props.contentID, etherchannel, tipValue, tx, function (error, gasEstimate) {
-	          tx.gas = gasEstimate;
+	          tx.gas = gasEstimate + 100000;
 	          window.feed.tip(_this2.props.contentID, etherchannel, tipValue, tx, function (error, result) {
 	            if (error) {
 	              _this2.setState({

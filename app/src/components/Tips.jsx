@@ -30,7 +30,7 @@ class Tips extends React.Component {
       let oldFunds = contentMeta.tipped;
       console.log(tipValue.toString());
       window.feed.tip.estimateGas(this.props.contentID, etherchannel, tipValue, tx, (error, gasEstimate) => {
-        tx.gas = gasEstimate;
+        tx.gas = gasEstimate + 100000;
         window.feed.tip(this.props.contentID, etherchannel, tipValue, tx, (error, result) => {
           if (error) {
             this.setState({

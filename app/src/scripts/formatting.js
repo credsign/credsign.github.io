@@ -215,7 +215,7 @@ export function submitPost(title, serializedDocument, token, parentID, callback)
   window.post.toContentID(window.account, serializedHeaders, serializedDocument, token, parentID, (error, contentID) => {
     window.post.publish.estimateGas(serializedHeaders, serializedDocument, token, parentID, tx, (error, gasEstimate) => {
       console.log(gasEstimate);
-      tx.gas = gasEstimate;
+      tx.gas = gasEstimate + 100000;
       window.post.publish(serializedHeaders, serializedDocument, token, parentID, tx, (error) => {
         callback(error, contentID);
       });
@@ -242,7 +242,7 @@ export function submitReply(title, doc, token, parentID, callback) {
   window.post.toContentID(window.account, serializedHeaders, serializedDocument, token, parentID, (error, contentID) => {
     window.post.publish.estimateGas(serializedHeaders, serializedDocument, token, parentID, tx, (error, gasEstimate) => {
       console.log(gasEstimate);
-      tx.gas = gasEstimate;
+      tx.gas = gasEstimate + 100000;
       window.post.publish(serializedHeaders, serializedDocument, token, parentID, tx, (error) => {
         callback(error, contentID);
       });
