@@ -25556,8 +25556,8 @@
 	                { to: '/', style: { textDecoration: 'none', display: 'inline-block' } },
 	                _react2.default.createElement(
 	                  'div',
-	                  { style: { padding: '.75em' } },
-	                  _react2.default.createElement('img', { style: { height: '1.5em' }, src: 'app/favicon/android-chrome-512x512.png' })
+	                  { style: { padding: '.5em' } },
+	                  _react2.default.createElement('img', { style: { height: '2em' }, src: 'app/favicon/android-chrome-512x512.png' })
 	                )
 	              )
 	            ),

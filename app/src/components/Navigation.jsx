@@ -38,7 +38,7 @@ class Navigation extends React.Component {
             </div>
             <div className='flex-shrink'>
               <Link to='/' style={{textDecoration: 'none', display: 'inline-block'}}>
-                <div style={{padding: '.75em'}}><img style={{height: '1.5em'}} src="app/favicon/android-chrome-512x512.png" /></div>
+                <div style={{padding: '.5em'}}><img style={{height: '2em'}} src="app/favicon/android-chrome-512x512.png" /></div>
               </Link>
             </div>
             <div className='flex-grow' style={{textAlign: 'right'}}>
