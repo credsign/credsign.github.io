@@ -38,7 +38,7 @@ class Navigation extends React.Component {
             </div>
             <div className='flex-shrink'>
               <Link to='/' style={{textDecoration: 'none', display: 'inline-block'}}>
-                <div style={{fontSize: '2.5em', padding: '0em', marginTop: '-.10em'}}>≅</div>
+                <div style={{padding: '.75em'}}><img style={{height: '1.5em'}} src="app/logo_dark.png" /></div>
               </Link>
             </div>
             <div className='flex-grow' style={{textAlign: 'right'}}>
