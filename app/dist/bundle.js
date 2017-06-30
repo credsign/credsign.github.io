@@ -25557,7 +25557,7 @@
 	                _react2.default.createElement(
 	                  'div',
 	                  { style: { padding: '.75em' } },
-	                  _react2.default.createElement('img', { style: { height: '1.5em' }, src: 'app/logo_dark.png' })
+	                  _react2.default.createElement('img', { style: { height: '1.5em' }, src: 'app/favicon/android-chrome-512x512.png' })
 	                )
 	              )
 	            ),
