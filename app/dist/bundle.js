@@ -41605,7 +41605,7 @@
 	          _react2.default.createElement(
 	            'div',
 	            { style: { padding: '1em' } },
-	            'Latest posts:'
+	            'Latest posts'
 	          ),
 	          _react2.default.createElement(
 	            'div',

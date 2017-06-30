@@ -134,7 +134,7 @@ class Feed extends React.Component {
     return (
       <div style={{width:'100%'}} className='feed flex-grow'>
         <div style={{maxWidth: '600px', margin: '0 auto'}}>
-          <div style={{padding: '1em'}}>Latest posts:</div>
+          <div style={{padding: '1em'}}>Latest posts</div>
           <div style={{
             margin: '1em',
             display: !this.state.loading && this.state.channelSize == 0 ? 'block'  : 'none'
