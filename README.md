@@ -1,19 +1,20 @@
 # Channel
-Channel lets you publish and view content using the Ethereum blockchain. It is currently in beta on the Ethereum main network at <https://channel.github.io/>. Shoutout to the folks at ChannelMe for giving us this github alias.
+Channel lets you publish and view content using the Ethereum blockchain. It is currently in beta on the Ethereum main network at <https://channel.github.io/>.
 
 # Development enviroment setup
 
 **To setup on a local privatenet**
 
-1. Copy or link `geth` to the root of this repo.
-2. Run `node dev --sync --network=privnet` to start your local node. Leave it running.
-3. Run `node dev --deploy --network=privnet --contracts=all` to deploy the contracts. When prompted for a password, use `credsign`.
-4. Run `node dev --serve` to compile the webapp and serve it at <http://localhost:8000/>
+1. Copy or link `geth` 1.5.3 to the root of this repo. Later versions have issues deploying.
+2. `npm install`
+3. Run `node dev --sync --network=privnet` to start your local node. Leave it running.
+4. Run `node dev --deploy --network=privnet --contracts=all` to deploy the contracts. When prompted for a password, use `credsign`.
+5. Run `node dev --serve` to compile the webapp and serve it at <http://localhost:8000/>
 
 Modifying files in `./app/src` will trigger a recompile while the frontend server is running.
 
 # System Architecture
-All the information rendered from within the Cent app is stored on the blockchain. To achieve this, we utilize both log storage and contract storage. The primary difference between the two is that log storage is append-only, whereas contract storage can be written to and modified by a smart contract. Log storage also significantly cheaper, one word (32 bytes) of log storage costs 256 gas, whereas in contract storage it costs 20,000 gas. 
+All the information rendered from within the app is stored on the blockchain. To achieve this, we utilize both log storage and contract storage. The primary difference between the two is that log storage is append-only, whereas contract storage can be written to and modified by a smart contract. Log storage also significantly cheaper, one word (32 bytes) of log storage costs 256 gas, whereas in contract storage it costs 20,000 gas. 
 
 ## Contract Storage
 For each user, channel, and piece of content, we maintain a set of core properties in contract storage. These properties were chosen on the basis of being actionable: without them in smart contract storage, our application cannot function in a secure, decentralized way. Only a subset of the data available in the presentation layer is stored in contract storage. 
