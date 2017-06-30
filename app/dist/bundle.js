@@ -41137,7 +41137,7 @@
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { style: { maxWidth: '600px', backgroundColor: '#FFF', margin: '0 auto', border: '1px solid #ddd' } },
+	          { style: { maxWidth: '600px', backgroundColor: '#FFF', margin: '0 auto', border: '1px solid #ddd', display: window.account ? 'block' : 'none' } },
 	          _react2.default.createElement(
 	            'div',
 	            { style: { padding: '1em', wordWrap: 'break-word' } },
@@ -41439,7 +41439,7 @@
 	      loading: true,
 	      token: props.match.params.token,
 	      pageLimit: 5,
-	      sort: props.match.params.sort || 'top'
+	      sort: 'new' // props.match.params.sort || 'top'
 	    };
 	
 	    _this.loadContents = _this.loadContents.bind(_this);
@@ -41605,21 +41605,7 @@
 	          _react2.default.createElement(
 	            'div',
 	            { style: { padding: '1em' } },
-	            _react2.default.createElement(
-	              _reactRouterDom.Link,
-	              { to: '/' + this.state.token + '/all/top', style: { textDecoration: this.state.sort == 'top' ? 'none' : 'underline' } },
-	              'Top'
-	            ),
-	            _react2.default.createElement(
-	              'span',
-	              null,
-	              ' - '
-	            ),
-	            _react2.default.createElement(
-	              _reactRouterDom.Link,
-	              { to: '/' + this.state.token + '/all/new', style: { textDecoration: this.state.sort == 'new' ? 'none' : 'underline' } },
-	              'New'
-	            )
+	            'Latest posts:'
 	          ),
 	          _react2.default.createElement(
 	            'div',

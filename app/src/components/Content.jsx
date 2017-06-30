@@ -230,7 +230,7 @@ class Content extends React.Component {
             </div>
           </div>
         </div>
-        <div style={{maxWidth: '600px', backgroundColor: '#FFF', margin: '0 auto', border: '1px solid #ddd'}}>
+        <div style={{maxWidth: '600px', backgroundColor: '#FFF', margin: '0 auto', border: '1px solid #ddd', display: window.account ? 'block' : 'none'}}>
           <div style={{padding: '1em', wordWrap: 'break-word'}}>
             <Editor contentID={this.state.contentID} resetCounter={this.state.replyResetCounter} placeholder={'write a response...'} />
           </div>

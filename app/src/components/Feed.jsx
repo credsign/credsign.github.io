@@ -12,7 +12,7 @@ class Feed extends React.Component {
       loading: true,
       token: props.match.params.token,
       pageLimit: 5,
-      sort: props.match.params.sort || 'top'
+      sort: 'new' // props.match.params.sort || 'top'
     };
 
     this.loadContents = this.loadContents.bind(this);
@@ -134,11 +134,7 @@ class Feed extends React.Component {
     return (
       <div style={{width:'100%'}} className='feed flex-grow'>
         <div style={{maxWidth: '600px', margin: '0 auto'}}>
-          <div style={{padding: '1em'}}>
-            <Link to={`/${this.state.token}/all/top`} style={{textDecoration: this.state.sort == 'top' ? 'none' : 'underline'}}>Top</Link>
-            <span> - </span>
-            <Link to={`/${this.state.token}/all/new`} style={{textDecoration: this.state.sort == 'new' ? 'none' : 'underline'}}>New</Link>
-          </div>
+          <div style={{padding: '1em'}}>Latest posts:</div>
           <div style={{
             margin: '1em',
             display: !this.state.loading && this.state.channelSize == 0 ? 'block'  : 'none'
