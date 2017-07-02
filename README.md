@@ -7,9 +7,9 @@ Channel lets you publish and view content using the Ethereum blockchain. It is c
 
 1. Copy or link `geth` 1.5.3 to the root of this repo. Later versions have issues deploying.
 2. `npm install`
-3. Run `node dev --sync --network=privnet` to start your local node. Leave it running.
-4. Run `node dev --deploy --network=privnet --contracts=all` to deploy the contracts. When prompted for a password, use `credsign`.
-5. Run `node dev --serve` to compile the webapp and serve it at <http://localhost:8000/>
+3. `node dev --sync --network=privnet` to start your local node. Leave it running.
+4. `node dev --deploy --network=privnet --contracts=all` to deploy the contracts. When prompted for a password, use `credsign`.
+5. `node dev --serve` to compile the webapp and serve it at <http://localhost:8000/>
 
 Modifying files in `./app/src` will trigger a recompile while the frontend server is running.
 
