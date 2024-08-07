@@ -1,5 +1,5 @@
-# Channel
-Channel lets you publish and view content using the Ethereum blockchain. It is currently in beta on the Ethereum main network at <https://channel.github.io/>.
+# Credsign
+Credsign lets you publish and view content using the Ethereum blockchain. It is currently in beta on the Ethereum main network at <https://credsign.github.io/>.
 
 # Development enviroment setup
 
@@ -50,7 +50,7 @@ Content is addressed by a content ID, which is simply a hash the content. Addres
 
 # License
 
-Copyright (C) 2017 Channel
+Copyright (C) 2017 Credsign
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
